@@ -1,0 +1,2443 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Astroharmony</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --card: #121823;
+      --ink: #e8eef7;
+      --muted: #a7b3c5;
+      --accent: #6ee7ff;
+      --accent-2: #8b5cf6;
+      --accent-3: #f59e0b;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; background: var(--bg) !important; color: var(--ink); }
+    body {
+      margin: 0; min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Noto Sans", "Helvetica Neue", Arial;
+      color-scheme: dark; -webkit-text-size-adjust: 100%;
+    }
+    body::before { content: ""; position: fixed; inset: 0; background: var(--bg); z-index: -1; }
+
+    .wrap { max-width: 1600px; margin: 0 auto; padding: 0 16px 32px; }
+    .wrap.view-1 { max-width: 980px; }
+    .wrap.view-2 { max-width: 1600px; }
+    
+    /* View Toggle */
+    .view-toggle {
+      position: fixed; top: 16px; right: 16px; z-index: 100;
+      display: flex; gap: 4px; background: var(--card);
+      border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: 4px;
+    }
+    .view-btn {
+      appearance: none; border: none; background: transparent;
+      color: var(--muted); font-weight: 700; font-size: 14px;
+      padding: 8px 16px; cursor: pointer; border-radius: 6px;
+      transition: all .15s;
+    }
+    .view-btn:hover { color: var(--ink); background: rgba(255,255,255,.05); }
+    .view-btn.active { color: var(--accent); background: rgba(110,231,255,.15); }
+    
+    /* Dual Panel Layout for View 2 */
+    .dual-panel { display: none; padding-top: 20px; }
+    .wrap.view-2 .dual-panel { display: block; }
+    .wrap.view-2 .main-tabs { display: none; }
+    .wrap.view-2 .main-panel { display: none !important; }
+    .wrap.view-1 .dual-panel { display: none; }
+    
+    /* Dual Panel Cards */
+    .dual-left, .dual-right {
+      background: var(--card); border: 1px solid rgba(255,255,255,.07);
+      border-radius: var(--radius); box-shadow: 0 6px 24px rgba(0,0,0,.35);
+      padding: 18px; min-height: 400px;
+    }
+    .dual-left { border-top: 3px solid var(--accent); }
+    .dual-right { border-top: 3px solid var(--accent-2); }
+
+    /* ===== TOP-LEVEL TABS (browser style) ===== */
+    .main-tabs {
+      display: flex; gap: 0; margin-top: 16px; border-bottom: 2px solid rgba(255,255,255,.1);
+    }
+    .main-tab {
+      appearance: none; border: none; background: transparent;
+      color: var(--muted); font-weight: 700; font-size: 15px;
+      padding: 14px 24px; cursor: pointer;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: all .15s;
+    }
+    .main-tab:hover { color: var(--ink); background: rgba(255,255,255,.03); }
+    .main-tab.active {
+      color: var(--accent); border-bottom-color: var(--accent);
+      background: rgba(110,231,255,.05);
+    }
+    .main-tab[data-tab="seven"].active { color: var(--accent-2); border-bottom-color: var(--accent-2); background: rgba(139,92,246,.05); }
+    .main-tab[data-tab="solar"].active { color: var(--accent-3); border-bottom-color: var(--accent-3); background: rgba(245,158,11,.05); }
+
+    .main-panel { display: none; padding-top: 20px; }
+    .main-panel.active { display: block; }
+
+    /* ===== CARD & FORM STYLES ===== */
+    .card {
+      background: var(--card); border: 1px solid rgba(255,255,255,.07);
+      border-radius: var(--radius); box-shadow: 0 6px 24px rgba(0,0,0,.35);
+    }
+    .card-header { padding: 16px 18px; border-bottom: 1px solid rgba(255,255,255,.06); }
+    .card-header h2 { margin: 0; font-size: 18px; }
+    .card-body { padding: 18px; }
+
+    .row {
+      display: grid; grid-template-columns: 1fr; gap: 10px; align-items: start;
+      padding: 14px; border-radius: 12px;
+      background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06);
+      margin-bottom: 10px;
+    }
+    .row label { color: var(--muted); font-weight: 800; }
+    .inp { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    input[type=number], select {
+      appearance: none; background: #0f1420;
+      border: 1px solid rgba(255,255,255,.10); color: var(--ink);
+      padding: 10px; font-size: 14px; border-radius: 10px; outline: none;
+    }
+    input[type=number] { width: 80px; }
+    select { min-width: 100px; }
+    input:focus, select:focus { border-color: rgba(110,231,255,.35); box-shadow: 0 0 0 3px rgba(110,231,255,.10); }
+
+    .hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .error { color: var(--err); font-size: 12px; margin-left: 8px; }
+
+    .asc-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; }
+    .asc-item {
+      display: flex; align-items: center; gap: 8px;
+      background: #0f1420; border: 1px solid rgba(255,255,255,.1);
+      border-radius: 10px; padding: 8px 10px; cursor: pointer;
+    }
+    .chip-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .chip {
+      display: flex; align-items: center; gap: 8px;
+      background: #0f1420; border: 1px solid rgba(255,255,255,.1);
+      border-radius: 999px; padding: 10px 12px; cursor: pointer;
+    }
+
+    .toolbar {
+      display: flex; gap: 10px; padding: 18px;
+      border-top: 1px solid rgba(255,255,255,.08); margin-top: 12px; justify-content: flex-end;
+    }
+    .toolbar button {
+      min-height: 44px; padding: 12px 16px; border-radius: 12px;
+      cursor: pointer; font-weight: 700;
+    }
+    .toolbar button.primary { background: rgba(110,231,255,.14); border: 1px solid rgba(110,231,255,.35); color: var(--ink); }
+    .toolbar button.secondary { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.10); color: var(--ink); }
+    .toolbar button.preset { min-width: 44px; font-weight: 900; }
+
+    /* ===== RESULTS ===== */
+    .results { margin-top: 20px; }
+    .house {
+      background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius); padding: 14px; margin-bottom: 14px;
+    }
+    .title { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-weight: 900; font-size: 18px; }
+    .badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 34px; height: 34px; border-radius: 999px;
+      background: rgba(110,231,255,.12); border: 1px solid rgba(110,231,255,.35);
+      color: var(--ink); font-weight: 900;
+    }
+    .list { display: flex; flex-direction: column; gap: 10px; }
+    .kv {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+      border-radius: 14px; border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03); flex-wrap: wrap;
+    }
+    .kv > div:first-child { font-weight: 900; color: var(--muted); }
+    .kv > div:last-child { font-weight: 800; }
+    .kv.planet {
+      margin-left: 18px; width: calc(100% - 18px);
+      background: rgba(245,158,11,.10); border: 1px dashed rgba(245,158,11,.35); color: #f7e3b3;
+    }
+    .pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex; gap: 6px; padding: 6px 10px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.18);
+      color: var(--ink); font-weight: 800; font-size: 12px;
+    }
+    .meta { margin-top: 10px; color: var(--muted); font-size: 12px; }
+
+    .el-fire { background: rgba(249,44,31,.18); }
+    .el-air { background: rgba(1,204,200,.16); }
+    .el-water { background: rgba(29,24,251,.14); }
+    .el-earth { background: rgba(0,255,0,.10); }
+
+    .footer { margin: 24px 0; text-align: center; color: var(--muted); font-size: 12px; }
+
+    /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .wrap { max-width: 100%; padding: 0 12px; }
+      #dualAlignedResults > div { grid-template-columns: 1fr !important; }
+      .dual-header { grid-template-columns: 1fr !important; gap: 8px !important; }
+    }
+    
+    @media (max-width: 900px) { 
+      .asc-grid { grid-template-columns: repeat(3,1fr); } 
+      .chip-grid { grid-template-columns: repeat(2,1fr); }
+      .main-tabs { flex-wrap: wrap; gap: 4px; }
+      .main-tab { flex: 1; min-width: 100px; padding: 10px 12px; font-size: 13px; }
+    }
+    
+    @media (max-width: 700px) {
+      .nav-btn { padding: 10px 12px; font-size: 12px; }
+      .main-tab { padding: 10px 8px; font-size: 12px; }
+      #wheelChart { width: 100%; height: auto; }
+      .house { padding: 14px; }
+      .house .title { font-size: 15px; }
+    }
+    
+    @media (max-width: 560px) {
+      .row { grid-template-columns: 1fr; gap: 6px; }
+      .main-tabs { gap: 3px; }
+      .main-tab { padding: 8px 6px; font-size: 11px; min-width: 60px; }
+      .kv { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .pill { font-size: 11px; padding: 4px 8px; }
+      .badge { width: 28px; height: 28px; font-size: 12px; }
+      input[type=number] { width: 60px; padding: 8px; font-size: 13px; }
+      select { min-width: 80px; padding: 8px; font-size: 13px; }
+      .quick-loc { padding: 4px 8px !important; font-size: 11px !important; }
+      .inp { gap: 6px; }
+      .nav-btn { padding: 8px 10px; font-size: 11px; }
+      .view-toggle { top: 8px; right: 8px; }
+      .view-btn { width: 28px; height: 28px; font-size: 12px; }
+    }
+    
+    @media (max-width: 420px) { 
+      .asc-grid { grid-template-columns: repeat(2,1fr); } 
+      .chip-grid { grid-template-columns: 1fr; }
+      .wrap { padding: 0 8px; }
+      .main-panel { padding: 16px 12px; }
+      .house { padding: 12px; margin-bottom: 12px; }
+      .main-tab { padding: 6px 4px; font-size: 10px; min-width: 50px; }
+      #wheelChart { max-width: 100%; width: 100%; height: auto; margin: 0 auto; display: block; }
+    }
+  </style>
+</head>
+<body>
+  <!-- View Toggle -->
+  <div class="view-toggle">
+    <button class="view-btn active" data-view="1" title="Klasik Görünüm">1</button>
+    <button class="view-btn" data-view="2" title="Geniş Görünüm (Dekan + 7'ler)">2</button>
+  </div>
+  
+  <div class="wrap view-1">
+    <!-- TOP LEVEL TABS -->
+    <div class="main-tabs">
+      <button class="main-tab active" data-tab="decan">Dekan Hesaplama</button>
+      <button class="main-tab" data-tab="seven">7'ler Kanunu</button>
+      <button class="main-tab" data-tab="solar">☉ Solar Harita</button>
+      <button class="main-tab" data-tab="chart">🎯 Harita</button>
+      <button class="main-tab" data-tab="veriler">📊 Veriler</button>
+    </div>
+
+    <!-- ==================== DEKAN PANEL ==================== -->
+    <div class="main-panel active" id="panelDecan">
+      <div class="card">
+        <div class="card-body">
+          <!-- Otomatik Hesaplama Bölümü (Açık Gelecek) -->
+          <details open style="margin-bottom:16px;background:rgba(110,231,255,.05);border:1px solid rgba(110,231,255,.2);border-radius:12px;padding:2px" id="autoCalcDecan">
+            <summary style="cursor:pointer;font-weight:800;color:var(--accent);padding:14px">🔮 Otomatik Hesapla (Doğum Bilgisi)</summary>
+            <div style="padding:0 14px 14px 14px;display:grid;gap:12px">
+              <div class="row">
+                <label><strong>Doğum Tarihi</strong></label>
+                <div class="inp">
+                  <input id="autoDecanDay" type="number" min="1" max="31" placeholder="Gün" style="width:65px" />
+                  <select id="autoDecanMonth" style="min-width:90px"></select>
+                  <input id="autoDecanYear" type="number" min="1900" max="2100" placeholder="Yıl" style="width:75px" />
+                </div>
+              </div>
+              <div class="row">
+                <label><strong>Doğum Saati</strong></label>
+                <div class="inp">
+                  <input id="autoDecanHour" type="number" min="0" max="23" placeholder="Saat" style="width:65px" />
+                  <span style="font-weight:bold">:</span>
+                  <input id="autoDecanMinute" type="number" min="0" max="59" placeholder="Dakika" style="width:65px" />
+                </div>
+              </div>
+              <div class="row">
+                <label><strong>Doğum Yeri</strong></label>
+                <div class="inp">
+                  <select id="autoDecanCountry" style="min-width:120px"></select>
+                  <select id="autoDecanCity" style="min-width:140px;max-height:200px"><option value="">Önce ülke seç</option></select>
+                </div>
+              </div>
+              <!-- Hızlı Konum Seçimi -->
+              <div class="row" style="background:rgba(110,231,255,.03)">
+                <label style="font-size:12px">Hızlı Seçim</label>
+                <div class="inp" style="gap:6px;flex-wrap:wrap">
+                  <button type="button" class="quick-loc" data-city="İstanbul" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">İstanbul</button>
+                  <button type="button" class="quick-loc" data-city="Eskişehir" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Eskişehir</button>
+                  <button type="button" class="quick-loc" data-city="İzmir" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">İzmir</button>
+                  <button type="button" class="quick-loc" data-city="Antalya" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Antalya</button>
+                </div>
+              </div>
+              <div class="row" style="background:rgba(255,255,255,.01)">
+                <label style="font-size:12px">veya Manuel Koordinat</label>
+                <div class="inp">
+                  <input id="autoDecanLat" type="number" step="0.0001" placeholder="Enlem" style="width:90px" />
+                  <input id="autoDecanLng" type="number" step="0.0001" placeholder="Boylam" style="width:90px" />
+                </div>
+              </div>
+              <div style="display:flex;gap:10px">
+                <button class="secondary" id="autoDecanClearBtn" style="flex:0 0 auto;padding:14px 20px;font-size:14px">🗑️ Temizle</button>
+                <button class="primary" id="autoDecanCalcBtn" style="flex:1;padding:14px;font-size:15px">
+                  🔮 Hesapla (Dekan + 7'ler)
+                </button>
+              </div>
+              <div id="autoDecanStatus" class="hint" style="text-align:center"></div>
+            </div>
+          </details>
+
+          <!-- Manuel Giriş Bölümü (Kapalı Gelecek) -->
+          <details style="margin-bottom:12px;background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:2px" id="manualEntryDecan">
+            <summary style="cursor:pointer;font-weight:800;color:var(--accent-2);padding:14px">⚙️ Manuel Veri Girişi (Opsiyonel)</summary>
+            <div style="padding:0 14px 14px 14px">
+              <div class="hint" style="margin-bottom:12px"><strong>Yükselen (1. ev burcu)</strong></div>
+              <div class="asc-grid" id="decanAscGrid"></div>
+
+              <details style="margin-top:16px">
+                <summary style="cursor:pointer;font-weight:800;color:var(--accent)">Gezegenler (opsiyonel)</summary>
+                <div id="decanPlanetGrid" style="margin-top:12px;display:grid;gap:8px"></div>
+              </details>
+
+              <div style="margin-top:16px">
+                <div class="hint" style="margin-bottom:10px"><strong>Kıstırılmış Eksenler</strong></div>
+                <div class="chip-grid" id="decanAxisGrid"></div>
+              </div>
+
+              <div style="margin-top:16px" id="decanCuspGrid"></div>
+            </div>
+          </details>
+        </div>
+        <div class="toolbar">
+          <button class="secondary" id="decanClear">Temizle</button>
+          <button class="secondary preset" data-preset="D">D</button>
+          <button class="secondary preset" data-preset="S">S</button>
+          <button class="secondary preset" data-preset="K">K</button>
+          <button class="primary" id="decanCalc">Hesapla</button>
+        </div>
+      </div>
+      <div class="results" id="decanResults"></div>
+    </div>
+
+    <!-- ==================== 7'LER PANEL ==================== -->
+    <div class="main-panel" id="panelSeven">
+      <div class="card">
+        <div class="card-body">
+          <!-- Bilgi Notu -->
+          <div style="margin-bottom:16px;padding:14px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:12px;color:var(--accent-2)">
+            <strong>💡 İpucu:</strong> Dekan Hesaplama sekmesindeki "Otomatik Hesapla" butonu hem Dekan hem de 7'ler hesaplamasını otomatik yapar.
+          </div>
+          
+          <!-- Manuel Giriş Bölümü (Kapalı Gelecek) -->
+          <details style="margin-bottom:12px;background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:2px" id="manualEntrySeven">
+            <summary style="cursor:pointer;font-weight:800;color:var(--accent-2);padding:14px">⚙️ Manuel Veri Girişi (Opsiyonel)</summary>
+            <div style="padding:0 14px 14px 14px">
+              <div class="hint" style="margin-bottom:12px"><strong>Yükselen (1. ev burcu)</strong></div>
+              <div class="asc-grid" id="sevenAscGrid"></div>
+
+              <details style="margin-top:16px">
+                <summary style="cursor:pointer;font-weight:800;color:var(--accent-2)">Gezegenler (opsiyonel)</summary>
+                <div id="sevenPlanetGrid" style="margin-top:12px;display:grid;gap:8px"></div>
+              </details>
+
+              <div class="row" style="margin-top:16px">
+                <label><strong>Doğum Tarihi</strong></label>
+                <div class="inp">
+                  <input id="sevenBirthDay" type="number" min="1" max="31" placeholder="Gün" style="width:70px" />
+                  <select id="sevenBirthMonth"></select>
+                  <input id="sevenBirthYear" type="number" min="1900" max="2100" placeholder="Yıl" style="width:80px" />
+                </div>
+              </div>
+
+              <div style="margin-top:16px">
+                <div class="hint" style="margin-bottom:10px"><strong>Kıstırılmış Eksenler</strong></div>
+                <div class="chip-grid" id="sevenAxisGrid"></div>
+              </div>
+
+              <div style="margin-top:16px" id="sevenCuspGrid"></div>
+            </div>
+          </details>
+        </div>
+        <div class="toolbar">
+          <button class="secondary" id="sevenClear">Temizle</button>
+          <button class="secondary preset" data-preset="D">D</button>
+          <button class="secondary preset" data-preset="S">S</button>
+          <button class="secondary preset" data-preset="K">K</button>
+          <button class="primary" id="sevenCalc">Hesapla</button>
+        </div>
+      </div>
+      <div class="results" id="sevenResults"></div>
+    </div>
+
+    <!-- ==================== SOLAR PANEL ==================== -->
+    <div class="main-panel" id="panelSolar">
+      <div class="card">
+        <div class="card-body">
+          <div class="row">
+            <label><strong>Doğum Tarihi</strong></label>
+            <div class="inp">
+              <input id="solarBirthDay" type="number" min="1" max="31" placeholder="Gün" style="width:70px" />
+              <select id="solarBirthMonth"></select>
+              <input id="solarBirthYear" type="number" min="1900" max="2100" placeholder="Yıl" style="width:80px" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label><strong>Solar Yılı</strong></label>
+            <div class="inp">
+              <input id="solarYear" type="number" min="1900" max="2100" placeholder="2024" style="width:100px" />
+              <span class="hint">İncelemek istediğin yıl</span>
+            </div>
+          </div>
+
+          <div style="margin-top:16px">
+            <div class="hint" style="margin-bottom:10px"><strong>Solar Harita Gezegenleri</strong></div>
+            <div class="hint" style="margin-bottom:12px">O yılın gezegen konumlarını gir (Solar Return chart)</div>
+            <div id="solarPlanetGrid" style="display:grid;gap:8px"></div>
+          </div>
+        </div>
+        <div class="toolbar">
+          <button class="secondary" id="solarClear">Temizle</button>
+          <button class="secondary preset" id="solarPresetS2020" title="Serra 2020">S2020</button>
+          <button class="primary" id="solarCalc">Hesapla</button>
+        </div>
+      </div>
+      <div class="results" id="solarResults"></div>
+    </div>
+
+    <!-- ==================== HARİTA (WHEEL CHART) PANEL ==================== -->
+    <div class="main-panel" id="panelChart">
+      <div class="card">
+        <div class="card-body" style="text-align:center">
+          <div class="hint" style="margin-bottom:16px">
+            <strong>🎯 Görsel Harita</strong> — Dekan Hesaplama sekmesinde doğum bilgilerini girin ve hesaplayın. Harita otomatik güncellenir.
+          </div>
+          <div id="chartContainer" style="display:flex;justify-content:center;align-items:center;min-height:800px">
+            <svg id="wheelChart" viewBox="0 0 1000 1000" width="950" height="950" style="max-width:100%">
+              <!-- Chart will be drawn here -->
+              <text x="500" y="500" text-anchor="middle" fill="#6EE7FF" font-size="18" opacity="0.5">
+                Harita için doğum bilgisi hesaplayın
+              </text>
+            </svg>
+          </div>
+          <div id="chartLegend" style="margin-top:16px;text-align:left"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VERİLER PANEL ==================== -->
+    <div class="main-panel" id="panelVeriler">
+      <div class="card">
+        <div class="card-body">
+          <div class="hint" style="margin-bottom:16px"><strong>Doğum Bilgilerini Gir</strong> - Hesaplanan verileri görüntüle</div>
+          
+          <div class="row">
+            <label><strong>Doğum Tarihi</strong></label>
+            <div class="inp">
+              <input id="verilerDay" type="number" min="1" max="31" placeholder="Gün" style="width:65px" />
+              <select id="verilerMonth" style="min-width:90px"></select>
+              <input id="verilerYear" type="number" min="1900" max="2100" placeholder="Yıl" style="width:75px" />
+            </div>
+          </div>
+          <div class="row">
+            <label><strong>Doğum Saati</strong></label>
+            <div class="inp">
+              <input id="verilerHour" type="number" min="0" max="23" placeholder="Saat" style="width:65px" />
+              <span style="font-weight:bold">:</span>
+              <input id="verilerMinute" type="number" min="0" max="59" placeholder="Dakika" style="width:65px" />
+            </div>
+          </div>
+          <div class="row">
+            <label><strong>Doğum Yeri</strong></label>
+            <div class="inp">
+              <select id="verilerCountry" style="min-width:120px"></select>
+              <select id="verilerCity" style="min-width:140px"><option value="">Önce ülke seç</option></select>
+            </div>
+          </div>
+          <div class="row" style="background:rgba(255,255,255,.01)">
+            <label style="font-size:12px">veya Manuel Koordinat</label>
+            <div class="inp">
+              <input id="verilerLat" type="number" step="0.0001" placeholder="Enlem" style="width:90px" />
+              <input id="verilerLng" type="number" step="0.0001" placeholder="Boylam" style="width:90px" />
+            </div>
+          </div>
+        </div>
+        <div class="toolbar">
+          <button class="secondary" id="verilerClear">Temizle</button>
+          <button class="primary" id="verilerCalc">📊 Verileri Hesapla</button>
+        </div>
+      </div>
+      <div class="results" id="verilerResults"></div>
+    </div>
+
+    <!-- ==================== DUAL PANEL (View 2) ==================== -->
+    <div class="dual-panel">
+      <div class="dual-header" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:16px">
+        <h2 style="margin:0;color:var(--accent);display:flex;align-items:center;gap:10px">
+          <span style="font-size:24px">🔮</span> Dekan Hesaplama
+        </h2>
+        <h2 style="margin:0;color:var(--accent-2);display:flex;align-items:center;gap:10px">
+          <span style="font-size:24px">⚡</span> 7'ler Kanunu
+        </h2>
+      </div>
+      <div id="dualAlignedResults" style="display:flex;flex-direction:column;gap:16px">
+        <!-- Houses will be rendered here as aligned rows -->
+      </div>
+    </div>
+
+    <div class="footer">Değerli hocalarım Beyza &amp; Serkan Aslan için hazırlanmıştır. ❤️ Kerem</div>
+  </div>
+
+<!-- Swiss Ephemeris WASM Module -->
+<script type="module">
+  // Import Swiss Ephemeris wrapper
+  import { initEphemeris, calculateChart, isEphemerisReady, getTurkeyOffset } from './ephemeris.js';
+  
+  // Make available globally for inline scripts
+  window.SwissEphemeris = {
+    init: initEphemeris,
+    calculateChart: calculateChart,
+    isReady: isEphemerisReady,
+    getTurkeyOffset: getTurkeyOffset
+  };
+  
+  // Auto-initialize on load
+  initEphemeris().then(success => {
+    if (success) {
+      console.log('✅ Swiss Ephemeris ready for accurate calculations!');
+      window.dispatchEvent(new CustomEvent('ephemerisReady'));
+    } else {
+      console.warn('⚠️ Swiss Ephemeris not available. Using fallback calculations.');
+    }
+  });
+</script>
+
+<script>
+(() => {
+  // ========== CONSTANTS ==========
+  const SIGNS = ["Koç","Boğa","İkizler","Yengeç","Aslan","Başak","Terazi","Akrep","Yay","Oğlak","Kova","Balık"];
+  const SIGN_SYM = {"Koç":"♈","Boğa":"♉","İkizler":"♊","Yengeç":"♋","Aslan":"♌","Başak":"♍","Terazi":"♎","Akrep":"♏","Yay":"♐","Oğlak":"♑","Kova":"♒","Balık":"♓"};
+  const RULERS = ["Mars","Venüs","Merkür","Ay","Güneş","Chiron","Venüs","Plüton","Jüpiter","Satürn","Uranüs","Neptün"];
+  const RULER_SYM = {"Chiron":"⚷","Merkür":"☿️","Venüs":"♀️","Mars":"♂️","Jüpiter":"♃","Satürn":"♄","Uranüs":"♅","Neptün":"♆","Plüton":"♇","Ay":"☽","Güneş":"☉"};
+  const MONTHS = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  const PLANETS = [
+    {key:'sun',name:'Güneş',sym:'☉'},{key:'moon',name:'Ay',sym:'☽'},
+    {key:'mercury',name:'Merkür',sym:'☿️'},{key:'venus',name:'Venüs',sym:'♀️'},
+    {key:'mars',name:'Mars',sym:'♂️'},{key:'jupiter',name:'Jüpiter',sym:'♃'},
+    {key:'saturn',name:'Satürn',sym:'♄'},{key:'uranus',name:'Uranüs',sym:'♅'},
+    {key:'neptune',name:'Neptün',sym:'♆'},{key:'pluto',name:'Plüton',sym:'♇'},
+    {key:'chiron',name:'Chiron',sym:'⚷'},{key:'fortune',name:'Şans Noktası',sym:'⊕'},
+    {key:'north',name:'KAD',sym:'☊'},{key:'south',name:'GAD',sym:'☋'}
+  ];
+  const ELEMENT_CYCLE = {fire:[0,4,8],earth:[1,5,9],air:[2,6,10],water:[3,7,11]};
+  const DEG_IN_MIN = 60, SIGN_IN_MIN = 30 * DEG_IN_MIN;
+
+  // ========== CITY DATABASE ==========
+  const COUNTRIES = {
+    TR: {name: "Türkiye", tz: "Europe/Istanbul", cities: {
+      // 81 İl (tüm iller)
+      "Adana": {lat:37.0000,lng:35.3213}, "Adıyaman": {lat:37.7648,lng:38.2786}, "Afyonkarahisar": {lat:38.7507,lng:30.5567},
+      "Ağrı": {lat:39.7191,lng:43.0503}, "Aksaray": {lat:38.3687,lng:34.0370}, "Amasya": {lat:40.6499,lng:35.8353},
+      "Ankara": {lat:39.9334,lng:32.8597}, "Antalya": {lat:36.8969,lng:30.7133}, "Ardahan": {lat:41.1105,lng:42.7022},
+      "Artvin": {lat:41.1828,lng:41.8183}, "Aydın": {lat:37.8560,lng:27.8416}, "Balıkesir": {lat:39.6484,lng:27.8826},
+      "Bartın": {lat:41.6344,lng:32.3375}, "Batman": {lat:37.8812,lng:41.1351}, "Bayburt": {lat:40.2552,lng:40.2249},
+      "Bilecik": {lat:40.0567,lng:30.0665}, "Bingöl": {lat:38.8854,lng:40.4966}, "Bitlis": {lat:38.4006,lng:42.1095},
+      "Bolu": {lat:40.7358,lng:31.6061}, "Burdur": {lat:37.7203,lng:30.2906}, "Bursa": {lat:40.1885,lng:29.0610},
+      "Çanakkale": {lat:40.1553,lng:26.4142}, "Çankırı": {lat:40.6013,lng:33.6134}, "Çorum": {lat:40.5506,lng:34.9556},
+      "Denizli": {lat:37.7765,lng:29.0864}, "Diyarbakır": {lat:37.9144,lng:40.2306}, "Düzce": {lat:40.8438,lng:31.1565},
+      "Edirne": {lat:41.6818,lng:26.5623}, "Elazığ": {lat:38.6810,lng:39.2264}, "Erzincan": {lat:39.7500,lng:39.5000},
+      "Erzurum": {lat:39.9043,lng:41.2679}, "Eskişehir": {lat:39.7767,lng:30.5206}, "Gaziantep": {lat:37.0662,lng:37.3833},
+      "Giresun": {lat:40.9128,lng:38.3895}, "Gümüşhane": {lat:40.4386,lng:39.5086}, "Hakkari": {lat:37.5833,lng:43.7333},
+      "Hatay": {lat:36.4018,lng:36.3498}, "Iğdır": {lat:39.9167,lng:44.0333}, "Isparta": {lat:37.7648,lng:30.5566},
+      "İstanbul": {lat:41.0082,lng:28.9784}, "İzmir": {lat:38.4192,lng:27.1287}, "Kahramanmaraş": {lat:37.5858,lng:36.9371},
+      "Karabük": {lat:41.2061,lng:32.6204}, "Karaman": {lat:37.1759,lng:33.2287}, "Kars": {lat:40.6167,lng:43.1000},
+      "Kastamonu": {lat:41.3887,lng:33.7827}, "Kayseri": {lat:38.7312,lng:35.4787}, "Kırıkkale": {lat:39.8468,lng:33.5153},
+      "Kırklareli": {lat:41.7333,lng:27.2167}, "Kırşehir": {lat:39.1425,lng:34.1709}, "Kilis": {lat:36.7184,lng:37.1212},
+      "Kocaeli": {lat:40.8533,lng:29.8815}, "Konya": {lat:37.8746,lng:32.4932}, "Kütahya": {lat:39.4167,lng:29.9833},
+      "Malatya": {lat:38.3552,lng:38.3095}, "Manisa": {lat:38.6191,lng:27.4289}, "Mardin": {lat:37.3212,lng:40.7245},
+      "Mersin": {lat:36.8121,lng:34.6415}, "Muğla": {lat:37.2153,lng:28.3636}, "Muş": {lat:38.9462,lng:41.7539},
+      "Nevşehir": {lat:38.6939,lng:34.6857}, "Niğde": {lat:37.9667,lng:34.6833}, "Ordu": {lat:40.9839,lng:37.8764},
+      "Osmaniye": {lat:37.0742,lng:36.2478}, "Rize": {lat:41.0201,lng:40.5234}, "Sakarya": {lat:40.6940,lng:30.4358},
+      "Samsun": {lat:41.2928,lng:36.3313}, "Siirt": {lat:37.9333,lng:41.9500}, "Sinop": {lat:42.0231,lng:35.1531},
+      "Sivas": {lat:39.7477,lng:37.0179}, "Şanlıurfa": {lat:37.1674,lng:38.7955}, "Şırnak": {lat:37.5164,lng:42.4611},
+      "Tekirdağ": {lat:40.9833,lng:27.5167}, "Tokat": {lat:40.3167,lng:36.5500}, "Trabzon": {lat:41.0027,lng:39.7168},
+      "Tunceli": {lat:39.1079,lng:39.5401}, "Uşak": {lat:38.6823,lng:29.4082}, "Van": {lat:38.4891,lng:43.4089},
+      "Yalova": {lat:40.6500,lng:29.2667}, "Yozgat": {lat:39.8181,lng:34.8147}, "Zonguldak": {lat:41.4564,lng:31.7987}
+    }},
+    DE: {name: "Almanya", tz: "Europe/Berlin", cities: {
+      "Berlin": {lat:52.5200,lng:13.4050}, "Hamburg": {lat:53.5511,lng:9.9937}, "München": {lat:48.1351,lng:11.5820},
+      "Köln": {lat:50.9375,lng:6.9603}, "Frankfurt": {lat:50.1109,lng:8.6821}, "Stuttgart": {lat:48.7758,lng:9.1829},
+      "Düsseldorf": {lat:51.2277,lng:6.7735}, "Dortmund": {lat:51.5136,lng:7.4653}, "Essen": {lat:51.4556,lng:7.0116},
+      "Bremen": {lat:53.0793,lng:8.8017}, "Dresden": {lat:51.0504,lng:13.7373}, "Leipzig": {lat:51.3397,lng:12.3731},
+      "Hannover": {lat:52.3759,lng:9.7320}, "Nürnberg": {lat:49.4521,lng:11.0767}, "Duisburg": {lat:51.4344,lng:6.7623},
+      "Bochum": {lat:51.4818,lng:7.2162}, "Wuppertal": {lat:51.2562,lng:7.1508}, "Bielefeld": {lat:52.0302,lng:8.5325},
+      "Bonn": {lat:50.7374,lng:7.0982}, "Münster": {lat:51.9607,lng:7.6261}, "Mannheim": {lat:49.4875,lng:8.4660},
+      "Karlsruhe": {lat:49.0069,lng:8.4037}, "Augsburg": {lat:48.3705,lng:10.8978}, "Wiesbaden": {lat:50.0782,lng:8.2398}
+    }},
+    AT: {name: "Avusturya", tz: "Europe/Vienna", cities: {
+      "Wien": {lat:48.2082,lng:16.3738}, "Graz": {lat:47.0707,lng:15.4395}, "Linz": {lat:48.3069,lng:14.2858},
+      "Salzburg": {lat:47.8095,lng:13.0550}, "Innsbruck": {lat:47.2692,lng:11.4041}, "Klagenfurt": {lat:46.6228,lng:14.3051},
+      "Villach": {lat:46.6111,lng:13.8558}, "Wels": {lat:48.1575,lng:14.0289}, "St.Pölten": {lat:48.2047,lng:15.6256},
+      "Dornbirn": {lat:47.4125,lng:9.7417}
+    }},
+    US: {name: "ABD", tz: "America/New_York", cities: {
+      "New York": {lat:40.7128,lng:-74.0060,tz:"America/New_York"}, "Los Angeles": {lat:34.0522,lng:-118.2437,tz:"America/Los_Angeles"},
+      "Chicago": {lat:41.8781,lng:-87.6298,tz:"America/Chicago"}, "Houston": {lat:29.7604,lng:-95.3698,tz:"America/Chicago"},
+      "Miami": {lat:25.7617,lng:-80.1918,tz:"America/New_York"}, "San Francisco": {lat:37.7749,lng:-122.4194,tz:"America/Los_Angeles"},
+      "Phoenix": {lat:33.4484,lng:-112.0740,tz:"America/Phoenix"}, "Philadelphia": {lat:39.9526,lng:-75.1652,tz:"America/New_York"},
+      "San Antonio": {lat:29.4241,lng:-98.4936,tz:"America/Chicago"}, "San Diego": {lat:32.7157,lng:-117.1611,tz:"America/Los_Angeles"},
+      "Dallas": {lat:32.7767,lng:-96.7970,tz:"America/Chicago"}, "Austin": {lat:30.2672,lng:-97.7431,tz:"America/Chicago"},
+      "Jacksonville": {lat:30.3322,lng:-81.6557,tz:"America/New_York"}, "San Jose": {lat:37.3382,lng:-121.8863,tz:"America/Los_Angeles"},
+      "Fort Worth": {lat:32.7555,lng:-97.3308,tz:"America/Chicago"}, "Columbus": {lat:39.9612,lng:-82.9988,tz:"America/New_York"},
+      "Charlotte": {lat:35.2271,lng:-80.8431,tz:"America/New_York"}, "Indianapolis": {lat:39.7684,lng:-86.1581,tz:"America/Indiana/Indianapolis"},
+      "Seattle": {lat:47.6062,lng:-122.3321,tz:"America/Los_Angeles"}, "Denver": {lat:39.7392,lng:-104.9903,tz:"America/Denver"},
+      "Boston": {lat:42.3601,lng:-71.0589,tz:"America/New_York"}, "Atlanta": {lat:33.7490,lng:-84.3880,tz:"America/New_York"},
+      "Las Vegas": {lat:36.1699,lng:-115.1398,tz:"America/Los_Angeles"}, "Portland": {lat:45.5051,lng:-122.6750,tz:"America/Los_Angeles"},
+      "Detroit": {lat:42.3314,lng:-83.0458,tz:"America/Detroit"}, "Nashville": {lat:36.1627,lng:-86.7816,tz:"America/Chicago"},
+      "Baltimore": {lat:39.2904,lng:-76.6122,tz:"America/New_York"}, "Oklahoma City": {lat:35.4676,lng:-97.5164,tz:"America/Chicago"}
+    }},
+    GB: {name: "İngiltere", tz: "Europe/London", cities: {
+      "London": {lat:51.5074,lng:-0.1278}, "Manchester": {lat:53.4808,lng:-2.2426}, "Birmingham": {lat:52.4862,lng:-1.8904},
+      "Liverpool": {lat:53.4084,lng:-2.9916}, "Bristol": {lat:51.4545,lng:-2.5879}, "Leeds": {lat:53.8008,lng:-1.5491},
+      "Glasgow": {lat:55.8642,lng:-4.2518}, "Edinburgh": {lat:55.9533,lng:-3.1883}, "Sheffield": {lat:53.3811,lng:-1.4701}
+    }},
+    FR: {name: "Fransa", tz: "Europe/Paris", cities: {
+      "Paris": {lat:48.8566,lng:2.3522}, "Lyon": {lat:45.7640,lng:4.8357}, "Marseille": {lat:43.2965,lng:5.3698},
+      "Toulouse": {lat:43.6047,lng:1.4442}, "Nice": {lat:43.7102,lng:7.2620}, "Nantes": {lat:47.2184,lng:-1.5536},
+      "Strasbourg": {lat:48.5734,lng:7.7521}, "Bordeaux": {lat:44.8378,lng:-0.5792}, "Lille": {lat:50.6292,lng:3.0573}
+    }},
+    NL: {name: "Hollanda", tz: "Europe/Amsterdam", cities: {
+      "Amsterdam": {lat:52.3676,lng:4.9041}, "Rotterdam": {lat:51.9244,lng:4.4777}, "Den Haag": {lat:52.0705,lng:4.3007},
+      "Utrecht": {lat:52.0907,lng:5.1214}, "Eindhoven": {lat:51.4416,lng:5.4697}
+    }},
+    CH: {name: "İsviçre", tz: "Europe/Zurich", cities: {
+      "Zürich": {lat:47.3769,lng:8.5417}, "Genève": {lat:46.2044,lng:6.1432}, "Basel": {lat:47.5596,lng:7.5886},
+      "Bern": {lat:46.9480,lng:7.4474}, "Lausanne": {lat:46.5197,lng:6.6323}
+    }}
+  };
+
+  // Timezone offsets (simplified - for accurate DST, would need full tz database)
+  // Format: {tz: [standardOffset, dstOffset, dstStartMonth, dstEndMonth]}
+  const TZ_DATA = {
+    "Europe/Istanbul": [3, 3, 0, 0], // Türkiye artık DST yok (2016'dan beri sabit UTC+3)
+    "Europe/Berlin": [1, 2, 3, 10],
+    "Europe/Vienna": [1, 2, 3, 10],
+    "Europe/London": [0, 1, 3, 10],
+    "Europe/Paris": [1, 2, 3, 10],
+    "Europe/Amsterdam": [1, 2, 3, 10],
+    "Europe/Zurich": [1, 2, 3, 10],
+    "America/New_York": [-5, -4, 3, 11],
+    "America/Chicago": [-6, -5, 3, 11],
+    "America/Los_Angeles": [-8, -7, 3, 11]
+  };
+
+  // ========== ASTRONOMICAL CALCULATIONS (Simplified Meeus algorithms) ==========
+  function dateToJD(year, month, day, hour, minute) {
+    // Julian Date calculation
+    if (month <= 2) { year--; month += 12; }
+    const A = Math.floor(year / 100);
+    const B = 2 - A + Math.floor(A / 4);
+    const JD = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + B - 1524.5;
+    return JD + (hour + minute / 60) / 24;
+  }
+
+  function getTimezoneOffset(tz, year, month) {
+    const data = TZ_DATA[tz] || [0, 0, 0, 0];
+    if (data[2] === 0) return data[0]; // No DST
+    // Simplified DST check (not 100% accurate for edge cases)
+    if (month > data[2] && month < data[3]) return data[1];
+    return data[0];
+  }
+
+  // ========== SWISS EPHEMERIS CALCULATIONS ==========
+  // Use SwissEphemeris for accurate geocentric calculations (Placidus houses)
+  async function calcWithSwissEph(year, month, day, hour, minute, lat, lng, tz) {
+    // Check if Swiss Ephemeris is available
+    if (!window.SwissEphemeris || !window.SwissEphemeris.isReady()) {
+      return null; // Fallback to basic calculations
+    }
+    
+    try {
+      // For Turkey, use automatic DST detection
+      let offset;
+      if (tz === 'tr' || tz === 'turkey' || tz === 'istanbul' || 
+          (lat > 35 && lat < 43 && lng > 25 && lng < 45)) {
+        // Turkey coordinates range - use automatic DST
+        offset = window.SwissEphemeris.getTurkeyOffset(year, month, day);
+        console.log(`🕐 Turkey DST: ${year}-${month}-${day} → UTC+${offset}`);
+      } else {
+        offset = getTimezoneOffset(tz, year, month);
+      }
+      
+      const chart = await window.SwissEphemeris.calculateChart({
+        year, month, day, hour, minute,
+        lat, lng,
+        tzOffset: offset,
+        houseSystem: 'P' // Placidus
+      });
+      
+      return chart;
+    } catch (e) {
+      console.warn('Swiss Ephemeris calculation failed:', e);
+      return null;
+    }
+  }
+
+  // Fallback basic calculations (keeping as backup)
+
+  function calcSunPosition(jd) {
+    // More accurate solar longitude using VSOP87 simplified
+    const T = (jd - 2451545.0) / 36525;
+    const T2 = T * T;
+    const T3 = T2 * T;
+    
+    // Mean longitude of the Sun
+    const L0 = 280.4664567 + 36000.76983 * T + 0.0003032 * T2;
+    
+    // Mean anomaly of the Sun
+    const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T2;
+    const Mrad = M * Math.PI / 180;
+    
+    // Equation of center
+    const C = (1.9146 - 0.004817 * T - 0.000014 * T2) * Math.sin(Mrad)
+            + (0.019993 - 0.000101 * T) * Math.sin(2 * Mrad)
+            + 0.00029 * Math.sin(3 * Mrad);
+    
+    // True longitude
+    let sunLong = (L0 + C) % 360;
+    if (sunLong < 0) sunLong += 360;
+    
+    // Apparent longitude (nutation + aberration correction)
+    const omega = 125.04 - 1934.136 * T;
+    sunLong = sunLong - 0.00569 - 0.00478 * Math.sin(omega * Math.PI / 180);
+    
+    sunLong = sunLong % 360;
+    if (sunLong < 0) sunLong += 360;
+    return sunLong;
+  }
+
+  function calcMoonPosition(jd) {
+    // More accurate Moon longitude with major perturbations
+    const T = (jd - 2451545.0) / 36525;
+    const T2 = T * T;
+    const T3 = T2 * T;
+    const T4 = T3 * T;
+    
+    // Mean longitude of the Moon
+    const Lp = 218.3164477 + 481267.88123421 * T - 0.0015786 * T2 + T3 / 538841 - T4 / 65194000;
+    
+    // Mean elongation of the Moon
+    const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T2 + T3 / 545868;
+    
+    // Sun's mean anomaly
+    const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T2;
+    
+    // Moon's mean anomaly
+    const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T2 + T3 / 69699;
+    
+    // Moon's argument of latitude
+    const F = 93.2720950 + 483202.0175233 * T - 0.0036539 * T2;
+    
+    // Convert to radians
+    const Drad = D * Math.PI / 180;
+    const Mrad = M * Math.PI / 180;
+    const Mprad = Mp * Math.PI / 180;
+    const Frad = F * Math.PI / 180;
+    
+    // Longitude terms (most significant)
+    let moonLong = Lp
+      + 6.288774 * Math.sin(Mprad)
+      + 1.274027 * Math.sin(2 * Drad - Mprad)
+      + 0.658314 * Math.sin(2 * Drad)
+      + 0.213618 * Math.sin(2 * Mprad)
+      - 0.185116 * Math.sin(Mrad)
+      - 0.114332 * Math.sin(2 * Frad)
+      + 0.058793 * Math.sin(2 * Drad - 2 * Mprad)
+      + 0.057066 * Math.sin(2 * Drad - Mrad - Mprad)
+      + 0.053322 * Math.sin(2 * Drad + Mprad)
+      + 0.045758 * Math.sin(2 * Drad - Mrad)
+      - 0.040923 * Math.sin(Mrad - Mprad)
+      - 0.034720 * Math.sin(Drad)
+      - 0.030383 * Math.sin(Mrad + Mprad)
+      + 0.015327 * Math.sin(2 * Drad - 2 * Frad)
+      - 0.012528 * Math.sin(Mprad + 2 * Frad)
+      + 0.010980 * Math.sin(Mprad - 2 * Frad);
+    
+    moonLong = moonLong % 360;
+    if (moonLong < 0) moonLong += 360;
+    return moonLong;
+  }
+
+  function calcPlanetPosition(jd, planet) {
+    // More accurate planetary positions using perturbation terms
+    const T = (jd - 2451545.0) / 36525;
+    const T2 = T * T;
+    
+    // Orbital elements for planets (J2000.0 + rates)
+    const elements = {
+      mercury: {
+        L: 252.2503235 + 149474.0722491 * T + 0.00030350 * T2,
+        a: 0.38709893,
+        e: 0.20563069 + 0.00002527 * T,
+        i: 7.00498625 - 0.00594749 * T,
+        omega: 77.45611904 + 0.15940013 * T,
+        node: 48.33089304 - 0.12214182 * T
+      },
+      venus: {
+        L: 181.9798012 + 58519.2130302 * T + 0.00031014 * T2,
+        a: 0.72333199,
+        e: 0.00677323 - 0.00004938 * T,
+        i: 3.39466189 - 0.00078890 * T,
+        omega: 131.56370300 + 0.00576464 * T,
+        node: 76.67992019 - 0.27769418 * T
+      },
+      mars: {
+        L: 355.4332944 + 19141.6964471 * T + 0.00031052 * T2,
+        a: 1.52366231,
+        e: 0.09341233 + 0.00011902 * T,
+        i: 1.84972648 - 0.00813131 * T,
+        omega: 336.06023395 + 0.44441088 * T,
+        node: 49.55953891 - 0.29257343 * T
+      },
+      jupiter: {
+        L: 34.3514839 + 3036.3027748 * T + 0.00022330 * T2,
+        a: 5.20336301,
+        e: 0.04839266 - 0.00012880 * T,
+        i: 1.30326698 - 0.00183714 * T,
+        omega: 14.33120687 + 0.21252668 * T,
+        node: 100.46444064 + 0.13024619 * T
+      },
+      saturn: {
+        L: 50.0774443 + 1223.5110686 * T + 0.00051908 * T2,
+        a: 9.53707032,
+        e: 0.05415060 - 0.00036762 * T,
+        i: 2.48887878 + 0.00193609 * T,
+        omega: 93.05678728 + 0.56654502 * T,
+        node: 113.66552252 - 0.25015002 * T
+      },
+      uranus: {
+        L: 314.0550112 + 429.8663296 * T - 0.00023436 * T2,
+        a: 19.19126393,
+        e: 0.04716771 - 0.00019150 * T,
+        i: 0.76986139 - 0.00244797 * T,
+        omega: 173.00529106 + 0.09266985 * T,
+        node: 74.00594744 + 0.04240589 * T
+      },
+      neptune: {
+        L: 304.3486535 + 219.8833092 * T + 0.00030882 * T2,
+        a: 30.06896348,
+        e: 0.00858587 + 0.00002514 * T,
+        i: 1.76917303 - 0.00493280 * T,
+        omega: 48.12027554 + 0.03175680 * T,
+        node: 131.78405702 - 0.00606302 * T
+      },
+      pluto: {
+        L: 238.9290355 + 146.3642277 * T,
+        a: 39.48168677,
+        e: 0.24880766,
+        i: 17.14175,
+        omega: 224.06676,
+        node: 110.30394
+      }
+    };
+    
+    if (!elements[planet]) return 0;
+    const el = elements[planet];
+    
+    // Mean anomaly
+    const M = (el.L - el.omega) % 360;
+    const Mrad = M * Math.PI / 180;
+    
+    // Solve Kepler's equation for eccentric anomaly (Newton-Raphson, 3 iterations)
+    let E = M;
+    for (let i = 0; i < 3; i++) {
+      E = M + (el.e * 180 / Math.PI) * Math.sin(E * Math.PI / 180);
+    }
+    const Erad = E * Math.PI / 180;
+    
+    // True anomaly
+    const xv = el.a * (Math.cos(Erad) - el.e);
+    const yv = el.a * Math.sqrt(1 - el.e * el.e) * Math.sin(Erad);
+    const v = Math.atan2(yv, xv) * 180 / Math.PI;
+    
+    // Heliocentric longitude
+    let helioLong = (v + el.omega) % 360;
+    if (helioLong < 0) helioLong += 360;
+    
+    // For outer planets, we need geocentric conversion
+    // Get Sun position for geocentric conversion
+    const sunLong = calcSunPosition(jd);
+    
+    // Simplified geocentric conversion
+    if (el.a > 1) { // Outer planet
+      // Apply parallax correction based on distance and elongation
+      const elongation = helioLong - sunLong;
+      const parallax = (1 / el.a) * Math.sin(elongation * Math.PI / 180) * (180 / Math.PI);
+      helioLong += parallax * 0.5; // Simplified correction
+    }
+    
+    helioLong = helioLong % 360;
+    if (helioLong < 0) helioLong += 360;
+    return helioLong;
+  }
+
+  function calcChiron(jd) {
+    // Chiron approximate position
+    const T = (jd - 2451545.0) / 36525;
+    let L = (209.0 + 14.728 * T * 365.25) % 360;
+    if (L < 0) L += 360;
+    return L;
+  }
+
+  function calcNodes(jd) {
+    // Mean lunar nodes
+    const T = (jd - 2451545.0) / 36525;
+    let northNode = (125.0445479 - 1934.1362891 * T) % 360;
+    if (northNode < 0) northNode += 360;
+    return {north: northNode, south: (northNode + 180) % 360};
+  }
+
+  function calcASC(jd, lat, lng) {
+    // Simplified Ascendant calculation
+    const T = (jd - 2451545.0) / 36525;
+    const GMST = (280.46061837 + 360.98564736629 * (jd - 2451545.0) + 0.000387933 * T * T) % 360;
+    const LST = (GMST + lng) % 360;
+    const obliquity = 23.439291 - 0.0130042 * T;
+    const oblRad = obliquity * Math.PI / 180;
+    const latRad = lat * Math.PI / 180;
+    const lstRad = LST * Math.PI / 180;
+    
+    let asc = Math.atan2(Math.cos(lstRad), -(Math.sin(lstRad) * Math.cos(oblRad) + Math.tan(latRad) * Math.sin(oblRad)));
+    asc = asc * 180 / Math.PI;
+    if (asc < 0) asc += 360;
+    return asc;
+  }
+
+  function calcHouseCusps(asc, lat) {
+    // Simplified Placidus-like equal house system from ASC
+    const cusps = [];
+    for (let i = 0; i < 12; i++) {
+      cusps.push((asc + i * 30) % 360);
+    }
+    return cusps;
+  }
+
+  function degToSignDegMin(totalDeg) {
+    totalDeg = totalDeg % 360;
+    if (totalDeg < 0) totalDeg += 360;
+    const signIdx = Math.floor(totalDeg / 30);
+    const degInSign = totalDeg - signIdx * 30;
+    const deg = Math.floor(degInSign);
+    const min = Math.round((degInSign - deg) * 60);
+    return {signIdx, deg, min: min === 60 ? 0 : min, degAdj: min === 60 ? deg + 1 : deg};
+  }
+
+  async function calculateChart(year, month, day, hour, minute, lat, lng, tz) {
+    // Try Swiss Ephemeris first (Placidus houses, accurate planets)
+    const swissResult = await calcWithSwissEph(year, month, day, hour, minute, lat, lng, tz);
+    
+    if (swissResult) {
+      // Swiss Ephemeris returned complete chart with Placidus houses
+      console.log('✅ Using Swiss Ephemeris (Placidus)');
+      return swissResult;
+    }
+    
+    // Fallback to basic calculations (Equal House)
+    console.log('⚠️ Using basic calculations (Equal House) - less accurate');
+    
+    const offset = getTimezoneOffset(tz, year, month);
+    const utcHour = hour - offset;
+    const jd = dateToJD(year, month, day, utcHour, minute);
+
+    // Basic planet calculations
+    const sunLong = calcSunPosition(jd);
+    const moonLong = calcMoonPosition(jd);
+    const mercuryLong = calcPlanetPosition(jd, 'mercury');
+    const venusLong = calcPlanetPosition(jd, 'venus');
+    const marsLong = calcPlanetPosition(jd, 'mars');
+    const jupiterLong = calcPlanetPosition(jd, 'jupiter');
+    const saturnLong = calcPlanetPosition(jd, 'saturn');
+    const uranusLong = calcPlanetPosition(jd, 'uranus');
+    const neptuneLong = calcPlanetPosition(jd, 'neptune');
+    const plutoLong = calcPlanetPosition(jd, 'pluto');
+    const chironLong = calcChiron(jd);
+    const nodes = calcNodes(jd);
+    const asc = calcASC(jd, lat, lng);
+    
+    const houseCusps = calcHouseCusps(asc, lat);
+
+    // Convert to sign/degree/minute format
+    const planets = {
+      sun: degToSignDegMin(sunLong),
+      moon: degToSignDegMin(moonLong),
+      mercury: degToSignDegMin(mercuryLong),
+      venus: degToSignDegMin(venusLong),
+      mars: degToSignDegMin(marsLong),
+      jupiter: degToSignDegMin(jupiterLong),
+      saturn: degToSignDegMin(saturnLong),
+      uranus: degToSignDegMin(uranusLong),
+      neptune: degToSignDegMin(neptuneLong),
+      pluto: degToSignDegMin(plutoLong),
+      chiron: degToSignDegMin(chironLong),
+      north: degToSignDegMin(nodes.north),
+      south: degToSignDegMin(nodes.south)
+    };
+
+    // House cusps
+    const houses = houseCusps.map((cusp, i) => ({
+      house: i + 1,
+      ...degToSignDegMin(cusp)
+    }));
+
+    // Detect intercepted signs and same-sign house starts
+    const interceptedAxes = []; // Which axes (1-6) have intercepted signs
+    const sameSignHouses = [];  // Which houses (1-6) have same sign as next house
+    
+    for (let i = 0; i < 12; i++) {
+      const currentSign = houses[i].signIdx;
+      const nextSign = houses[(i + 1) % 12].signIdx;
+      
+      // Check if same sign (consecutive houses start in same zodiac sign)
+      if (currentSign === nextSign) {
+        // First 6 houses matter for our form
+        if (i < 6) {
+          sameSignHouses.push(i + 1);
+        }
+      }
+      
+      // Check for intercepted sign (sign completely contained within house)
+      // This happens when nextSign is more than 1 sign away from currentSign
+      const signDiff = ((nextSign - currentSign) % 12 + 12) % 12;
+      if (signDiff > 1) {
+        // There's at least one intercepted sign between these houses
+        // For axes 1-6, check if this axis has interception
+        if (i < 6) {
+          interceptedAxes.push(i + 1);
+        }
+      }
+    }
+
+    // Calculate aspects (including MC - Tepe Noktası)
+    const mcLong = houseCusps[9] ? (houseCusps[9].signIdx * 30 + houseCusps[9].deg + houseCusps[9].min / 60) : 0;
+    const ascLong = asc; // ASC longitude
+    const planetLongs = {
+      sun: sunLong, moon: moonLong, mercury: mercuryLong, venus: venusLong,
+      mars: marsLong, jupiter: jupiterLong, saturn: saturnLong, uranus: uranusLong,
+      neptune: neptuneLong, pluto: plutoLong, chiron: chironLong, north: nodes.north,
+      mc: mcLong, asc: ascLong
+    };
+    const aspects = calculateAspects(planetLongs);
+
+    return {planets, houses, asc: degToSignDegMin(asc), aspects, interceptedAxes, sameSignHouses};
+  }
+
+  // ========== ASPECT CALCULATIONS ==========
+  const ASPECTS = [
+    {name: 'Kavuşum', symbol: '☌', angle: 0, orb: 8, color: '#f59e0b'},
+    {name: 'Karşıt', symbol: '☍', angle: 180, orb: 8, color: '#ef4444'},
+    {name: 'Üçgen', symbol: '△', angle: 120, orb: 8, color: '#22c55e'},
+    {name: 'Kare', symbol: '□', angle: 90, orb: 7, color: '#ef4444'},
+    {name: 'Altmışlık', symbol: '⚹', angle: 60, orb: 6, color: '#22c55e'}
+  ];
+
+  function calculateAspects(planetLongs) {
+    const aspects = [];
+    const planetKeys = Object.keys(planetLongs);
+    
+    for (let i = 0; i < planetKeys.length; i++) {
+      for (let j = i + 1; j < planetKeys.length; j++) {
+        const p1 = planetKeys[i];
+        const p2 = planetKeys[j];
+        const long1 = planetLongs[p1];
+        const long2 = planetLongs[p2];
+        
+        // Calculate angular difference (0-180)
+        let diff = Math.abs(long1 - long2);
+        if (diff > 180) diff = 360 - diff;
+        
+        // Check each aspect
+        for (const aspect of ASPECTS) {
+          const orb = Math.abs(diff - aspect.angle);
+          if (orb <= aspect.orb) {
+            aspects.push({
+              planet1: p1,
+              planet2: p2,
+              aspect: aspect.name,
+              symbol: aspect.symbol,
+              angle: aspect.angle,
+              orb: orb.toFixed(1),
+              color: aspect.color,
+              exact: orb < 1
+            });
+            break; // Only one aspect per planet pair
+          }
+        }
+      }
+    }
+    
+    return aspects;
+  }
+
+  const $ = id => document.getElementById(id);
+  const toMin = (d,m) => (Number(d)||0)*60 + (Number(m)||0);
+  const fmt = ({deg,min}) => `${deg}° ${String(min).padStart(2,'0')}'`;
+  const fmtAbsMin = m => `${Math.floor(Math.round(m)/60)}° ${String(Math.round(m)%60).padStart(2,'0')}'`;
+  const elementOf = s => ["Koç","Aslan","Yay"].includes(s)?'fire':["İkizler","Terazi","Kova"].includes(s)?'air':["Yengeç","Akrep","Balık"].includes(s)?'water':'earth';
+
+  // ========== UI BUILDERS ==========
+  function buildAscGrid(container) {
+    container.innerHTML = '';
+    SIGNS.forEach((s,i) => {
+      const lbl = document.createElement('label');
+      lbl.className = 'asc-item';
+      lbl.innerHTML = `<input type="radio" name="asc_${container.id}" value="${i}" ${i===0?'checked':''}> ${s}`;
+      container.appendChild(lbl);
+    });
+  }
+
+  function buildMonthSelect(sel) {
+    sel.innerHTML = '<option value="">Ay</option>' + MONTHS.map((m,i) => `<option value="${i+1}">${m}</option>`).join('');
+  }
+
+  function buildCountrySelect(sel) {
+    sel.innerHTML = '<option value="">Ülke seç</option>' + Object.entries(COUNTRIES).map(([code, data]) => 
+      `<option value="${code}">${data.name}</option>`
+    ).join('');
+  }
+
+  function updateCitySelect(countrySel, citySel, latInput, lngInput) {
+    const code = countrySel.value;
+    if (!code || !COUNTRIES[code]) {
+      citySel.innerHTML = '<option value="">Önce ülke seç</option>';
+      return;
+    }
+    const cities = COUNTRIES[code].cities;
+    let cityList = Object.keys(cities);
+    
+    // For Turkey, put popular cities first
+    if (code === 'TR') {
+      const popularCities = ['İstanbul', 'Ankara', 'İzmir', 'Eskişehir', 'Antalya', 'Bursa'];
+      const otherCities = cityList.filter(c => !popularCities.includes(c)).sort();
+      cityList = [...popularCities.filter(c => cities[c]), ...otherCities];
+    } else {
+      cityList = cityList.sort();
+    }
+    
+    citySel.innerHTML = '<option value="">Şehir seç</option>' + cityList.map(city => 
+      `<option value="${city}">${city}</option>`
+    ).join('');
+    
+    // When city changes, update lat/lng
+    citySel.onchange = () => {
+      const cityData = cities[citySel.value];
+      if (cityData) {
+        latInput.value = cityData.lat;
+        lngInput.value = cityData.lng;
+      }
+    };
+  }
+
+  function setupAutoCalc(prefix) {
+    const countryEl = $(`auto${prefix}Country`);
+    const cityEl = $(`auto${prefix}City`);
+    const latEl = $(`auto${prefix}Lat`);
+    const lngEl = $(`auto${prefix}Lng`);
+    const monthEl = $(`auto${prefix}Month`);
+    
+    if (countryEl) {
+      buildCountrySelect(countryEl);
+      countryEl.addEventListener('change', () => updateCitySelect(countryEl, cityEl, latEl, lngEl));
+    }
+    if (monthEl) buildMonthSelect(monthEl);
+  }
+
+  function buildAxisGrid(container) {
+    container.innerHTML = '';
+    for (let i=1; i<=6; i++) {
+      const lbl = document.createElement('label');
+      lbl.className = 'chip';
+      lbl.innerHTML = `<input type="checkbox" class="axis" value="${i}"> ${i}–${i+6}`;
+      container.appendChild(lbl);
+    }
+  }
+
+  function buildCuspGrid(container, prefix) {
+    container.innerHTML = '';
+    for (let i=1; i<=6; i++) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `
+        <label>${i}. Ev</label>
+        <div class="inp">
+          <input id="${prefix}Deg${i}" type="number" min="0" max="29" placeholder="°" />
+          <input id="${prefix}Min${i}" type="number" min="0" max="59" placeholder="'" />
+          <label style="display:flex;gap:6px;align-items:center;margin-left:8px">
+            <input type="checkbox" id="${prefix}Same${i}"> <span class="hint">2 ev başlangıcı</span>
+          </label>
+        </div>
+      `;
+      container.appendChild(row);
+    }
+  }
+
+  function buildPlanetGrid(container, prefix, includeHouse = true) {
+    container.innerHTML = '';
+    PLANETS.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `
+        <label>${p.sym} ${p.name}</label>
+        <div class="inp">
+          ${includeHouse ? `<select id="${prefix}_${p.key}_house"><option value="">Ev</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select>` : ''}
+          <select id="${prefix}_${p.key}_sign"><option value="">Burç</option>${SIGNS.map((s,i)=>`<option value="${i}">${s} ${SIGN_SYM[s]}</option>`).join('')}</select>
+          <input id="${prefix}_${p.key}_deg" type="number" min="0" max="29" placeholder="°" />
+          <input id="${prefix}_${p.key}_min" type="number" min="0" max="59" placeholder="'" />
+        </div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  // ========== READERS ==========
+  function readAsc(gridId) {
+    const r = document.querySelector(`#${gridId} input[type="radio"]:checked`);
+    return r ? Number(r.value) : 0;
+  }
+
+  function readCusps(prefix, axisGridId) {
+    const cusps = [], flags = [];
+    for (let i=1; i<=6; i++) {
+      const d = $(`${prefix}Deg${i}`)?.value, m = $(`${prefix}Min${i}`)?.value;
+      if (d===''||m==='') return null;
+      const deg = Number(d), min = Number(m);
+      if (deg<0||deg>29||min<0||min>59) return null;
+      cusps.push({deg,min});
+      flags.push(!!$(`${prefix}Same${i}`)?.checked);
+    }
+    for (let i=0; i<6; i++) cusps.push({deg:cusps[i].deg, min:cusps[i].min});
+    for (let i=0; i<6; i++) flags.push(flags[i]);
+
+    const add30 = [];
+    document.querySelectorAll(`#${axisGridId} .axis`).forEach(cb => {
+      add30[Number(cb.value)-1] = cb.checked;
+    });
+    for (let i=0; i<6; i++) add30.push(add30[i] || false);
+    return {cusps, flags, add30};
+  }
+
+  function readPlanets(prefix, includeHouse = true) {
+    const planets = [];
+    PLANETS.forEach(p => {
+      const h = includeHouse ? $(`${prefix}_${p.key}_house`)?.value : '1';
+      const s = $(`${prefix}_${p.key}_sign`)?.value;
+      const d = $(`${prefix}_${p.key}_deg`)?.value;
+      const m = $(`${prefix}_${p.key}_min`)?.value;
+      if ((includeHouse ? h : true) && s!=='' && d!=='' && m!=='') {
+        const house = Number(h), signIdx = Number(s), posMin = Number(d)*60 + Number(m);
+        const totalDeg = signIdx*30 + Number(d) + Number(m)/60;
+        planets.push({key:p.key, name:p.name, sym:p.sym, house, signIdx, posMin, deg:Number(d), min:Number(m), totalDegrees:totalDeg});
+      }
+    });
+    return planets;
+  }
+
+  // ========== COMPUTATIONS ==========
+  function computeBaseSigns(asc, sameFlags, add30Flags) {
+    const bs = [((asc%12)+12)%12];
+    for (let i=1; i<12; i++) {
+      bs[i] = sameFlags[i-1] ? bs[i-1] : (bs[i-1] + 1 + (add30Flags[i-1]?1:0)) % 12;
+    }
+    return bs;
+  }
+
+  function computeSpan(cur, next, same, add30) {
+    return same ? (next>=cur ? next-cur : SIGN_IN_MIN-cur+next) : (SIGN_IN_MIN-cur)+next+(add30?SIGN_IN_MIN:0);
+  }
+
+  function computeDecan(cusps, sameFlags, add30Flags, asc) {
+    const cm = cusps.map(c=>toMin(c.deg,c.min)), bs = computeBaseSigns(asc,sameFlags,add30Flags), results = [];
+    for (let i=0; i<12; i++) {
+      const cur=cm[i], next=cm[(i+1)%12], span=computeSpan(cur,next,sameFlags[i],add30Flags[i]), decSize=span/3;
+      const ev = {house:i+1, houseSignIdx:bs[i], houseSign:SIGNS[bs[i]], meta:{spanMin:span, decanSizeMin:decSize, spanText:fmtAbsMin(span), decanSizeText:fmtAbsMin(decSize)}};
+      ev.decans = [0,decSize,decSize*2].map((off,idx) => {
+        const a=cur+off, signAdv=Math.floor(a/SIGN_IN_MIN), within=a-signAdv*SIGN_IN_MIN;
+        let deg=Math.floor(within/DEG_IN_MIN), min=Math.round(within%DEG_IN_MIN);
+        if(min===60){deg++;min=0;}
+        const runIdx=(bs[i]+signAdv)%12, band=within<10*DEG_IN_MIN?0:within<20*DEG_IN_MIN?1:2;
+        const elem=[0,4,8].includes(runIdx)?'fire':[1,5,9].includes(runIdx)?'earth':[2,6,10].includes(runIdx)?'air':'water';
+        const cyc=ELEMENT_CYCLE[elem], pos=cyc.indexOf(runIdx), decSignIdx=cyc[(pos+band)%3];
+        return {index:idx+1, start:{deg,min}, startText:fmt({deg,min}), absStartMin:off, decanSign:SIGNS[decSignIdx], ruler:RULERS[decSignIdx]};
+      });
+      results.push(ev);
+    }
+    return results;
+  }
+
+  function computeSeven(cusps, sameFlags, add30Flags, asc, birthYear) {
+    const cm = cusps.map(c=>toMin(c.deg,c.min)), bs = computeBaseSigns(asc,sameFlags,add30Flags), houses = [];
+    for (let i=0; i<12; i++) {
+      const cur=cm[i], next=cm[(i+1)%12], span=computeSpan(cur,next,sameFlags[i],add30Flags[i]), step=span/7, segs=[];
+      for (let y=1; y<=7; y++) {
+        const startAge=i*7+(y-1), endAge=startAge+1, off0=step*(y-1), off1=step*y;
+        const a0=cur+off0, a1=cur+off1, sAdv0=Math.floor(a0/SIGN_IN_MIN), sAdv1=Math.floor(a1/SIGN_IN_MIN);
+        const w0=a0-sAdv0*SIGN_IN_MIN, w1=a1-sAdv1*SIGN_IN_MIN;
+        const s0={deg:Math.floor(w0/DEG_IN_MIN),min:Math.round(w0%DEG_IN_MIN)}, s1={deg:Math.floor(w1/DEG_IN_MIN),min:Math.round(w1%DEG_IN_MIN)};
+        if(s0.min===60){s0.deg++;s0.min=0;} if(s1.min===60){s1.deg++;s1.min=0;}
+        // Calculate decan for start position
+        const startSignIdx = (bs[i]+sAdv0)%12;
+        const startBand = w0<10*DEG_IN_MIN?0:w0<20*DEG_IN_MIN?1:2;
+        const startElem = [0,4,8].includes(startSignIdx)?'fire':[1,5,9].includes(startSignIdx)?'earth':[2,6,10].includes(startSignIdx)?'air':'water';
+        const startCyc = ELEMENT_CYCLE[startElem];
+        const startPos = startCyc.indexOf(startSignIdx);
+        const startDecanIdx = startCyc[(startPos+startBand)%3];
+        segs.push({startAge,endAge,absStartMin:off0,absEndMin:off1,startText:fmt(s0),endText:fmt(s1),signStart:SIGNS[startSignIdx],signEnd:SIGNS[(bs[i]+sAdv1)%12],decanSign:SIGNS[startDecanIdx],decanRuler:RULERS[startDecanIdx]});
+      }
+      houses.push({house:i+1,houseSign:SIGNS[bs[i]],spanMin:span,stepMin:step,spanText:fmtAbsMin(span),stepText:fmtAbsMin(step),birthYear,segments:segs});
+    }
+    return houses;
+  }
+
+  function computeSolar(planets, birthDay, birthMonth, solarYear) {
+    const sun = planets.find(p => p.key==='sun');
+    if (!sun) return null;
+    const sunDeg = sun.totalDegrees, months = [];
+    for (let i=0; i<12; i++) {
+      let mNum=birthMonth+i, yr=solarYear;
+      if(mNum>12){mNum-=12;yr++;}
+      let nMNum=mNum+1, nYr=yr;
+      if(nMNum>12){nMNum-=12;nYr++;}
+      const startStr=`${birthDay} ${MONTHS[mNum-1]} ${yr}`, endStr=`${birthDay-1||30} ${MONTHS[nMNum-1]} ${nYr}`;
+      const startDeg=(sunDeg+i*30)%360, endDeg=(sunDeg+(i+1)*30)%360;
+      const inMonth = [];
+      planets.forEach(pl => {
+        if(pl.key==='sun' && i===0){inMonth.push({...pl,dayOffset:0,dateStr:`${birthDay} ${MONTHS[mNum-1]} ${yr}`,isStart:true});return;}
+        let off=pl.totalDegrees-sunDeg; if(off<0)off+=360;
+        if(off>=i*30 && off<(i+1)*30){
+          const dayOff=off-i*30, dayNum=Math.round(birthDay+dayOff);
+          let pM=mNum,pY=yr,pD=dayNum;
+          if(pD>30){pD-=30;pM++;if(pM>12){pM-=12;pY++;}}
+          inMonth.push({...pl,dayOffset:Math.round(dayOff),dateStr:`${pD} ${MONTHS[pM-1]} ${pY}`,isStart:false});
+        }
+      });
+      inMonth.sort((a,b)=>a.dayOffset-b.dayOffset);
+      months.push({solarHouse:i+1,startDateStr:startStr,endDateStr:endStr,startDeg,endDeg,planets:inMonth});
+    }
+    return {sunPosition:sun, months};
+  }
+
+  // ========== RENDERERS ==========
+  function renderDecan(results, planets, cusps, sameFlags, add30Flags, asc, container, aspects) {
+    const cm=cusps.map(c=>toMin(c.deg,c.min)), bs=computeBaseSigns(asc,sameFlags,add30Flags);
+    const byHouse=Array.from({length:12},()=>[]);
+    (planets||[]).forEach(pl=>{
+      const hi=pl.house-1; if(hi<0||hi>11)return;
+      const span=results[hi]?.meta?.spanMin; if(!span)return;
+      const hStart=bs[hi]*SIGN_IN_MIN+cm[hi], pAbs=pl.signIdx*SIGN_IN_MIN+pl.posMin;
+      let d=pAbs-hStart; d=((d%(12*SIGN_IN_MIN))+(12*SIGN_IN_MIN))%(12*SIGN_IN_MIN);
+      if(d<span) byHouse[hi].push({...pl,delta:d});
+    });
+    byHouse.forEach(a=>a.sort((x,y)=>x.delta-y.delta));
+    
+    // Get aspects for each planet
+    const planetAspects = {};
+    if (aspects && aspects.length > 0) {
+      aspects.forEach(asp => {
+        if (!planetAspects[asp.planet1]) planetAspects[asp.planet1] = [];
+        if (!planetAspects[asp.planet2]) planetAspects[asp.planet2] = [];
+        planetAspects[asp.planet1].push({ ...asp, otherPlanet: asp.planet2 });
+        planetAspects[asp.planet2].push({ ...asp, otherPlanet: asp.planet1 });
+      });
+    }
+    
+    const PLANET_SYMS = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',south:'☋',fortune:'⊕',mc:'MC',asc:'ASC'};
+    const PLANET_NAMES = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',chiron:'Chiron',north:'KAD',south:'GAD',fortune:'Şans',mc:'MC',asc:'ASC'};
+
+    container.innerHTML = '';
+    results.forEach(h => {
+      const hi=h.house-1, html = document.createElement('div');
+      html.className = 'house';
+      html.innerHTML = `<div class="title"><span class="badge">${h.house}</span> Ev <span style="color:var(--muted);font-size:14px">• ${SIGN_SYM[h.houseSign]} ${h.houseSign}</span></div>`;
+      const list = document.createElement('div'); list.className = 'list';
+      const decSize = h.meta.decanSizeMin;
+      h.decans.forEach((d,di) => {
+        const kv = document.createElement('div'); kv.className = `kv el-${elementOf(d.decanSign)}`;
+        kv.innerHTML = `<div>${di+1}.dekan</div><div class="degval" style="font-weight:900">${d.startText}</div><div class="pills"><span class="pill">Ev: ${SIGN_SYM[h.houseSign]} ${h.houseSign}</span><span class="pill">Dekan: ${SIGN_SYM[d.decanSign]} ${d.decanSign} (${RULER_SYM[d.ruler]||''} ${d.ruler})</span></div>`;
+        list.appendChild(kv);
+        const start=di*decSize, end=di===2?h.meta.spanMin:start+decSize;
+        byHouse[hi].filter(p=>p.delta>=start&&p.delta<end).forEach(p=>{
+          const pAspects = planetAspects[p.key];
+          const hasAspects = pAspects && pAspects.length > 0;
+          
+          const pk=document.createElement('div');pk.className='kv planet';
+          pk.style.cursor = hasAspects ? 'pointer' : 'default';
+          pk.innerHTML=`<div style="font-weight:900">${p.sym} ${p.name} ${hasAspects ? '<span style="font-size:11px;color:var(--accent);margin-left:6px">▼ ' + pAspects.length + ' açı</span>' : ''}</div><div>${SIGN_SYM[SIGNS[p.signIdx]]} ${Math.floor(p.posMin/60)}°${String(p.posMin%60).padStart(2,'0')}'</div>`;
+          list.appendChild(pk);
+          
+          // Add collapsible aspects container for this planet
+          if (hasAspects) {
+            const aspectsContainer = document.createElement('div');
+            aspectsContainer.className = 'planet-aspects';
+            aspectsContainer.style.cssText = 'display:none;margin-left:32px;padding:4px 0;border-left:2px solid rgba(139,92,246,0.3);margin-bottom:8px';
+            
+            // Sort aspects: Kavuşum (0), Altmışlık (60), Kare (90), Üçgen (120), Karşıt (180)
+            const aspectOrder = { 0: 0, 60: 1, 90: 2, 120: 3, 180: 4 };
+            const sortedAspects = [...pAspects].sort((a, b) => (aspectOrder[a.angle] || 99) - (aspectOrder[b.angle] || 99));
+            
+            sortedAspects.forEach(asp => {
+              const aspEl = document.createElement('div');
+              aspEl.style.cssText = 'padding:4px 12px;font-size:12px;background:rgba(139,92,246,0.05);margin:2px 0;border-radius:4px';
+              const otherSym = PLANET_SYMS[asp.otherPlanet] || '?';
+              const otherName = PLANET_NAMES[asp.otherPlanet] || asp.otherPlanet;
+              aspEl.innerHTML = `<span style="color:${asp.color};font-weight:bold">${asp.symbol}</span> ${asp.aspect} <span style="color:var(--muted)">${otherSym} ${otherName}</span> <span style="font-size:11px;opacity:0.7">(${asp.orb}°)</span>`;
+              aspectsContainer.appendChild(aspEl);
+            });
+            list.appendChild(aspectsContainer);
+            
+            // Toggle on click
+            pk.addEventListener('click', () => {
+              const isOpen = aspectsContainer.style.display !== 'none';
+              aspectsContainer.style.display = isOpen ? 'none' : 'block';
+              pk.querySelector('span').textContent = (isOpen ? '▼ ' : '▲ ') + pAspects.length + ' açı';
+            });
+          }
+        });
+      });
+      html.appendChild(list);
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `Ev toplam: ${h.meta.spanText} — Dekan: ${h.meta.decanSizeText}`;
+      html.appendChild(meta);
+      container.appendChild(html);
+    });
+  }
+
+  function renderSeven(houses, planets, cusps, sameFlags, add30Flags, asc, container, aspects) {
+    const cm=cusps.map(c=>toMin(c.deg,c.min)), bs=computeBaseSigns(asc,sameFlags,add30Flags);
+    const byHouse=Array.from({length:12},()=>[]);
+    (planets||[]).forEach(pl=>{
+      const hi=pl.house-1; if(hi<0||hi>11)return;
+      const span=houses[hi]?.spanMin; if(!span)return;
+      const hStart=bs[hi]*SIGN_IN_MIN+cm[hi], pAbs=pl.signIdx*SIGN_IN_MIN+pl.posMin;
+      let d=pAbs-hStart; d=((d%(12*SIGN_IN_MIN))+(12*SIGN_IN_MIN))%(12*SIGN_IN_MIN);
+      if(d<span) byHouse[hi].push({...pl,delta:d});
+    });
+    
+    // Get aspects for each planet
+    const planetAspects = {};
+    if (aspects && aspects.length > 0) {
+      aspects.forEach(asp => {
+        if (!planetAspects[asp.planet1]) planetAspects[asp.planet1] = [];
+        if (!planetAspects[asp.planet2]) planetAspects[asp.planet2] = [];
+        planetAspects[asp.planet1].push({ ...asp, otherPlanet: asp.planet2 });
+        planetAspects[asp.planet2].push({ ...asp, otherPlanet: asp.planet1 });
+      });
+    }
+    
+    const PLANET_SYMS = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',south:'☋',fortune:'⊕',mc:'MC',asc:'ASC'};
+    const PLANET_NAMES = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',chiron:'Chiron',north:'KAD',south:'GAD',fortune:'Şans',mc:'MC',asc:'ASC'};
+
+    container.innerHTML = '';
+    houses.forEach(h => {
+      const hi=h.house-1, html = document.createElement('div');
+      html.className = 'house';
+      html.innerHTML = `<div class="title"><span class="badge">${h.house}</span> Ev <span style="color:var(--muted);font-size:14px">• ${SIGN_SYM[h.houseSign]} ${h.houseSign}</span></div>`;
+      const list = document.createElement('div'); list.className = 'list';
+      h.segments.forEach(seg => {
+        const kv = document.createElement('div'); kv.className = `kv el-${elementOf(seg.signStart)}`;
+        const ageL = `${seg.startAge}–${seg.endAge} yaş`;
+        const yearL = h.birthYear ? ` • ${h.birthYear+seg.startAge}–${h.birthYear+seg.endAge}` : '';
+        const sameS = seg.signStart===seg.signEnd;
+        const decanInfo = seg.decanSign ? ` <span style="color:var(--accent-2);font-size:12px">[${SIGN_SYM[seg.decanSign]} ${seg.decanSign}]</span>` : '';
+        kv.innerHTML = `<div>${ageL}${yearL}</div><div>${seg.startText} ${SIGN_SYM[seg.signStart]} ${seg.signStart}${decanInfo}${sameS?` — ${seg.endText}`:`  →  ${seg.endText} ${SIGN_SYM[seg.signEnd]} ${seg.signEnd}`}</div>`;
+        list.appendChild(kv);
+        byHouse[hi].filter(p=>p.delta>=seg.absStartMin&&p.delta<seg.absEndMin).forEach(p=>{
+          const pAspects = planetAspects[p.key];
+          const hasAspects = pAspects && pAspects.length > 0;
+          
+          const pk=document.createElement('div');pk.className='kv planet';
+          pk.style.cursor = hasAspects ? 'pointer' : 'default';
+          pk.innerHTML=`<div style="font-weight:900">${p.sym} ${p.name} ${hasAspects ? '<span style="font-size:11px;color:var(--accent);margin-left:6px">▼ ' + pAspects.length + ' açı</span>' : ''}</div><div>${SIGN_SYM[SIGNS[p.signIdx]]} ${Math.floor(p.posMin/60)}°${String(p.posMin%60).padStart(2,'0')}'</div>`;
+          list.appendChild(pk);
+          
+          // Add collapsible aspects container for this planet
+          if (hasAspects) {
+            const aspectsContainer = document.createElement('div');
+            aspectsContainer.className = 'planet-aspects';
+            aspectsContainer.style.cssText = 'display:none;margin-left:32px;padding:4px 0;border-left:2px solid rgba(139,92,246,0.3);margin-bottom:8px';
+            
+            // Sort aspects: Kavuşum (0), Altmışlık (60), Kare (90), Üçgen (120), Karşıt (180)
+            const aspectOrder = { 0: 0, 60: 1, 90: 2, 120: 3, 180: 4 };
+            const sortedAspects = [...pAspects].sort((a, b) => (aspectOrder[a.angle] || 99) - (aspectOrder[b.angle] || 99));
+            
+            sortedAspects.forEach(asp => {
+              const aspEl = document.createElement('div');
+              aspEl.style.cssText = 'padding:4px 12px;font-size:12px;background:rgba(139,92,246,0.05);margin:2px 0;border-radius:4px';
+              const otherSym = PLANET_SYMS[asp.otherPlanet] || '?';
+              const otherName = PLANET_NAMES[asp.otherPlanet] || asp.otherPlanet;
+              aspEl.innerHTML = `<span style="color:${asp.color};font-weight:bold">${asp.symbol}</span> ${asp.aspect} <span style="color:var(--muted)">${otherSym} ${otherName}</span> <span style="font-size:11px;opacity:0.7">(${asp.orb}°)</span>`;
+              aspectsContainer.appendChild(aspEl);
+            });
+            list.appendChild(aspectsContainer);
+            
+            // Toggle on click
+            pk.addEventListener('click', () => {
+              const isOpen = aspectsContainer.style.display !== 'none';
+              aspectsContainer.style.display = isOpen ? 'none' : 'block';
+              pk.querySelector('span').textContent = (isOpen ? '▼ ' : '▲ ') + pAspects.length + ' açı';
+            });
+          }
+        });
+      });
+      html.appendChild(list);
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `Ev: ${h.spanText} — 1 yıl: ${h.stepText}`;
+      html.appendChild(meta);
+      container.appendChild(html);
+    });
+  }
+
+  function renderSolar(data, container) {
+    if (!data) { container.innerHTML = '<p class="hint" style="color:var(--err)">Güneş pozisyonu gerekli.</p>'; return; }
+    container.innerHTML = '';
+    const header = document.createElement('div'); header.className = 'house';
+    header.innerHTML = `<div class="title"><span class="badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4)">☉</span> Solar Yılı</div><div class="kv" style="background:rgba(245,158,11,.08)"><div>Güneş</div><div>${SIGN_SYM[SIGNS[data.sunPosition.signIdx]]} ${SIGNS[data.sunPosition.signIdx]} ${data.sunPosition.deg}°${String(data.sunPosition.min).padStart(2,'0')}'</div></div>`;
+    container.appendChild(header);
+
+    data.months.forEach(m => {
+      const box = document.createElement('div'); box.className = 'house';
+      box.innerHTML = `<div class="title"><span class="badge">${m.solarHouse}</span> ${m.solarHouse}. Ay <span style="color:var(--muted);font-size:14px">• ${m.startDateStr} → ${m.endDateStr}</span></div>`;
+      const list = document.createElement('div'); list.className = 'list';
+      if (m.planets.length === 0) {
+        list.innerHTML = '<div class="kv"><div style="color:var(--muted);font-style:italic">Bu ayda gezegen yok</div></div>';
+      } else {
+        m.planets.forEach(p => {
+          const kv = document.createElement('div'); kv.className = `kv ${p.isStart?'el-fire':'el-air'}`;
+          const dateT = p.isStart ? `<strong>${p.dateStr}</strong> (başlangıç)` : `<strong>${p.dateStr}</strong> <span style="color:var(--muted)">(±1-2 gün)</span>`;
+          kv.innerHTML = `<div><strong>${p.sym} ${p.name}</strong></div><div>${SIGN_SYM[SIGNS[p.signIdx]]} ${p.deg}°${String(p.min).padStart(2,'0')}' → ${dateT}</div>`;
+          list.appendChild(kv);
+        });
+      }
+      box.appendChild(list);
+      const startS=SIGNS[Math.floor(m.startDeg/30)%12], endS=SIGNS[Math.floor(m.endDeg/30)%12];
+      box.innerHTML += `<div class="meta">${Math.round(m.startDeg)}° → ${Math.round(m.endDeg)}° (${SIGN_SYM[startS]} → ${SIGN_SYM[endS]})</div>`;
+      container.appendChild(box);
+    });
+  }
+
+  // ========== WHEEL CHART DRAWING ==========
+  // Store last chart data for re-rendering
+  let lastChartData = null;
+
+  function drawWheelChart(chartData, decanResults) {
+    lastChartData = { chartData, decanResults };
+    const svg = $('wheelChart');
+    if (!svg || !chartData) return;
+    
+    const cx = 500, cy = 500; // Center (1000/2)
+    const radiusOuter = 470;
+    const radiusZodiac = 420;
+    const radiusHouse = 360;
+    const radiusInner = 280;
+    const radiusPlanet = 210;
+    const radiusCenter = 120;
+    
+    // Element colors: fire=red, earth=green, air=light blue, water=dark blue
+    const EL_COLORS = {
+      fire: '#EF4444',    // Red
+      earth: '#22C55E',   // Green
+      air: '#38BDF8',     // Light blue/Sky blue
+      water: '#3B82F6'    // Dark blue
+    };
+    const SIGN_EL = ['fire','earth','air','water','fire','earth','air','water','fire','earth','air','water'];
+    
+    // Convert ecliptic degree to SVG angle
+    // Standard astrology: ASC on LEFT (180°), counter-clockwise
+    // ecliptic 0° Aries = ascDeg position, going counter-clockwise
+    const ascLong = chartData.asc.longitude || (chartData.asc.signIdx * 30 + chartData.asc.deg + chartData.asc.min / 60);
+    
+    // Convert ecliptic longitude to chart angle (radians)
+    // ASC is at 180° (left side), degrees increase counter-clockwise
+    const toAngle = (eclipticDeg) => {
+      const relDeg = eclipticDeg - ascLong; // Relative to ASC
+      const chartDeg = 180 + relDeg; // ASC at 180° (left)
+      return chartDeg * Math.PI / 180;
+    };
+    
+    const polarX = (r, eclipticDeg) => cx + r * Math.cos(toAngle(eclipticDeg));
+    const polarY = (r, eclipticDeg) => cy - r * Math.sin(toAngle(eclipticDeg));
+    
+    let html = '';
+    
+    // Background
+    html += `<circle cx="${cx}" cy="${cy}" r="${radiusOuter}" fill="#0D1B2A" stroke="rgba(110,231,255,0.2)" stroke-width="2"/>`;
+    
+    // Zodiac wheel (outer ring with 12 signs) - fixed position
+    for (let i = 0; i < 12; i++) {
+      const startDeg = i * 30;
+      const endDeg = (i + 1) * 30;
+      const midDeg = startDeg + 15;
+      const color = EL_COLORS[SIGN_EL[i]];
+      
+      // Draw zodiac arc segment
+      const a1 = toAngle(startDeg), a2 = toAngle(endDeg);
+      const x1o = cx + radiusOuter * Math.cos(a1), y1o = cy - radiusOuter * Math.sin(a1);
+      const x2o = cx + radiusOuter * Math.cos(a2), y2o = cy - radiusOuter * Math.sin(a2);
+      const x1z = cx + radiusZodiac * Math.cos(a1), y1z = cy - radiusZodiac * Math.sin(a1);
+      const x2z = cx + radiusZodiac * Math.cos(a2), y2z = cy - radiusZodiac * Math.sin(a2);
+      
+      // Arc path for zodiac segment
+      html += `<path d="M ${x1z} ${y1z} L ${x1o} ${y1o} A ${radiusOuter} ${radiusOuter} 0 0 0 ${x2o} ${y2o} L ${x2z} ${y2z} A ${radiusZodiac} ${radiusZodiac} 0 0 1 ${x1z} ${y1z}" fill="${color}" fill-opacity="0.12" stroke="${color}" stroke-opacity="0.4" stroke-width="1"/>`;
+      
+      // Zodiac symbol
+      const symX = polarX((radiusOuter + radiusZodiac) / 2, midDeg);
+      const symY = polarY((radiusOuter + radiusZodiac) / 2, midDeg);
+      html += `<text x="${symX}" y="${symY}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="20" font-weight="bold">${SIGN_SYM[SIGNS[i]]}</text>`;
+      
+      // Zodiac degree markers (every 10°)
+      for (let d = 0; d < 30; d += 10) {
+        const tickDeg = startDeg + d;
+        const tx1 = polarX(radiusZodiac, tickDeg);
+        const ty1 = polarY(radiusZodiac, tickDeg);
+        const tx2 = polarX(radiusZodiac - 5, tickDeg);
+        const ty2 = polarY(radiusZodiac - 5, tickDeg);
+        html += `<line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="${color}" stroke-opacity="0.5" stroke-width="1"/>`;
+      }
+    }
+    
+    // House lines and cusps
+    if (chartData.houses) {
+      // House divider circle
+      html += `<circle cx="${cx}" cy="${cy}" r="${radiusHouse}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
+      
+      // First pass: Draw house segment backgrounds with element colors
+      chartData.houses.forEach((h, i) => {
+        const deg = h.signIdx * 30 + h.deg + h.min / 60;
+        const nextH = chartData.houses[(i + 1) % 12];
+        let nextDeg = nextH.signIdx * 30 + nextH.deg + nextH.min / 60;
+        if (nextDeg < deg) nextDeg += 360;
+        
+        // Get element color based on house sign
+        const houseElement = SIGN_EL[h.signIdx];
+        const houseColor = EL_COLORS[houseElement];
+        
+        // Draw arc segment for house background
+        const a1 = toAngle(deg), a2 = toAngle(nextDeg);
+        const x1h = cx + radiusHouse * Math.cos(a1), y1h = cy - radiusHouse * Math.sin(a1);
+        const x2h = cx + radiusHouse * Math.cos(a2), y2h = cy - radiusHouse * Math.sin(a2);
+        const x1i = cx + radiusInner * Math.cos(a1), y1i = cy - radiusInner * Math.sin(a1);
+        const x2i = cx + radiusInner * Math.cos(a2), y2i = cy - radiusInner * Math.sin(a2);
+        
+        // Determine arc direction
+        const largeArc = (nextDeg - deg) > 180 ? 1 : 0;
+        
+        html += `<path d="M ${x1i} ${y1i} L ${x1h} ${y1h} A ${radiusHouse} ${radiusHouse} 0 ${largeArc} 0 ${x2h} ${y2h} L ${x2i} ${y2i} A ${radiusInner} ${radiusInner} 0 ${largeArc} 1 ${x1i} ${y1i}" fill="${houseColor}" fill-opacity="0.08" stroke="none"/>`;
+      });
+      
+      // Second pass: Draw house lines and labels
+      chartData.houses.forEach((h, i) => {
+        const deg = h.signIdx * 30 + h.deg + h.min / 60;
+        const x1 = polarX(radiusCenter, deg);
+        const y1 = polarY(radiusCenter, deg);
+        const x2 = polarX(radiusZodiac, deg);
+        const y2 = polarY(radiusZodiac, deg);
+        
+        // House line - ASC/DESC/MC/IC are thicker
+        const isCardinal = (i === 0 || i === 3 || i === 6 || i === 9);
+        const lineColor = isCardinal ? 'rgba(110,231,255,0.9)' : 'rgba(255,255,255,0.25)';
+        const lineWidth = isCardinal ? 2.5 : 1;
+        html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lineColor}" stroke-width="${lineWidth}"/>`;
+        
+        // House number in the middle of the house
+        const nextH = chartData.houses[(i + 1) % 12];
+        let nextDeg = nextH.signIdx * 30 + nextH.deg + nextH.min / 60;
+        let midDeg = (deg + nextDeg) / 2;
+        if (nextDeg < deg) midDeg = ((deg + nextDeg + 360) / 2) % 360;
+        const numX = polarX((radiusHouse + radiusInner) / 2, midDeg);
+        const numY = polarY((radiusHouse + radiusInner) / 2, midDeg);
+        html += `<text x="${numX}" y="${numY}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.6)" font-size="18" font-weight="bold">${i + 1}</text>`;
+        
+        // Cusp degree label (show degree inside zodiac ring)
+        const degText = `${h.deg}°${String(h.min).padStart(2,'0')}'`;
+        const degLabelX = polarX(radiusZodiac - 25, deg + 4);
+        const degLabelY = polarY(radiusZodiac - 25, deg + 4);
+        html += `<text x="${degLabelX}" y="${degLabelY}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.7)" font-size="12" font-weight="bold">${degText}</text>`;
+        
+        // Labels for ASC, IC, DESC, MC with degrees
+        if (i === 0) {
+          html += `<text x="${polarX(radiusZodiac + 20, deg)}" y="${polarY(radiusZodiac + 20, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="14" font-weight="bold">ASC</text>`;
+        } else if (i === 3) {
+          html += `<text x="${polarX(radiusZodiac + 20, deg)}" y="${polarY(radiusZodiac + 20, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="14" font-weight="bold">IC</text>`;
+        } else if (i === 6) {
+          html += `<text x="${polarX(radiusZodiac + 20, deg)}" y="${polarY(radiusZodiac + 20, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="14" font-weight="bold">DES</text>`;
+        } else if (i === 9) {
+          html += `<text x="${polarX(radiusZodiac + 20, deg)}" y="${polarY(radiusZodiac + 20, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="14" font-weight="bold">MC</text>`;
+        }
+      });
+    }
+    
+    // Inner circles
+    html += `<circle cx="${cx}" cy="${cy}" r="${radiusInner}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
+    html += `<circle cx="${cx}" cy="${cy}" r="${radiusCenter}" fill="#0D1B2A" stroke="rgba(139,92,246,0.5)" stroke-width="2"/>`;
+    
+    // Planets
+    if (chartData.planets) {
+      const planetList = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','fortune'];
+      const planetSyms = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',fortune:'⊕'};
+      const planetColors = {sun:'#F59E0B',moon:'#E2E8F0',mercury:'#A78BFA',venus:'#EC4899',mars:'#EF4444',jupiter:'#3B82F6',saturn:'#6B7280',uranus:'#06B6D4',neptune:'#8B5CF6',pluto:'#78716C',chiron:'#10B981',north:'#6EE7FF',fortune:'#22C55E'};
+      
+      // Sort planets by longitude to avoid overlap
+      const sortedPlanets = planetList
+        .filter(key => chartData.planets[key])
+        .map(key => ({
+          key, 
+          ...chartData.planets[key],
+          longitude: chartData.planets[key].longitude || (chartData.planets[key].signIdx * 30 + chartData.planets[key].deg + chartData.planets[key].min / 60)
+        }))
+        .sort((a, b) => a.longitude - b.longitude);
+      
+      // Spread out overlapping planets
+      let lastDeg = -999;
+      sortedPlanets.forEach((p, idx) => {
+        let displayDeg = p.longitude;
+        if (displayDeg - lastDeg < 10) displayDeg = lastDeg + 10;
+        lastDeg = displayDeg;
+        
+        const x = polarX(radiusPlanet, displayDeg);
+        const y = polarY(radiusPlanet, displayDeg);
+        const sym = planetSyms[p.key] || '?';
+        const color = planetColors[p.key] || '#FFF';
+        
+        // Planet symbol (larger)
+        html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="28" font-weight="bold" style="filter: drop-shadow(0 0 5px ${color}60)">${sym}</text>`;
+        
+        // Planet degree below symbol
+        const degX = polarX(radiusPlanet - 25, displayDeg);
+        const degY = polarY(radiusPlanet - 25, displayDeg);
+        html += `<text x="${degX}" y="${degY}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="12" opacity="0.85">${p.deg}°</text>`;
+        
+        // Line from planet to wheel edge
+        const edgeX = polarX(radiusInner, p.longitude);
+        const edgeY = polarY(radiusInner, p.longitude);
+        html += `<line x1="${x}" y1="${y}" x2="${edgeX}" y2="${edgeY}" stroke="${color}" stroke-width="1" stroke-opacity="0.5" stroke-dasharray="3,3"/>`;
+      });
+    }
+    
+    // Dekan markers - draw small ticks and dekan info
+    if (decanResults && decanResults.length > 0) {
+      // Use same element colors as the rest of the chart
+      
+      decanResults.forEach(house => {
+        if (!house.decans) return;
+        
+        house.decans.forEach((decan, di) => {
+          // Calculate the ecliptic degree for this decan start
+          // house.houseSign gives the sign name, we need the sign index
+          const houseSignIdx = SIGNS.indexOf(house.houseSign);
+          const startAbsMin = decan.startMin || 0;
+          
+          // Get house cusp from chartData for accurate positioning
+          if (chartData.houses && chartData.houses[house.house - 1]) {
+            const houseCusp = chartData.houses[house.house - 1];
+            const cuspDeg = houseCusp.signIdx * 30 + houseCusp.deg + houseCusp.min / 60;
+            
+            // Dekan position = house cusp + dekan offset
+            const decanOffsetMin = di * (house.meta.decanSizeMin);
+            const decanDeg = cuspDeg + decanOffsetMin / 60;
+            
+            // Draw dekan tick mark
+            const decanSignEl = elementOf(decan.decanSign);
+            const decanColor = EL_COLORS[decanSignEl] || '#a855f7';
+            
+            if (di > 0) { // Don't draw tick for first dekan (it's the house cusp)
+              const tx1 = polarX(radiusHouse, decanDeg);
+              const ty1 = polarY(radiusHouse, decanDeg);
+              const tx2 = polarX(radiusInner, decanDeg);
+              const ty2 = polarY(radiusInner, decanDeg);
+              html += `<line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="${decanColor}" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="3,3"/>`;
+            }
+            
+            // Add dekan symbol in the middle of each dekan section
+            const nextDecanDeg = cuspDeg + (di + 1) * (house.meta.decanSizeMin) / 60;
+            const midDecanDeg = (decanDeg + nextDecanDeg) / 2;
+            const decanSymX = polarX((radiusHouse + radiusInner) / 2 - 20, midDecanDeg);
+            const decanSymY = polarY((radiusHouse + radiusInner) / 2 - 20, midDecanDeg);
+            
+            // Small dekan sign symbol
+            html += `<text x="${decanSymX}" y="${decanSymY}" text-anchor="middle" dominant-baseline="central" fill="${decanColor}" font-size="14" opacity="0.8">${SIGN_SYM[decan.decanSign]}</text>`;
+          }
+        });
+      });
+    }
+    
+    // Center info
+    if (chartData.asc) {
+      html += `<text x="${cx}" y="${cy - 20}" text-anchor="middle" fill="#6EE7FF" font-size="16">Yükselen</text>`;
+      html += `<text x="${cx}" y="${cy + 8}" text-anchor="middle" fill="#FFF" font-size="20" font-weight="bold">${SIGN_SYM[SIGNS[chartData.asc.signIdx]]} ${chartData.asc.deg}°${String(chartData.asc.min).padStart(2,'0')}'</text>`;
+      html += `<text x="${cx}" y="${cy + 35}" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="14">${SIGNS[chartData.asc.signIdx]}</text>`;
+    }
+    
+    svg.innerHTML = html;
+    
+    // Legend
+    const legend = $('chartLegend');
+    if (legend && chartData.planets) {
+      const planetNames = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',chiron:'Chiron',north:'KAD',fortune:'Şans'};
+      const planetSyms = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',fortune:'⊕'};
+      let legendHtml = '<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">';
+      for (const key of ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','fortune']) {
+        const p = chartData.planets[key];
+        if (!p) continue;
+        legendHtml += `<span style="font-size:12px;color:rgba(255,255,255,0.7)">${planetSyms[key]} ${planetNames[key]}: ${SIGN_SYM[SIGNS[p.signIdx]]} ${p.deg}°${String(p.min).padStart(2,'0')}' (${p.house}. ev)</span>`;
+      }
+      legendHtml += '</div>';
+      legend.innerHTML = legendHtml;
+    }
+  }
+
+  // ========== PRESETS ==========
+  const PRESETS = {
+    D: {asc:1,birthDay:13,birthMonth:11,birthYear:1993,cusps:[{deg:26,min:34},{deg:21,min:45},{deg:12,min:31},{deg:4,min:7},{deg:1,min:8},{deg:9,min:22}],axes:[],sameFlags:[],planets:{sun:{house:6,sign:7,deg:21,min:15},moon:{house:6,sign:7,deg:17,min:26},mercury:{house:6,sign:7,deg:6,min:46},venus:{house:6,sign:7,deg:5,min:40},mars:{house:7,sign:8,deg:3,min:9},jupiter:{house:6,sign:7,deg:0,min:41},saturn:{house:10,sign:10,deg:23,min:52},uranus:{house:9,sign:9,deg:19,min:8},neptune:{house:9,sign:9,deg:18,min:54},pluto:{house:6,sign:7,deg:25,min:15},north:{house:7,sign:8,deg:3,min:39},south:{house:1,sign:2,deg:3,min:39},chiron:{house:5,sign:5,deg:7,min:49},fortune:{house:1,sign:2,deg:0,min:23}}},
+    K: {asc:6,birthDay:5,birthMonth:10,birthYear:1994,cusps:[{deg:2,min:59},{deg:29,min:13},{deg:29,min:46},{deg:3,min:28},{deg:7,min:1},{deg:7,min:15}],axes:[3],sameFlags:[1],planets:{sun:{house:1,sign:6,deg:12,min:39},moon:{house:1,sign:6,deg:26,min:15},mercury:{house:2,sign:7,deg:5,min:55},venus:{house:2,sign:7,deg:17,min:22},mars:{house:10,sign:4,deg:0,min:50},jupiter:{house:2,sign:7,deg:16,min:5},saturn:{house:5,sign:11,deg:6,min:38},uranus:{house:4,sign:9,deg:22,min:23},neptune:{house:4,sign:9,deg:20,min:34},pluto:{house:2,sign:7,deg:26,min:17},north:{house:2,sign:7,deg:16,min:22},south:{house:8,sign:1,deg:16,min:22},chiron:{house:12,sign:5,deg:18,min:41},fortune:{house:12,sign:5,deg:19,min:23}}},
+    S: {asc:7,birthDay:6,birthMonth:8,birthYear:1998,birthHour:14,birthMinute:37,birthCity:'Antalya',birthLat:36.8969,birthLng:30.7133,cusps:[{deg:26,min:42},{deg:27,min:21},{deg:2,min:18},{deg:8,min:6},{deg:9,min:35},{deg:6,min:15}],axes:[2],sameFlags:[6],planets:{sun:{house:9,sign:4,deg:13,min:48},moon:{house:2,sign:9,deg:23,min:16},mercury:{house:9,sign:4,deg:26,min:31},venus:{house:8,sign:3,deg:21,min:35},mars:{house:8,sign:3,deg:20,min:41},jupiter:{house:4,sign:11,deg:27,min:26},saturn:{house:5,sign:1,deg:3,min:33},uranus:{house:3,sign:10,deg:10,min:38},neptune:{house:3,sign:10,deg:0,min:24},pluto:{house:1,sign:8,deg:5,min:19},north:{house:10,sign:5,deg:2,min:12},south:{house:4,sign:11,deg:2,min:12},chiron:{house:12,sign:7,deg:12,min:58},fortune:{house:6,sign:1,deg:6,min:10}}}
+  };
+
+  // Solar Presets
+  const SOLAR_PRESETS = {
+    S2020: {
+      birthDay: 6, birthMonth: 8, solarYear: 2020,
+      planets: {
+        sun:{sign:4,deg:13,min:15},moon:{sign:11,deg:8,min:47},mercury:{sign:4,deg:1,min:48},
+        venus:{sign:2,deg:28,min:20},mars:{sign:0,deg:20,min:15},jupiter:{sign:9,deg:19,min:36},
+        saturn:{sign:9,deg:27,min:29},uranus:{sign:1,deg:10,min:39},neptune:{sign:11,deg:20,min:28},
+        pluto:{sign:9,deg:23,min:14},north:{sign:2,deg:26,min:42},south:{sign:8,deg:26,min:42},
+        chiron:{sign:0,deg:9,min:10},fortune:{sign:5,deg:8,min:15}
+      }
+    }
+  };
+
+  function applyPreset(name, prefix) {
+    const p = PRESETS[name]; if(!p) return;
+    // ASC
+    document.querySelectorAll(`#${prefix}AscGrid input`).forEach(r=>r.checked=Number(r.value)===p.asc);
+    // Cusps
+    p.cusps.forEach((c,i)=>{$(`${prefix}Deg${i+1}`).value=c.deg;$(`${prefix}Min${i+1}`).value=c.min;});
+    // Same
+    for(let i=1;i<=6;i++){const el=$(`${prefix}Same${i}`);if(el)el.checked=p.sameFlags.includes(i);}
+    // Axes
+    document.querySelectorAll(`#${prefix}AxisGrid .axis`).forEach(cb=>cb.checked=p.axes.includes(Number(cb.value)));
+    // Planets
+    Object.entries(p.planets).forEach(([k,d])=>{
+      const h=$(`${prefix}_${k}_house`);if(h)h.value=d.house;
+      $(`${prefix}_${k}_sign`).value=d.sign;
+      $(`${prefix}_${k}_deg`).value=d.deg;
+      $(`${prefix}_${k}_min`).value=d.min;
+    });
+    // Birth date (for seven)
+    if(prefix==='seven'){
+      $('sevenBirthDay').value=p.birthDay;
+      $('sevenBirthMonth').value=p.birthMonth;
+      $('sevenBirthYear').value=p.birthYear;
+    }
+  }
+
+  // ========== INIT ==========
+  // Build UI
+  buildAscGrid($('decanAscGrid'));
+  buildAscGrid($('sevenAscGrid'));
+  buildAxisGrid($('decanAxisGrid'));
+  buildAxisGrid($('sevenAxisGrid'));
+  buildCuspGrid($('decanCuspGrid'), 'decan');
+  buildCuspGrid($('sevenCuspGrid'), 'seven');
+  buildPlanetGrid($('decanPlanetGrid'), 'decan', true);
+  buildPlanetGrid($('sevenPlanetGrid'), 'seven', true);
+  buildPlanetGrid($('solarPlanetGrid'), 'solar', false);
+  buildMonthSelect($('sevenBirthMonth'));
+  buildMonthSelect($('solarBirthMonth'));
+  
+  // Auto-calculate setup
+  setupAutoCalc('Decan');
+
+  // Auto-calculate button handler
+  function fillFormFromChart(chart, prefix) {
+    // Fill ASC
+    const ascIdx = chart.asc.signIdx;
+    document.querySelectorAll(`#${prefix}AscGrid input[type="radio"]`).forEach(r => {
+      r.checked = Number(r.value) === ascIdx;
+    });
+
+    // Fill house cusps (first 6)
+    for (let i = 0; i < 6; i++) {
+      const h = chart.houses[i];
+      $(`${prefix}Deg${i+1}`).value = h.deg;
+      $(`${prefix}Min${i+1}`).value = h.min;
+    }
+
+    // Fill planets with correct house calculation (including Part of Fortune)
+    const planetKeys = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','south','fortune'];
+    
+    // Calculate house cusps in absolute degrees (0-360)
+    const houseCusps = chart.houses.map(h => (h.signIdx * 30 + h.deg + h.min / 60) % 360);
+    
+    planetKeys.forEach(key => {
+      const p = chart.planets[key];
+      if (!p) return;
+      
+      // Planet position in absolute degrees
+      const planetDeg = (p.signIdx * 30 + p.deg + p.min / 60) % 360;
+      
+      // Find which house the planet is in
+      let house = 1;
+      for (let i = 0; i < 12; i++) {
+        const cuspStart = houseCusps[i];
+        const cuspEnd = houseCusps[(i + 1) % 12];
+        
+        // Handle wrap-around at 0 degrees
+        let inHouse = false;
+        if (cuspStart <= cuspEnd) {
+          // Normal case: cusp doesn't wrap around
+          inHouse = planetDeg >= cuspStart && planetDeg < cuspEnd;
+        } else {
+          // Wrap-around case: house spans 0 degrees
+          inHouse = planetDeg >= cuspStart || planetDeg < cuspEnd;
+        }
+        
+        if (inHouse) {
+          house = i + 1;
+          break;
+        }
+      }
+      
+      const hEl = $(`${prefix}_${key}_house`); if (hEl) hEl.value = house;
+      const sEl = $(`${prefix}_${key}_sign`); if (sEl) sEl.value = p.signIdx;
+      const dEl = $(`${prefix}_${key}_deg`); if (dEl) dEl.value = p.deg;
+      const mEl = $(`${prefix}_${key}_min`); if (mEl) mEl.value = p.min;
+    });
+
+    // Fill intercepted axes (kıstırılmış eksenler)
+    if (chart.interceptedAxes) {
+      document.querySelectorAll(`#${prefix}AxisGrid .axis`).forEach(cb => {
+        cb.checked = chart.interceptedAxes.includes(Number(cb.value));
+      });
+    }
+
+    // Fill same-sign houses (aynı burçta 2 ev başlangıcı)
+    if (chart.sameSignHouses) {
+      for (let i = 1; i <= 6; i++) {
+        const sameEl = $(`${prefix}Same${i}`);
+        if (sameEl) {
+          sameEl.checked = chart.sameSignHouses.includes(i);
+        }
+      }
+    }
+  }
+
+  // Quick location button handlers
+  document.querySelectorAll('.quick-loc').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const city = btn.dataset.city;
+      // Set Turkey as country
+      $('autoDecanCountry').value = 'TR';
+      $('autoDecanCountry').dispatchEvent(new Event('change'));
+      // Wait for city list to update, then select the city
+      setTimeout(() => {
+        $('autoDecanCity').value = city;
+        $('autoDecanCity').dispatchEvent(new Event('change'));
+      }, 50);
+    });
+  });
+
+  // Clear button handler
+  $('autoDecanClearBtn').addEventListener('click', () => {
+    $('autoDecanDay').value = '';
+    $('autoDecanMonth').value = '';
+    $('autoDecanYear').value = '';
+    $('autoDecanHour').value = '';
+    $('autoDecanMinute').value = '';
+    $('autoDecanCountry').value = '';
+    $('autoDecanCity').innerHTML = '<option value="">Önce ülke seç</option>';
+    $('autoDecanLat').value = '';
+    $('autoDecanLng').value = '';
+    $('autoDecanStatus').innerHTML = '';
+    // Also clear results
+    $('decanResults').innerHTML = '';
+    $('sevenResults').innerHTML = '';
+  });
+
+  $('autoDecanCalcBtn').addEventListener('click', async () => {
+    const day = Number($('autoDecanDay').value);
+    const month = Number($('autoDecanMonth').value);
+    const year = Number($('autoDecanYear').value);
+    const hour = Number($('autoDecanHour').value) || 12;
+    const minute = Number($('autoDecanMinute').value) || 0;
+    const lat = Number($('autoDecanLat').value);
+    const lng = Number($('autoDecanLng').value);
+    const countryCode = $('autoDecanCountry').value;
+    
+    const statusEl = $('autoDecanStatus');
+    
+    if (!day || !month || !year) {
+      statusEl.innerHTML = '<span style="color:var(--err)">Doğum tarihi girin</span>';
+      return;
+    }
+    if (!lat || !lng) {
+      statusEl.innerHTML = '<span style="color:var(--err)">Şehir seçin veya koordinat girin</span>';
+      return;
+    }
+
+    // Get timezone
+    let tz = 'Europe/Istanbul';
+    if (countryCode && COUNTRIES[countryCode]) {
+      tz = COUNTRIES[countryCode].tz;
+      const city = $('autoDecanCity').value;
+      if (city && COUNTRIES[countryCode].cities[city]?.tz) {
+        tz = COUNTRIES[countryCode].cities[city].tz;
+      }
+    }
+
+    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Hesaplanıyor (Dekan + 7\'ler)...</span>';
+
+    try {
+      const chart = await calculateChart(year, month, day, hour, minute, lat, lng, tz);
+      
+      // Fill Dekan form
+      fillFormFromChart(chart, 'decan');
+      
+      // Also fill 7'ler form (same data)
+      fillFormFromChart(chart, 'seven');
+      // Set birth date for 7'ler
+      $('sevenBirthDay').value = day;
+      $('sevenBirthMonth').value = month;
+      $('sevenBirthYear').value = year;
+      
+      // Calculate aspects from chart data
+      let aspects = [];
+      if (chart && chart.planets) {
+        const planetLongs = {};
+        for (const [key, p] of Object.entries(chart.planets)) {
+          if (p.longitude !== undefined) {
+            planetLongs[key] = p.longitude;
+          } else if (p.signIdx !== undefined) {
+            planetLongs[key] = p.signIdx * 30 + p.deg + p.min / 60;
+          }
+        }
+        aspects = calculateAspects(planetLongs);
+      }
+      
+      // Calculate Dekan
+      const decanInput = readCusps('decan', 'decanAxisGrid');
+      let decanResults = null;
+      if (decanInput) {
+        const asc = readAsc('decanAscGrid');
+        const planets = readPlanets('decan', true);
+        decanResults = computeDecan(decanInput.cusps, decanInput.flags, decanInput.add30, asc);
+        renderDecan(decanResults, planets, decanInput.cusps, decanInput.flags, decanInput.add30, asc, $('decanResults'), aspects);
+      }
+      
+      // Calculate 7'ler
+      const sevenInput = readCusps('seven', 'sevenAxisGrid');
+      if (sevenInput) {
+        const asc = readAsc('sevenAscGrid');
+        const planets = readPlanets('seven', true);
+        const sev = computeSeven(sevenInput.cusps, sevenInput.flags, sevenInput.add30, asc, day, month, year);
+        renderSeven(sev, planets, sevenInput.cusps, sevenInput.flags, sevenInput.add30, asc, $('sevenResults'), aspects);
+      }
+      
+      // Draw wheel chart
+      drawWheelChart(chart, decanResults);
+      
+      // Sync to Veriler tab
+      $('verilerDay').value = day;
+      $('verilerMonth').value = month;
+      $('verilerYear').value = year;
+      $('verilerHour').value = hour;
+      $('verilerMinute').value = minute;
+      $('verilerLat').value = lat;
+      $('verilerLng').value = lng;
+      // Trigger city selection
+      if (countryCode) {
+        $('verilerCountry').value = countryCode;
+        $('verilerCountry').dispatchEvent(new Event('change'));
+        setTimeout(() => {
+          if (city) $('verilerCity').value = city;
+        }, 50);
+      }
+      
+      // Also render Veriler data
+      renderVerilerData(chart);
+      
+      // Build status message
+      let statusMsg = '<span style="color:var(--ok)">✓ Dekan ve 7\'ler hesaplandı!</span>';
+      
+      // Check if Swiss Ephemeris was used (Placidus)
+      const usedPlacidus = window.SwissEphemeris && window.SwissEphemeris.isReady();
+      if (usedPlacidus) {
+        statusMsg += '<br><span style="color:var(--ok)">🌟 Swiss Ephemeris (Placidus) + DST otomatik</span>';
+      }
+      
+      // Add info about detected special situations
+      if (chart.interceptedAxes && chart.interceptedAxes.length > 0) {
+        statusMsg += `<br><span style="color:var(--accent)">🔸 Kıstırılmış eksen: ${chart.interceptedAxes.map(a => `${a}-${a+6}`).join(', ')}</span>`;
+      }
+      if (chart.sameSignHouses && chart.sameSignHouses.length > 0) {
+        statusMsg += `<br><span style="color:var(--accent-2)">🔸 Aynı burçta ev: ${chart.sameSignHouses.join(', ')}. evler</span>`;
+      }
+
+      statusEl.innerHTML = statusMsg;
+      
+      // Update dual view if active
+      if (document.querySelector('.wrap').classList.contains('view-2')) {
+        updateDualView();
+      }
+      
+    } catch (e) {
+      statusEl.innerHTML = `<span style="color:var(--err)">Hata: ${e.message}</span>`;
+    }
+  });
+
+  // Main tabs
+  document.querySelectorAll('.main-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.main-panel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      $(`panel${tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)}`).classList.add('active');
+    });
+  });
+
+  // View Toggle (1 = Klasik, 2 = Geniş Dual View)
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const wrap = document.querySelector('.wrap');
+      wrap.classList.remove('view-1', 'view-2');
+      wrap.classList.add('view-' + btn.dataset.view);
+      
+      // If switching to view 2, update dual panel with current data
+      if (btn.dataset.view === '2') {
+        updateDualView();
+      }
+    });
+  });
+
+  // Update dual view with aligned houses (Dekan left, 7'ler right)
+  function updateDualView() {
+    const container = $('dualAlignedResults');
+    if (!container) return;
+    
+    const decanHouses = $('decanResults').querySelectorAll('.house');
+    const sevenHouses = $('sevenResults').querySelectorAll('.house');
+    
+    if (decanHouses.length === 0 && sevenHouses.length === 0) {
+      container.innerHTML = '<p class="hint" style="color:var(--muted);text-align:center;grid-column:1/-1">Sonuç görmek için Dekan Hesaplama sekmesinde hesaplama yapın.</p>';
+      return;
+    }
+    
+    container.innerHTML = '';
+    
+    // Create aligned rows for each house (1-12)
+    for (let i = 0; i < 12; i++) {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start';
+      
+      // Dekan house (left)
+      const dekanCol = document.createElement('div');
+      if (decanHouses[i]) {
+        dekanCol.innerHTML = decanHouses[i].outerHTML;
+      } else {
+        dekanCol.innerHTML = '<div class="house" style="opacity:0.5"><p class="hint">Hesaplanmadı</p></div>';
+      }
+      row.appendChild(dekanCol);
+      
+      // 7'ler house (right)
+      const sevenCol = document.createElement('div');
+      if (sevenHouses[i]) {
+        sevenCol.innerHTML = sevenHouses[i].outerHTML;
+      } else {
+        sevenCol.innerHTML = '<div class="house" style="opacity:0.5"><p class="hint">Hesaplanmadı</p></div>';
+      }
+      row.appendChild(sevenCol);
+      
+      container.appendChild(row);
+    }
+  }
+
+  // Preset buttons
+  document.querySelectorAll('#panelDecan .preset').forEach(btn => btn.addEventListener('click', () => applyPreset(btn.dataset.preset, 'decan')));
+  document.querySelectorAll('#panelSeven .preset').forEach(btn => btn.addEventListener('click', () => applyPreset(btn.dataset.preset, 'seven')));
+
+  // Decan calc
+  $('decanCalc').addEventListener('click', () => {
+    const input = readCusps('decan', 'decanAxisGrid'); if(!input) return;
+    const asc = readAsc('decanAscGrid'), planets = readPlanets('decan', true);
+    const dec = computeDecan(input.cusps, input.flags, input.add30, asc);
+    renderDecan(dec, planets, input.cusps, input.flags, input.add30, asc, $('decanResults'));
+  });
+
+  // Seven calc
+  $('sevenCalc').addEventListener('click', () => {
+    const input = readCusps('seven', 'sevenAxisGrid'); if(!input) return;
+    const asc = readAsc('sevenAscGrid'), planets = readPlanets('seven', true);
+    const by = Number($('sevenBirthYear').value) || null;
+    const sev = computeSeven(input.cusps, input.flags, input.add30, asc, by);
+    renderSeven(sev, planets, input.cusps, input.flags, input.add30, asc, $('sevenResults'));
+  });
+
+  // Solar calc
+  $('solarCalc').addEventListener('click', () => {
+    const bDay = Number($('solarBirthDay').value), bMonth = Number($('solarBirthMonth').value), sYear = Number($('solarYear').value);
+    if (!bDay || !bMonth || !sYear) { $('solarResults').innerHTML = '<p class="hint" style="color:var(--err)">Doğum tarihi ve solar yılı girin.</p>'; return; }
+    const planets = readPlanets('solar', false);
+    if (planets.length === 0 || !planets.find(p=>p.key==='sun')) { $('solarResults').innerHTML = '<p class="hint" style="color:var(--err)">En az Güneş pozisyonu gerekli.</p>'; return; }
+    const data = computeSolar(planets, bDay, bMonth, sYear);
+    renderSolar(data, $('solarResults'));
+  });
+
+  // Clear buttons - now also clears axes and ASC
+  $('decanClear').addEventListener('click', () => {
+    for(let i=1;i<=6;i++){$(`decanDeg${i}`).value='';$(`decanMin${i}`).value='';$(`decanSame${i}`).checked=false;}
+    document.querySelectorAll('#decanAxisGrid .axis').forEach(cb => cb.checked = false);
+    document.querySelectorAll('#decanAscGrid input[type="radio"]').forEach((r,i) => r.checked = i===0);
+    PLANETS.forEach(p => {const h=$(`decan_${p.key}_house`);if(h)h.value='';const s=$(`decan_${p.key}_sign`);if(s)s.value='';const d=$(`decan_${p.key}_deg`);if(d)d.value='';const m=$(`decan_${p.key}_min`);if(m)m.value='';});
+    $('decanResults').innerHTML='';
+  });
+  $('sevenClear').addEventListener('click', () => {
+    for(let i=1;i<=6;i++){$(`sevenDeg${i}`).value='';$(`sevenMin${i}`).value='';$(`sevenSame${i}`).checked=false;}
+    document.querySelectorAll('#sevenAxisGrid .axis').forEach(cb => cb.checked = false);
+    document.querySelectorAll('#sevenAscGrid input[type="radio"]').forEach((r,i) => r.checked = i===0);
+    PLANETS.forEach(p => {const h=$(`seven_${p.key}_house`);if(h)h.value='';const s=$(`seven_${p.key}_sign`);if(s)s.value='';const d=$(`seven_${p.key}_deg`);if(d)d.value='';const m=$(`seven_${p.key}_min`);if(m)m.value='';});
+    $('sevenBirthDay').value='';$('sevenBirthMonth').value='';$('sevenBirthYear').value='';$('sevenResults').innerHTML='';
+  });
+  $('solarClear').addEventListener('click', () => { $('solarBirthDay').value='';$('solarBirthMonth').value='';$('solarBirthYear').value='';$('solarYear').value='';PLANETS.forEach(p=>{$(`solar_${p.key}_sign`).value='';$(`solar_${p.key}_deg`).value='';$(`solar_${p.key}_min`).value='';});$('solarResults').innerHTML=''; });
+
+  // Veriler panel setup - direct initialization (different ID format)
+  buildCountrySelect($('verilerCountry'));
+  $('verilerCountry').addEventListener('change', () => updateCitySelect($('verilerCountry'), $('verilerCity'), $('verilerLat'), $('verilerLng')));
+  buildMonthSelect($('verilerMonth'));
+
+  // Veriler panel calculation and display
+  function renderVerilerData(chart) {
+    const container = $('verilerResults');
+    container.innerHTML = '';
+    
+    // ASC Card
+    const ascCard = document.createElement('div');
+    ascCard.className = 'house';
+    ascCard.innerHTML = `
+      <div class="title"><span class="badge" style="background:rgba(110,231,255,.15);border-color:rgba(110,231,255,.4)">ASC</span> Yükselen</div>
+      <div class="kv" style="background:rgba(110,231,255,.08)"><div>Burç</div><div><strong>${SIGN_SYM[SIGNS[chart.asc.signIdx]]} ${SIGNS[chart.asc.signIdx]} ${chart.asc.deg}°${String(chart.asc.min).padStart(2,'0')}'</strong></div></div>
+    `;
+    container.appendChild(ascCard);
+
+    // Houses Card
+    const housesCard = document.createElement('div');
+    housesCard.className = 'house';
+    housesCard.innerHTML = `<div class="title"><span class="badge" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.4)">🏠</span> Ev Başlangıçları</div>`;
+    const houseList = document.createElement('div');
+    houseList.className = 'list';
+    chart.houses.forEach(h => {
+      const kv = document.createElement('div');
+      kv.className = 'kv';
+      kv.innerHTML = `<div><strong>${h.house}. Ev</strong></div><div>${SIGN_SYM[SIGNS[h.signIdx]]} ${SIGNS[h.signIdx]} ${h.deg}°${String(h.min).padStart(2,'0')}'</div>`;
+      houseList.appendChild(kv);
+    });
+    housesCard.appendChild(houseList);
+    // Placidus house system is now used via Swiss Ephemeris
+    container.appendChild(housesCard);
+
+    const planetsCard = document.createElement('div');
+    planetsCard.className = 'house';
+    planetsCard.innerHTML = `<div class="title"><span class="badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4)">🪐</span> Gezegen Konumları (Eve Göre)</div>`;
+    const planetList = document.createElement('div');
+    planetList.className = 'list';
+    
+    const planetOrder = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','south','fortune'];
+    const planetNames = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',chiron:'Chiron',north:'Kuzey Ay Düğümü',south:'Güney Ay Düğümü',fortune:'Şans Noktası'};
+    const planetSyms = {sun:'☉',moon:'☽',mercury:'☿️',venus:'♀️',mars:'♂️',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',south:'☋',fortune:'⊕'};
+    
+    // Calculate house for each planet and group by house
+    const houseCusps = chart.houses.map(h => (h.signIdx * 30 + h.deg + h.min / 60) % 360);
+    const planetsByHouse = {};
+    
+    planetOrder.forEach(key => {
+      const p = chart.planets[key];
+      if (!p) return;
+      
+      const planetDeg = (p.signIdx * 30 + p.deg + p.min / 60) % 360;
+      let house = 1;
+      for (let i = 0; i < 12; i++) {
+        const cuspStart = houseCusps[i];
+        const cuspEnd = houseCusps[(i + 1) % 12];
+        let inHouse = cuspStart <= cuspEnd ? (planetDeg >= cuspStart && planetDeg < cuspEnd) : (planetDeg >= cuspStart || planetDeg < cuspEnd);
+        if (inHouse) { house = i + 1; break; }
+      }
+      
+      if (!planetsByHouse[house]) planetsByHouse[house] = [];
+      planetsByHouse[house].push({ key, ...p, house });
+    });
+    
+    // Display planets grouped by house with separators
+    Object.keys(planetsByHouse).sort((a, b) => Number(a) - Number(b)).forEach((house, idx) => {
+      // House header separator
+      const houseHeader = document.createElement('div');
+      houseHeader.className = 'kv';
+      houseHeader.style.cssText = 'background:rgba(110,231,255,.1);border-left:3px solid var(--accent);padding:8px 12px;font-weight:bold;margin-top:' + (idx > 0 ? '12px' : '0');
+      const houseSign = chart.houses[house - 1];
+      houseHeader.innerHTML = `<div>${house}. Ev</div><div style="color:var(--muted)">${SIGN_SYM[SIGNS[houseSign.signIdx]]} ${SIGNS[houseSign.signIdx]}</div>`;
+      planetList.appendChild(houseHeader);
+      
+      planetsByHouse[house].forEach(p => {
+        const kv = document.createElement('div');
+        kv.className = 'kv planet';
+        kv.style.marginLeft = '12px';
+        kv.innerHTML = `<div><strong>${planetSyms[p.key]} ${planetNames[p.key]}</strong></div><div>${SIGN_SYM[SIGNS[p.signIdx]]} ${SIGNS[p.signIdx]} ${p.deg}°${String(p.min).padStart(2,'0')}'</div>`;
+        planetList.appendChild(kv);
+      });
+    });
+    planetsCard.appendChild(planetList);
+    container.appendChild(planetsCard);
+
+    // Aspects Card - grouped by planet
+    if (chart.aspects && chart.aspects.length > 0) {
+      const aspectsCard = document.createElement('div');
+      aspectsCard.className = 'house';
+      aspectsCard.innerHTML = `<div class="title"><span class="badge" style="background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.4)">⚹</span> Açılar (Gezegene Göre)</div>`;
+      const aspectList = document.createElement('div');
+      aspectList.className = 'list';
+      
+      // Group aspects by first planet
+      const aspectsByPlanet = {};
+      chart.aspects.forEach(a => {
+        if (!aspectsByPlanet[a.planet1]) aspectsByPlanet[a.planet1] = [];
+        aspectsByPlanet[a.planet1].push(a);
+      });
+      
+      Object.keys(aspectsByPlanet).forEach((planet, idx) => {
+        // Planet header separator
+        const planetHeader = document.createElement('div');
+        planetHeader.className = 'kv';
+        planetHeader.style.cssText = 'background:rgba(168,85,247,.1);border-left:3px solid #a855f7;padding:8px 12px;font-weight:bold;margin-top:' + (idx > 0 ? '12px' : '0');
+        planetHeader.innerHTML = `<div>${planetSyms[planet]} ${planetNames[planet]}</div><div style="color:var(--muted)">${aspectsByPlanet[planet].length} açı</div>`;
+        aspectList.appendChild(planetHeader);
+        
+        aspectsByPlanet[planet].forEach(a => {
+          const kv = document.createElement('div');
+          kv.className = 'kv';
+          kv.style.cssText = 'margin-left:12px;border-left:3px solid ' + a.color;
+          const p2Name = planetNames[a.planet2] || a.planet2;
+          const p2Sym = planetSyms[a.planet2] || '';
+          const exactBadge = a.exact ? '<span style="background:#22c55e;color:#000;padding:2px 6px;border-radius:4px;font-size:10px;margin-left:8px">TAM</span>' : '';
+          kv.innerHTML = `<div><span style="color:${a.color};font-weight:bold">${a.symbol}</span> ${a.aspect} <strong>${p2Sym} ${p2Name}</strong>${exactBadge}</div><div style="color:var(--muted)">Orb: ${a.orb}°</div>`;
+          aspectList.appendChild(kv);
+        });
+      });
+      aspectsCard.appendChild(aspectList);
+      container.appendChild(aspectsCard);
+    }
+
+    // Special Info Card (Intercepted axes + Same sign starts)
+    if ((chart.interceptedAxes && chart.interceptedAxes.length > 0) || (chart.sameSignHouses && chart.sameSignHouses.length > 0)) {
+      const infoCard = document.createElement('div');
+      infoCard.className = 'house';
+      infoCard.innerHTML = `<div class="title"><span class="badge" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.4)">⚠️</span> Özel Durumlar</div>`;
+      const infoList = document.createElement('div');
+      infoList.className = 'list';
+      
+      if (chart.interceptedAxes && chart.interceptedAxes.length > 0) {
+        const kv = document.createElement('div');
+        kv.className = 'kv';
+        kv.style.borderLeft = '3px solid #f59e0b';
+        kv.innerHTML = `<div><strong>Kıstırılmış Eksenler</strong></div><div>${chart.interceptedAxes.map(a => `${a}-${a+6}`).join(', ')} eksenleri</div>`;
+        infoList.appendChild(kv);
+      }
+      
+      if (chart.sameSignHouses && chart.sameSignHouses.length > 0) {
+        const kv = document.createElement('div');
+        kv.className = 'kv';
+        kv.style.borderLeft = '3px solid #8b5cf6';
+        const details = chart.sameSignHouses.map(h => {
+          const sign = SIGNS[chart.houses[h-1].signIdx];
+          return `${h}. ve ${h+1}. ev (${sign})`;
+        }).join(', ');
+        kv.innerHTML = `<div><strong>Aynı Burçta 2 Ev</strong></div><div>${details}</div>`;
+        infoList.appendChild(kv);
+      }
+      
+      infoCard.appendChild(infoList);
+      container.appendChild(infoCard);
+    }
+  }
+
+  $('verilerCalc').addEventListener('click', async () => {
+    const day = Number($('verilerDay').value);
+    const month = Number($('verilerMonth').value);
+    const year = Number($('verilerYear').value);
+    const hour = Number($('verilerHour').value) || 12;
+    const minute = Number($('verilerMinute').value) || 0;
+    const lat = Number($('verilerLat').value);
+    const lng = Number($('verilerLng').value);
+    const countryCode = $('verilerCountry').value;
+    
+    if (!day || !month || !year) { $('verilerResults').innerHTML = '<p class="hint" style="color:var(--err)">Doğum tarihi girin</p>'; return; }
+    if (!lat || !lng) { $('verilerResults').innerHTML = '<p class="hint" style="color:var(--err)">Şehir seçin veya koordinat girin</p>'; return; }
+
+    let tz = 'Europe/Istanbul';
+    if (countryCode && COUNTRIES[countryCode]) {
+      tz = COUNTRIES[countryCode].tz;
+      const city = $('verilerCity').value;
+      if (city && COUNTRIES[countryCode].cities[city]?.tz) tz = COUNTRIES[countryCode].cities[city].tz;
+    }
+
+    $('verilerResults').innerHTML = '<p class="hint" style="color:var(--accent)">⏳ Hesaplanıyor...</p>';
+
+    try {
+      const chart = await calculateChart(year, month, day, hour, minute, lat, lng, tz);
+      renderVerilerData(chart);
+    } catch (e) {
+      $('verilerResults').innerHTML = `<p class="hint" style="color:var(--err)">Hata: ${e.message}</p>`;
+    }
+  });
+
+  $('verilerClear').addEventListener('click', () => {
+    $('verilerDay').value='';$('verilerMonth').value='';$('verilerYear').value='';
+    $('verilerHour').value='';$('verilerMinute').value='';
+    $('verilerCountry').value='';$('verilerCity').innerHTML='<option value="">Önce ülke seç</option>';
+    $('verilerLat').value='';$('verilerLng').value='';
+    $('verilerResults').innerHTML='';
+  });
+
+  // Solar preset
+  function applySolarPreset(name) {
+    const p = SOLAR_PRESETS[name]; if (!p) return;
+    $('solarBirthDay').value = p.birthDay;
+    $('solarBirthMonth').value = p.birthMonth;
+    $('solarYear').value = p.solarYear;
+    Object.entries(p.planets).forEach(([k, d]) => {
+      $(`solar_${k}_sign`).value = d.sign;
+      $(`solar_${k}_deg`).value = d.deg;
+      $(`solar_${k}_min`).value = d.min;
+    });
+  }
+  $('solarPresetS2020').addEventListener('click', () => applySolarPreset('S2020'));
+})();
+</script>
+</body>
+</html>

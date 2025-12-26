@@ -1,0 +1,17 @@
+{
+  "name": "asmm",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "ephemeris.js",
+  "scripts": {
+    "start": "node server.cjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "sweph-wasm": "^2.6.9"
+  }
+}
