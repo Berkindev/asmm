@@ -394,6 +394,43 @@ function calculateAspects(longitudes) {
 }
 
 /**
+ * Find the exact moment when the Sun crosses a specific longitude
+ * Uses Swiss Ephemeris swe_solcross_ut for precise calculation
+ * @param {number} targetLongitude Target Sun longitude (0-360)
+ * @param {number} startJD Julian Date to start searching from
+ * @param {number} flags Ephemeris flags (0 for default Swiss Ephemeris)
+ * @returns {Promise<number|null>} Julian Date when Sun crosses the target longitude
+ */
+async function findSolarCross(targetLongitude, startJD, flags = 0) {
+  if (!isInitialized) {
+    const success = await initEphemeris();
+    if (!success) {
+      console.error('Swiss Ephemeris not initialized');
+      return null;
+    }
+  }
+  
+  try {
+    // swe_solcross_ut returns the Julian Date when Sun crosses the given longitude
+    // This is the EXACT astronomical moment - no approximation needed
+    const resultJD = swe.swe_solcross_ut(targetLongitude, startJD, flags);
+    console.log(`🌞 Swiss Ephemeris solcross: Sun reaches ${targetLongitude.toFixed(4)}° at JD ${resultJD.toFixed(6)}`);
+    return resultJD;
+  } catch (error) {
+    console.error('Error in findSolarCross:', error);
+    return null;
+  }
+}
+
+/**
+ * Get the Swiss Ephemeris instance (for advanced calculations)
+ * @returns {object|null} Swiss Ephemeris instance
+ */
+function getSweInstance() {
+  return swe;
+}
+
+/**
  * Check if ephemeris is ready
  * @returns {boolean}
  */
@@ -408,6 +445,9 @@ export {
   isEphemerisReady,
   degToSignDegMin,
   getTurkeyOffset,
+  findSolarCross,
+  getSweInstance,
+  getJulianDay,
   PLANETS,
   SIGNS
 };

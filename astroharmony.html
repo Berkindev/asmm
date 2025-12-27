@@ -185,6 +185,8 @@
       .wrap { max-width: 100%; padding: 0 12px; }
       #dualAlignedResults > div { grid-template-columns: 1fr !important; }
       .dual-header { grid-template-columns: 1fr !important; gap: 8px !important; }
+      #solarResults { grid-template-columns: 1fr !important; }
+      #solarDekanResults { border-right: none !important; padding-right: 0 !important; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 16px; margin-bottom: 16px; }
     }
     
     @media (max-width: 900px) { 
@@ -390,36 +392,78 @@
     <div class="main-panel" id="panelSolar">
       <div class="card">
         <div class="card-body">
-          <div class="row">
-            <label><strong>Doğum Tarihi</strong></label>
-            <div class="inp">
-              <input id="solarBirthDay" type="number" min="1" max="31" placeholder="Gün" style="width:70px" />
-              <select id="solarBirthMonth"></select>
-              <input id="solarBirthYear" type="number" min="1900" max="2100" placeholder="Yıl" style="width:80px" />
-            </div>
+          <div class="hint" style="margin-bottom:16px;padding:12px;background:rgba(245,158,11,.1);border-radius:8px;border-left:3px solid #f59e0b">
+            <strong>☉ Solar Return Haritası</strong><br>
+            <span style="font-size:13px">Dekan sekmesinde doğum bilgilerinizi hesapladıktan sonra, buradan istediğiniz yılın Solar Return haritasını görüntüleyebilirsiniz.</span>
+          </div>
+          
+          <div id="solarNatalInfo" style="margin-bottom:16px;padding:12px;background:rgba(110,231,255,.05);border-radius:8px;display:none">
+            <div style="font-weight:bold;margin-bottom:8px;color:var(--accent)">📌 Natal Bilgiler</div>
+            <div id="solarNatalSummary" style="font-size:13px;color:var(--muted)"></div>
           </div>
 
           <div class="row">
             <label><strong>Solar Yılı</strong></label>
             <div class="inp">
-              <input id="solarYear" type="number" min="1900" max="2100" placeholder="2024" style="width:100px" />
-              <span class="hint">İncelemek istediğin yıl</span>
+              <input id="solarYear" type="number" min="1900" max="2100" placeholder="2024" style="width:120px" />
+              <span class="hint">İncelemek istediğin yıl (örn: 2020, 2024)</span>
             </div>
           </div>
-
-          <div style="margin-top:16px">
-            <div class="hint" style="margin-bottom:10px"><strong>Solar Harita Gezegenleri</strong></div>
-            <div class="hint" style="margin-bottom:12px">O yılın gezegen konumlarını gir (Solar Return chart)</div>
-            <div id="solarPlanetGrid" style="display:grid;gap:8px"></div>
+          
+          <div class="row" style="margin-top:12px">
+            <label><strong>Konum Seçimi</strong></label>
+            <div class="inp" style="flex-direction:column;align-items:flex-start;gap:8px">
+              <div style="display:flex;gap:16px;align-items:center">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                  <input type="radio" name="solarLocation" id="solarLocBirth" value="birth" checked style="width:auto" />
+                  <span>🏠 Doğum Yeri</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+                  <input type="radio" name="solarLocation" id="solarLocCustom" value="custom" style="width:auto" />
+                  <span>📍 Farklı Konum</span>
+                </label>
+              </div>
+              <span class="hint">Geleneksel: doğum yeri kullanılır | Modern: o yıl bulunduğunuz şehir</span>
+            </div>
+          </div>
+          
+          <div id="solarCustomLocation" style="display:none;margin-top:12px;padding:12px;background:rgba(139,92,246,.05);border-radius:8px;border-left:2px solid #8b5cf6">
+            <div class="row" style="margin:0">
+              <label>Şehir</label>
+              <div class="inp">
+                <input id="solarCustomCity" type="text" placeholder="Londra, Paris, New York..." style="width:180px" />
+                <button class="quick-loc" onclick="window.setSolarQuickLoc('London',51.5074,-0.1278)">Londra</button>
+                <button class="quick-loc" onclick="window.setSolarQuickLoc('Paris',48.8566,2.3522)">Paris</button>
+                <button class="quick-loc" onclick="window.setSolarQuickLoc('New York',40.7128,-74.0060)">New York</button>
+              </div>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <label>Koordinat</label>
+              <div class="inp">
+                <input id="solarCustomLat" type="number" step="0.0001" placeholder="Enlem" style="width:100px" />
+                <input id="solarCustomLng" type="number" step="0.0001" placeholder="Boylam" style="width:100px" />
+              </div>
+            </div>
+          </div>
+          
+          <div id="solarReturnDateInfo" style="margin-top:12px;padding:10px;background:rgba(34,197,94,.1);border-radius:8px;display:none">
+            <span style="color:#22c55e;font-weight:bold">☀️ Solar Return Tarihi:</span>
+            <span id="solarReturnDateText" style="margin-left:8px"></span>
           </div>
         </div>
         <div class="toolbar">
           <button class="secondary" id="solarClear">Temizle</button>
-          <button class="secondary preset" id="solarPresetS2020" title="Serra 2020">S2020</button>
-          <button class="primary" id="solarCalc">Hesapla</button>
+          <button class="primary" id="solarCalc" style="background:linear-gradient(135deg,#f59e0b,#d97706)">☉ Solar Hesapla</button>
         </div>
       </div>
-      <div class="results" id="solarResults"></div>
+      <div class="results" id="solarResults" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div id="solarDekanResults" style="border-right:1px solid rgba(255,255,255,.1);padding-right:16px">
+          <!-- Solar Return Dekan calculation will appear here -->
+        </div>
+        <div id="solarMonthResults">
+          <!-- Monthly planetary events will appear here -->
+        </div>
+      </div>
     </div>
 
     <!-- ==================== HARİTA (WHEEL CHART) PANEL ==================== -->
@@ -549,6 +593,9 @@
   const ELEMENT_CYCLE = {fire:[0,4,8],earth:[1,5,9],air:[2,6,10],water:[3,7,11]};
   const DEG_IN_MIN = 60, SIGN_IN_MIN = 30 * DEG_IN_MIN;
 
+  // ========== GLOBAL NATAL DATA (populated by Dekan calculation) ==========
+  let globalNatalData = null; // Stores: { birthDay, birthMonth, birthYear, birthHour, birthMinute, lat, lng, chart, sunLongitude }
+
   // ========== CITY DATABASE ==========
   const COUNTRIES = {
     TR: {name: "Türkiye", tz: "Europe/Istanbul", cities: {
@@ -675,15 +722,32 @@
     }
     
     try {
-      // For Turkey, use automatic DST detection
+      // Determine timezone offset
       let offset;
-      if (tz === 'tr' || tz === 'turkey' || tz === 'istanbul' || 
-          (lat > 35 && lat < 43 && lng > 25 && lng < 45)) {
+      
+      // CRITICAL: If tz is EXACTLY 0 (not falsy), time is already in UT
+      // This is used for Solar Return calculations where Swiss Ephemeris returns UT
+      if (tz === 0) {
+        offset = 0;
+        console.log(`🕐 Using UT (Universal Time) - no timezone conversion`);
+      }
+      // For Turkey timezone strings OR Turkey coordinates (when tz is not 0)
+      // This handles natal calculations for people in Turkey
+      else if (tz === 'tr' || tz === 'turkey' || tz === 'istanbul' || 
+               (lat > 35 && lat < 43 && lng > 25 && lng < 45)) {
         // Turkey coordinates range - use automatic DST
         offset = window.SwissEphemeris.getTurkeyOffset(year, month, day);
         console.log(`🕐 Turkey DST: ${year}-${month}-${day} → UTC+${offset}`);
-      } else {
+      }
+      // For numeric tz values, use directly
+      else if (typeof tz === 'number') {
+        offset = tz;
+        console.log(`🕐 Using provided offset: UTC+${offset}`);
+      }
+      // For other string timezones
+      else {
         offset = getTimezoneOffset(tz, year, month);
+        console.log(`🕐 Timezone ${tz}: UTC+${offset}`);
       }
       
       const chart = await window.SwissEphemeris.calculateChart({
@@ -1314,6 +1378,315 @@
     return houses;
   }
 
+  // ========== SOLAR RETURN CALCULATIONS ==========
+  
+  // Update Solar panel with natal info
+  function updateSolarNatalInfo() {
+    const infoDiv = $('solarNatalInfo');
+    const summaryDiv = $('solarNatalSummary');
+    if (!infoDiv || !summaryDiv) return;
+    
+    if (!globalNatalData) {
+      infoDiv.style.display = 'none';
+      return;
+    }
+    
+    const d = globalNatalData;
+    const sunSign = SIGNS[d.chart.planets.sun.signIdx];
+    const sunDeg = d.chart.planets.sun.deg;
+    const sunMin = d.chart.planets.sun.min;
+    
+    summaryDiv.innerHTML = `
+      <div><strong>Doğum:</strong> ${d.birthDay} ${MONTHS[d.birthMonth - 1]} ${d.birthYear}, ${String(d.birthHour).padStart(2,'0')}:${String(d.birthMinute).padStart(2,'0')}</div>
+      <div style="margin-top:4px"><strong>Natal Güneş:</strong> ${SIGN_SYM[sunSign]} ${sunSign} ${sunDeg}°${String(sunMin).padStart(2,'0')}' <span style="color:var(--muted)">(${d.sunLongitude.toFixed(2)}°)</span></div>
+    `;
+    infoDiv.style.display = 'block';
+  }
+  
+  // Find Solar Return date - when Sun returns to natal position
+  // Uses Swiss Ephemeris swe_solcross_ut for EXACT professional-grade calculation
+  async function findSolarReturnDate(natalSunLong, solarYear) {
+    if (!globalNatalData) return null;
+    
+    const birthDay = globalNatalData.birthDay;
+    const birthMonth = globalNatalData.birthMonth;
+    
+    // Start search from a few days before expected birthday
+    const startJD = dateToJD(solarYear, birthMonth, birthDay, 0, 0) - 5;
+    
+    try {
+      // Use Swiss Ephemeris for EXACT calculation
+      const { findSolarCross, getJulianDay } = await import('./ephemeris.js');
+      const exactJD = await findSolarCross(natalSunLong, startJD, 0);
+      
+      if (exactJD) {
+        const result = jdToDateTime(exactJD);
+        result.jd = exactJD;
+        result.approximate = false;
+        console.log(`✅ Swiss Ephemeris Solar Return: ${result.day}/${result.month}/${result.year} ${result.hour}:${String(result.minute).padStart(2,'0')}`);
+        return result;
+      }
+    } catch (error) {
+      console.warn('Swiss Ephemeris findSolarCross failed, using fallback:', error);
+    }
+    
+    // Fallback to binary search if Swiss Ephemeris fails
+    console.warn('Using fallback binary search for Solar Return');
+    let searchStartJD = startJD;
+    let searchEndJD = startJD + 10;
+    
+    const tolerance = 1 / 60; // 1 arcminute
+    let iterations = 0;
+    const maxIterations = 50;
+    
+    while (iterations < maxIterations) {
+      const midJD = (searchStartJD + searchEndJD) / 2;
+      const sunLong = calcSunPosition(midJD);
+      
+      let diff = sunLong - natalSunLong;
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
+      
+      if (Math.abs(diff) < tolerance) {
+        const result = jdToDateTime(midJD);
+        result.jd = midJD;
+        result.approximate = true;
+        return result;
+      }
+      
+      if (diff < 0) {
+        searchStartJD = midJD;
+      } else {
+        searchEndJD = midJD;
+      }
+      
+      iterations++;
+    }
+    
+    // Last resort fallback
+    return {
+      day: birthDay,
+      month: birthMonth,
+      year: solarYear,
+      hour: 12,
+      minute: 0,
+      approximate: true
+    };
+  }
+  
+  // Convert Julian Date back to calendar date and time
+  function jdToDateTime(jd) {
+    const Z = Math.floor(jd + 0.5);
+    const F = jd + 0.5 - Z;
+    
+    let A;
+    if (Z < 2299161) {
+      A = Z;
+    } else {
+      const alpha = Math.floor((Z - 1867216.25) / 36524.25);
+      A = Z + 1 + alpha - Math.floor(alpha / 4);
+    }
+    
+    const B = A + 1524;
+    const C = Math.floor((B - 122.1) / 365.25);
+    const D = Math.floor(365.25 * C);
+    const E = Math.floor((B - D) / 30.6001);
+    
+    const day = B - D - Math.floor(30.6001 * E);
+    const month = E < 14 ? E - 1 : E - 13;
+    const year = month > 2 ? C - 4716 : C - 4715;
+    
+    // Extract time from fractional part
+    const totalHours = F * 24;
+    const hour = Math.floor(totalHours);
+    const minute = Math.round((totalHours - hour) * 60);
+    
+    return {
+      day: day,
+      month: month,
+      year: year,
+      hour: hour,
+      minute: minute,
+      approximate: false
+    };
+  }
+  
+  // Compute Solar Return chart using ephemeris
+  async function computeSolarReturn(solarYear) {
+    if (!globalNatalData) {
+      return { error: 'Natal veri bulunamadı. Önce Dekan sekmesinde hesaplama yapın.' };
+    }
+    
+    const natal = globalNatalData;
+    const natalSunLong = natal.sunLongitude;
+    
+    // Determine chart location based on user selection
+    const useCustomLocation = $('solarLocCustom').checked;
+    let chartLat = natal.lat;
+    let chartLng = natal.lng;
+    let chartLocationName = 'Doğum Yeri';
+    
+    if (useCustomLocation) {
+      const customLat = parseFloat($('solarCustomLat').value);
+      const customLng = parseFloat($('solarCustomLng').value);
+      const customCity = $('solarCustomCity').value || 'Özel Konum';
+      
+      if (isNaN(customLat) || isNaN(customLng)) {
+        return { error: 'Geçerli bir konum seçin veya koordinat girin.' };
+      }
+      
+      chartLat = customLat;
+      chartLng = customLng;
+      chartLocationName = customCity;
+    }
+    
+    // Find PRECISE solar return moment for this year (AWAIT because it's async now)
+    const srDate = await findSolarReturnDate(natalSunLong, solarYear);
+    if (!srDate) return { error: 'Solar return tarihi hesaplanamadı.' };
+    
+    // Find NEXT year's Solar Return for precise year length calculation
+    const nextSrDate = await findSolarReturnDate(natalSunLong, solarYear + 1);
+    
+    // Calculate exact solar year length in days
+    const srJD = srDate.jd || dateToJD(srDate.year, srDate.month, srDate.day, srDate.hour || 12, srDate.minute || 0);
+    const nextSrJD = nextSrDate.jd || dateToJD(nextSrDate.year, nextSrDate.month, nextSrDate.day, nextSrDate.hour || 12, nextSrDate.minute || 0);
+    const solarYearDays = nextSrJD - srJD; // Actual days in this solar year (usually ~365.24)
+    
+    // Precise degree-to-day conversion: 360° = solarYearDays
+    const daysPerDegree = solarYearDays / 360;
+    console.log(`📅 Solar Year Length: ${solarYearDays.toFixed(4)} days | Days per degree: ${daysPerDegree.toFixed(6)}`);
+    console.log(`📍 Chart Location: ${chartLocationName} (${chartLat.toFixed(4)}, ${chartLng.toFixed(4)})`);
+    
+    // Calculate chart for EXACT solar return moment with SELECTED location
+    const tz = 'Europe/Istanbul';
+    
+    try {
+      const srHour = srDate.hour || 12;
+      const srMinute = srDate.minute || 0;
+      
+      // CRITICAL: Swiss Ephemeris swe_solcross_ut returns time in UT (Universal Time)
+      // We must use tz = 0 to avoid double timezone conversion
+      // The time from findSolarReturnDate is ALREADY in UT!
+      const srChart = await calculateChart(
+        srDate.year, srDate.month, srDate.day, 
+        srHour, srMinute, 
+        chartLat, chartLng, 
+        0  // tz = 0 because time is already in UT
+      );
+      
+      // Verify the Solar Sun matches Natal Sun
+      const srSunLong = srChart.planets.sun.signIdx * 30 + srChart.planets.sun.deg + srChart.planets.sun.min / 60;
+      console.log(`🌞 Solar Return Sun: ${srSunLong.toFixed(4)}° | Natal Sun: ${natalSunLong.toFixed(4)}° | Diff: ${Math.abs(srSunLong - natalSunLong).toFixed(4)}°`);
+      
+      // Helper function: Add fractional days to a date
+      function addDaysToDate(baseJD, days) {
+        const newJD = baseJD + days;
+        return jdToDateTime(newJD);
+      }
+      
+      // Build solar months (12 segments of 30° each)
+      const months = [];
+      for (let i = 0; i < 12; i++) {
+        // Calculate precise start/end dates for this solar month
+        const monthStartDegOffset = i * 30;
+        const monthEndDegOffset = (i + 1) * 30;
+        
+        const monthStartDays = monthStartDegOffset * daysPerDegree;
+        const monthEndDays = monthEndDegOffset * daysPerDegree;
+        
+        const monthStartDate = addDaysToDate(srJD, monthStartDays);
+        const monthEndDate = addDaysToDate(srJD, monthEndDays - 1); // End is day before next month
+        
+        const startStr = `${monthStartDate.day} ${MONTHS[monthStartDate.month - 1]} ${monthStartDate.year}`;
+        const endStr = `${monthEndDate.day} ${MONTHS[monthEndDate.month - 1]} ${monthEndDate.year}`;
+        const startDeg = (natalSunLong + i * 30) % 360;
+        const endDeg = (natalSunLong + (i + 1) * 30) % 360;
+        
+        // Calculate actual days in this solar month
+        const monthDays = monthEndDays - monthStartDays;
+        
+        // Find planets in this solar house
+        const inMonth = [];
+        
+        // Add all SR planets with their positions
+        Object.entries(srChart.planets).forEach(([key, planet]) => {
+          const planetLong = planet.signIdx * 30 + planet.deg + planet.min / 60;
+          let offset = planetLong - natalSunLong;
+          if (offset < 0) offset += 360;
+          
+          if (offset >= i * 30 && offset < (i + 1) * 30) {
+            // Precise date calculation using degree offset
+            const planetDays = offset * daysPerDegree;
+            const planetDate = addDaysToDate(srJD, planetDays);
+            
+            // Calculate day number within the month (1-30ish)
+            const dayInMonth = Math.round((offset - monthStartDegOffset) * daysPerDegree) + 1;
+            
+            const planetInfo = PLANETS.find(p => p.key === key);
+            inMonth.push({
+              key: key,
+              name: planetInfo?.name || key,
+              sym: planetInfo?.sym || '?',
+              signIdx: planet.signIdx,
+              deg: planet.deg,
+              min: planet.min,
+              totalDegrees: planetLong,
+              degreeOffset: offset.toFixed(2),
+              dayOffset: dayInMonth,
+              dateStr: `${planetDate.day} ${MONTHS[planetDate.month - 1]} ${planetDate.year}`,
+              fullDateStr: `${planetDate.day} ${MONTHS[planetDate.month - 1]} ${planetDate.year}${planetDate.hour !== undefined ? ` ~${String(planetDate.hour).padStart(2,'0')}:${String(planetDate.minute).padStart(2,'0')}` : ''}`,
+              isStart: key === 'sun' && i === 0
+            });
+          }
+        });
+        
+        inMonth.sort((a, b) => a.dayOffset - b.dayOffset);
+        months.push({ 
+          solarHouse: i + 1, 
+          startDateStr: startStr, 
+          endDateStr: endStr, 
+          startDeg, 
+          endDeg, 
+          monthDays: Math.round(monthDays),
+          planets: inMonth 
+        });
+      }
+      
+      // Calculate Dekan for Solar Return chart (using SR ASC and houses)
+      // computeDekan parameters: (cusps, sameFlags, add30Flags, asc)
+      const srCusps = srChart.houses.map(h => ({
+        deg: h.deg,
+        min: h.min
+      }));
+      const sameFlags = new Array(12).fill(false);  // No same-sign flags for SR
+      const add30Flags = new Array(12).fill(false); // No add30 flags for SR
+      const srDekan = computeDecan(srCusps, sameFlags, add30Flags, srChart.asc.signIdx);
+      
+      return {
+        solarYear: solarYear,
+        solarReturnDate: srDate,
+        natalSun: {
+          signIdx: Math.floor(natalSunLong / 30),
+          deg: Math.floor(natalSunLong % 30),
+          min: Math.round((natalSunLong % 1) * 60),
+          longitude: natalSunLong
+        },
+        chartLocation: {
+          name: chartLocationName,
+          lat: chartLat,
+          lng: chartLng
+        },
+        srChart: srChart,
+        srDekan: srDekan,
+        months: months
+      };
+    } catch (err) {
+      console.error('Solar Return error:', err);
+      return { error: 'Solar Return hesaplanamadı: ' + err.message };
+    }
+  }
+  
+  // Legacy computeSolar for backward compatibility (manual input)
   function computeSolar(planets, birthDay, birthMonth, solarYear) {
     const sun = planets.find(p => p.key==='sun');
     if (!sun) return null;
@@ -1539,6 +1912,176 @@
       const startS=SIGNS[Math.floor(m.startDeg/30)%12], endS=SIGNS[Math.floor(m.endDeg/30)%12];
       box.innerHTML += `<div class="meta">${Math.round(m.startDeg)}° → ${Math.round(m.endDeg)}° (${SIGN_SYM[startS]} → ${SIGN_SYM[endS]})</div>`;
       container.appendChild(box);
+    });
+  }
+
+  // Render Solar Return results (automatic calculation)
+  function renderSolarReturn(data, container) {
+    if (!data || data.error) {
+      container.innerHTML = `<p class="hint" style="color:var(--err)">${data?.error || 'Solar Return verisi bulunamadı.'}</p>`;
+      return;
+    }
+    
+    // Initialize the two-panel layout inside container
+    container.innerHTML = `
+      <div id="solarDekanResults" style="border-right:1px solid rgba(255,255,255,.1);padding-right:16px"></div>
+      <div id="solarMonthResults"></div>
+    `;
+    
+    const dekanPanel = $('solarDekanResults');
+    const monthPanel = $('solarMonthResults');
+    
+    // ===== LEFT PANEL: Solar Return Chart Info + Dekan Calculation =====
+    const srChart = data.srChart;
+    const natalSunSign = SIGNS[data.natalSun.signIdx];
+    const srSunLong = srChart.planets.sun.signIdx * 30 + srChart.planets.sun.deg + srChart.planets.sun.min / 60;
+    
+    // Header with SR info
+    const infoHeader = document.createElement('div');
+    infoHeader.className = 'house';
+    infoHeader.style.borderLeft = '3px solid #f59e0b';
+    
+    // Format precise time
+    const timeStr = data.solarReturnDate.hour !== undefined 
+      ? `${String(data.solarReturnDate.hour).padStart(2,'0')}:${String(data.solarReturnDate.minute).padStart(2,'0')}` 
+      : '';
+    const precisionBadge = data.solarReturnDate.approximate 
+      ? '<span style="color:var(--muted)">(yaklaşık)</span>' 
+      : '<span style="color:#22c55e">✓ Hassas</span>';
+    
+    infoHeader.innerHTML = `
+      <div class="title">
+        <span class="badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4)">☉</span> 
+        Solar Return ${data.solarYear} Haritası
+      </div>
+      <div class="kv" style="background:rgba(245,158,11,.08)">
+        <div>Natal Güneş</div>
+        <div>${SIGN_SYM[natalSunSign]} ${natalSunSign} ${data.natalSun.deg}°${String(data.natalSun.min).padStart(2,'0')}' <span style="color:var(--muted)">(${data.natalSun.longitude.toFixed(4)}°)</span></div>
+      </div>
+      <div class="kv" style="background:rgba(110,231,255,.05)">
+        <div>SR Güneş</div>
+        <div>${SIGN_SYM[SIGNS[srChart.planets.sun.signIdx]]} ${SIGNS[srChart.planets.sun.signIdx]} ${srChart.planets.sun.deg}°${String(srChart.planets.sun.min).padStart(2,'0')}' <span style="color:var(--muted)">(${srSunLong.toFixed(4)}°)</span></div>
+      </div>
+      <div class="kv" style="background:rgba(34,197,94,.1)">
+        <div>Solar Return Tarihi</div>
+        <div><strong>${data.solarReturnDate.day} ${MONTHS[data.solarReturnDate.month - 1]} ${data.solarReturnDate.year}</strong> ${timeStr} ${precisionBadge}</div>
+      </div>
+      <div class="kv" style="background:rgba(139,92,246,.1)">
+        <div>SR Yükselen</div>
+        <div><strong>${SIGN_SYM[SIGNS[srChart.asc.signIdx]]} ${SIGNS[srChart.asc.signIdx]} ${srChart.asc.deg}°${String(srChart.asc.min).padStart(2,'0')}'</strong></div>
+      </div>
+      <div class="kv" style="background:rgba(59,130,246,.08)">
+        <div>📍 Konum</div>
+        <div>${data.chartLocation?.name || 'Doğum Yeri'} <span style="color:var(--muted)">(${data.chartLocation?.lat?.toFixed(2) || '?'}°, ${data.chartLocation?.lng?.toFixed(2) || '?'}°)</span></div>
+      </div>
+    `;
+    dekanPanel.appendChild(infoHeader);
+    
+    // Now render Dekan results for SR chart
+    if (data.srDekan && data.srDekan.length > 0) {
+      const dekanTitle = document.createElement('h3');
+      dekanTitle.style.cssText = 'color:var(--accent);margin:16px 0 12px;font-size:16px;';
+      dekanTitle.innerHTML = '🔮 Solar Return Dekanları';
+      dekanPanel.appendChild(dekanTitle);
+      
+      data.srDekan.forEach(h => {
+        const box = document.createElement('div');
+        box.className = 'house';
+        
+        // Color based on house sign element
+        const elIdx = h.houseSignIdx % 4;
+        const elColors = {0:'#EF4444',1:'#22C55E',2:'#38BDF8',3:'#3B82F6'};
+        box.style.borderLeft = `3px solid ${elColors[elIdx]}`;
+        
+        box.innerHTML = `
+          <div class="title">
+            <span class="badge">${h.house}</span> 
+            ${h.house}. Ev 
+            <span style="color:var(--muted);font-size:13px">• ${SIGN_SYM[h.houseSign]} ${h.houseSign}</span>
+          </div>
+        `;
+        
+        const list = document.createElement('div');
+        list.className = 'list';
+        
+        h.decans.forEach((d, di) => {
+          const kv = document.createElement('div');
+          kv.className = 'kv';
+          kv.innerHTML = `
+            <div><strong>${d.index}. Dekan</strong> <span style="color:var(--muted)">${d.startText}</span></div>
+            <div>${SIGN_SYM[d.decanSign]} ${d.decanSign} — ${RULER_SYM[d.ruler] || ''} ${d.ruler}</div>
+          `;
+          list.appendChild(kv);
+        });
+        
+        box.appendChild(list);
+        dekanPanel.appendChild(box);
+      });
+    }
+    
+    // ===== RIGHT PANEL: Monthly Events =====
+    const monthTitle = document.createElement('h3');
+    monthTitle.style.cssText = 'color:var(--accent);margin:0 0 12px;font-size:16px;';
+    monthTitle.innerHTML = '📅 Solar Yıl Ayları (Gezegen Geçişleri)';
+    monthPanel.appendChild(monthTitle);
+    
+    // Solar months (12)
+    data.months.forEach(m => {
+      const box = document.createElement('div');
+      box.className = 'house';
+      
+      // Color based on sign at start
+      const startSignIdx = Math.floor(m.startDeg / 30) % 12;
+      const elementColors = { 0: '#EF4444', 1: '#22C55E', 2: '#38BDF8', 3: '#3B82F6' };
+      const elIdx = startSignIdx % 4;
+      box.style.borderLeft = `3px solid ${elementColors[elIdx]}`;
+      
+      // Show month duration if available
+      const daysInfo = m.monthDays ? `<span style="color:#22c55e;font-size:11px;margin-left:8px">(~${m.monthDays} gün)</span>` : '';
+      
+      box.innerHTML = `
+        <div class="title">
+          <span class="badge">${m.solarHouse}</span> 
+          ${m.solarHouse}. Ay ${daysInfo}
+          <span style="color:var(--muted);font-size:12px;display:block;margin-top:4px">• ${m.startDateStr} → ${m.endDateStr}</span>
+        </div>
+      `;
+      
+      const list = document.createElement('div');
+      list.className = 'list';
+      
+      if (m.planets.length === 0) {
+        list.innerHTML = '<div class="kv"><div style="color:var(--muted);font-style:italic;font-size:13px">Bu ayda gezegen yok</div></div>';
+      } else {
+        m.planets.forEach(p => {
+          const kv = document.createElement('div');
+          kv.className = `kv ${p.isStart ? 'el-fire' : 'el-air'}`;
+          
+          // Show full date with approx time if available
+          const dateDisplay = p.fullDateStr || p.dateStr;
+          const dateText = p.isStart 
+            ? `<strong>${dateDisplay}</strong> <span style="color:#f59e0b">(Solar başlangıç)</span>` 
+            : `<strong>${dateDisplay}</strong>`;
+          
+          // Show degree offset info
+          const degInfo = p.degreeOffset ? `<span style="color:var(--muted);font-size:11px;margin-left:6px">[${p.degreeOffset}°]</span>` : '';
+          
+          kv.innerHTML = `
+            <div><strong>${p.sym} ${p.name}</strong>${degInfo}</div>
+            <div>${SIGN_SYM[SIGNS[p.signIdx]]} ${p.deg}°${String(p.min).padStart(2,'0')}' → ${dateText}</div>
+          `;
+          list.appendChild(kv);
+        });
+      }
+      
+      box.appendChild(list);
+      
+      // Degree range info
+      const startS = SIGNS[Math.floor(m.startDeg / 30) % 12];
+      const endS = SIGNS[Math.floor(m.endDeg / 30) % 12];
+      box.innerHTML += `<div class="meta">${Math.round(m.startDeg)}° → ${Math.round(m.endDeg)}° (${SIGN_SYM[startS]} → ${SIGN_SYM[endS]})</div>`;
+      
+      monthPanel.appendChild(box);
     });
   }
 
@@ -1868,9 +2411,9 @@
   buildCuspGrid($('sevenCuspGrid'), 'seven');
   buildPlanetGrid($('decanPlanetGrid'), 'decan', true);
   buildPlanetGrid($('sevenPlanetGrid'), 'seven', true);
-  buildPlanetGrid($('solarPlanetGrid'), 'solar', false);
+  // solarPlanetGrid removed - Solar panel now uses automatic calculation
   buildMonthSelect($('sevenBirthMonth'));
-  buildMonthSelect($('solarBirthMonth'));
+  // solarBirthMonth removed - Solar panel now uses automatic calculation
   
   // Auto-calculate setup
   setupAutoCalc('Decan');
@@ -2063,6 +2606,24 @@
       // Draw wheel chart
       drawWheelChart(chart, decanResults);
       
+      // Save natal data globally for Solar calculations
+      const sunPlanet = chart.planets?.sun;
+      const sunLongitude = sunPlanet ? (sunPlanet.signIdx * 30 + sunPlanet.deg + sunPlanet.min / 60) : 0;
+      globalNatalData = {
+        birthDay: day,
+        birthMonth: month,
+        birthYear: year,
+        birthHour: hour,
+        birthMinute: minute,
+        lat: lat,
+        lng: lng,
+        chart: chart,
+        sunLongitude: sunLongitude
+      };
+      
+      // Update Solar panel with natal info
+      updateSolarNatalInfo();
+      
       // Sync to Veriler tab
       $('verilerDay').value = day;
       $('verilerMonth').value = month;
@@ -2201,14 +2762,45 @@
     renderSeven(sev, planets, input.cusps, input.flags, input.add30, asc, $('sevenResults'));
   });
 
-  // Solar calc
-  $('solarCalc').addEventListener('click', () => {
-    const bDay = Number($('solarBirthDay').value), bMonth = Number($('solarBirthMonth').value), sYear = Number($('solarYear').value);
-    if (!bDay || !bMonth || !sYear) { $('solarResults').innerHTML = '<p class="hint" style="color:var(--err)">Doğum tarihi ve solar yılı girin.</p>'; return; }
-    const planets = readPlanets('solar', false);
-    if (planets.length === 0 || !planets.find(p=>p.key==='sun')) { $('solarResults').innerHTML = '<p class="hint" style="color:var(--err)">En az Güneş pozisyonu gerekli.</p>'; return; }
-    const data = computeSolar(planets, bDay, bMonth, sYear);
-    renderSolar(data, $('solarResults'));
+  // Solar calc - now automatic using global natal data
+  $('solarCalc').addEventListener('click', async () => {
+    const sYear = Number($('solarYear').value);
+    const resultsEl = $('solarResults');
+    const dateInfoEl = $('solarReturnDateInfo');
+    const dateTextEl = $('solarReturnDateText');
+    
+    if (!sYear) {
+      resultsEl.innerHTML = '<p class="hint" style="color:var(--err)">Solar yılını girin (örn: 2020, 2024).</p>';
+      return;
+    }
+    
+    if (!globalNatalData) {
+      resultsEl.innerHTML = '<p class="hint" style="color:var(--err)">Önce Dekan Hesaplama sekmesinde doğum bilgilerinizi hesaplayın.</p>';
+      return;
+    }
+    
+    resultsEl.innerHTML = '<p class="hint" style="color:var(--accent)">⏳ Solar Return hesaplanıyor...</p>';
+    
+    try {
+      const data = await computeSolarReturn(sYear);
+      
+      if (data.error) {
+        resultsEl.innerHTML = `<p class="hint" style="color:var(--err)">${data.error}</p>`;
+        dateInfoEl.style.display = 'none';
+        return;
+      }
+      
+      // Show Solar Return date
+      if (data.solarReturnDate && dateInfoEl && dateTextEl) {
+        dateTextEl.innerHTML = `<strong>${data.solarReturnDate.day} ${MONTHS[data.solarReturnDate.month - 1]} ${data.solarReturnDate.year}</strong> <span style="color:var(--muted)">(yaklaşık)</span>`;
+        dateInfoEl.style.display = 'block';
+      }
+      
+      // Render results
+      renderSolarReturn(data, resultsEl);
+    } catch (err) {
+      resultsEl.innerHTML = `<p class="hint" style="color:var(--err)">Hata: ${err.message}</p>`;
+    }
   });
 
   // Clear buttons - now also clears axes and ASC
@@ -2226,7 +2818,33 @@
     PLANETS.forEach(p => {const h=$(`seven_${p.key}_house`);if(h)h.value='';const s=$(`seven_${p.key}_sign`);if(s)s.value='';const d=$(`seven_${p.key}_deg`);if(d)d.value='';const m=$(`seven_${p.key}_min`);if(m)m.value='';});
     $('sevenBirthDay').value='';$('sevenBirthMonth').value='';$('sevenBirthYear').value='';$('sevenResults').innerHTML='';
   });
-  $('solarClear').addEventListener('click', () => { $('solarBirthDay').value='';$('solarBirthMonth').value='';$('solarBirthYear').value='';$('solarYear').value='';PLANETS.forEach(p=>{$(`solar_${p.key}_sign`).value='';$(`solar_${p.key}_deg`).value='';$(`solar_${p.key}_min`).value='';});$('solarResults').innerHTML=''; });
+  $('solarClear').addEventListener('click', () => { 
+    $('solarYear').value='';
+    $('solarResults').innerHTML='';
+    const dateInfo = $('solarReturnDateInfo');
+    if (dateInfo) dateInfo.style.display = 'none';
+    // Reset location to birth
+    $('solarLocBirth').checked = true;
+    $('solarCustomLocation').style.display = 'none';
+    $('solarCustomCity').value = '';
+    $('solarCustomLat').value = '';
+    $('solarCustomLng').value = '';
+  });
+  
+  // Solar location toggle
+  $('solarLocBirth').addEventListener('change', () => {
+    $('solarCustomLocation').style.display = 'none';
+  });
+  $('solarLocCustom').addEventListener('change', () => {
+    $('solarCustomLocation').style.display = 'block';
+  });
+  
+  // Helper for solar quick location buttons
+  window.setSolarQuickLoc = function(city, lat, lng) {
+    $('solarCustomCity').value = city;
+    $('solarCustomLat').value = lat;
+    $('solarCustomLng').value = lng;
+  };
 
   // Veriler panel setup - direct initialization (different ID format)
   buildCountrySelect($('verilerCountry'));
@@ -2423,20 +3041,6 @@
     $('verilerLat').value='';$('verilerLng').value='';
     $('verilerResults').innerHTML='';
   });
-
-  // Solar preset
-  function applySolarPreset(name) {
-    const p = SOLAR_PRESETS[name]; if (!p) return;
-    $('solarBirthDay').value = p.birthDay;
-    $('solarBirthMonth').value = p.birthMonth;
-    $('solarYear').value = p.solarYear;
-    Object.entries(p.planets).forEach(([k, d]) => {
-      $(`solar_${k}_sign`).value = d.sign;
-      $(`solar_${k}_deg`).value = d.deg;
-      $(`solar_${k}_min`).value = d.min;
-    });
-  }
-  $('solarPresetS2020').addEventListener('click', () => applySolarPreset('S2020'));
 })();
 </script>
 </body>
