@@ -258,9 +258,66 @@
             <div style="padding:0 14px 14px 14px;display:grid;gap:12px">
               <div class="row">
                 <label><strong>Doğum Tarihi</strong></label>
-                <div class="inp">
-                  <input id="autoDecanDay" type="number" min="1" max="31" placeholder="Gün" style="width:65px" />
-                  <select id="autoDecanMonth" style="min-width:90px"></select>
+                <div class="inp" style="flex-wrap:wrap;gap:8px">
+                  <div style="display:flex;flex-direction:column;gap:4px">
+                    <input id="autoDecanDay" type="number" min="1" max="31" placeholder="Gün" style="width:65px" />
+                    <details id="dayQuickPick" style="font-size:11px">
+                      <summary style="cursor:pointer;color:var(--muted);padding:2px">▼ Gün</summary>
+                      <div id="dayButtonsGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px;background:var(--card);border-radius:6px;margin-top:4px">
+                        <button type="button" class="day-pick" data-day="1" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">1</button>
+                        <button type="button" class="day-pick" data-day="2" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">2</button>
+                        <button type="button" class="day-pick" data-day="3" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">3</button>
+                        <button type="button" class="day-pick" data-day="4" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">4</button>
+                        <button type="button" class="day-pick" data-day="5" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">5</button>
+                        <button type="button" class="day-pick" data-day="6" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">6</button>
+                        <button type="button" class="day-pick" data-day="7" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">7</button>
+                        <button type="button" class="day-pick" data-day="8" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">8</button>
+                        <button type="button" class="day-pick" data-day="9" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">9</button>
+                        <button type="button" class="day-pick" data-day="10" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">10</button>
+                        <button type="button" class="day-pick" data-day="11" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">11</button>
+                        <button type="button" class="day-pick" data-day="12" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">12</button>
+                        <button type="button" class="day-pick" data-day="13" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">13</button>
+                        <button type="button" class="day-pick" data-day="14" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">14</button>
+                        <button type="button" class="day-pick" data-day="15" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">15</button>
+                        <button type="button" class="day-pick" data-day="16" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">16</button>
+                        <button type="button" class="day-pick" data-day="17" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">17</button>
+                        <button type="button" class="day-pick" data-day="18" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">18</button>
+                        <button type="button" class="day-pick" data-day="19" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">19</button>
+                        <button type="button" class="day-pick" data-day="20" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">20</button>
+                        <button type="button" class="day-pick" data-day="21" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">21</button>
+                        <button type="button" class="day-pick" data-day="22" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">22</button>
+                        <button type="button" class="day-pick" data-day="23" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">23</button>
+                        <button type="button" class="day-pick" data-day="24" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">24</button>
+                        <button type="button" class="day-pick" data-day="25" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">25</button>
+                        <button type="button" class="day-pick" data-day="26" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">26</button>
+                        <button type="button" class="day-pick" data-day="27" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">27</button>
+                        <button type="button" class="day-pick" data-day="28" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">28</button>
+                        <button type="button" class="day-pick" data-day="29" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">29</button>
+                        <button type="button" class="day-pick" data-day="30" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">30</button>
+                        <button type="button" class="day-pick" data-day="31" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">31</button>
+                      </div>
+                    </details>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:4px">
+                    <select id="autoDecanMonth" style="min-width:90px"></select>
+                    <details id="monthQuickPick" style="font-size:11px">
+                      <summary style="cursor:pointer;color:var(--muted);padding:2px">▼ Ay</summary>
+                      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:4px;background:var(--card);border-radius:6px;margin-top:4px">
+                        <button type="button" class="month-pick" data-month="1" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Oca</button>
+                        <button type="button" class="month-pick" data-month="2" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Şub</button>
+                        <button type="button" class="month-pick" data-month="3" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Mar</button>
+                        <button type="button" class="month-pick" data-month="4" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Nis</button>
+                        <button type="button" class="month-pick" data-month="5" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">May</button>
+                        <button type="button" class="month-pick" data-month="6" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Haz</button>
+                        <button type="button" class="month-pick" data-month="7" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Tem</button>
+                        <button type="button" class="month-pick" data-month="8" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Ağu</button>
+                        <button type="button" class="month-pick" data-month="9" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Eyl</button>
+                        <button type="button" class="month-pick" data-month="10" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Eki</button>
+                        <button type="button" class="month-pick" data-month="11" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Kas</button>
+                        <button type="button" class="month-pick" data-month="12" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Ara</button>
+                      </div>
+                    </details>
+                  </div>
                   <input id="autoDecanYear" type="number" min="1900" max="2100" placeholder="Yıl" style="width:75px" />
                 </div>
               </div>
@@ -269,7 +326,7 @@
                 <div class="inp">
                   <input id="autoDecanHour" type="number" min="0" max="23" placeholder="Saat" style="width:65px" />
                   <span style="font-weight:bold">:</span>
-                  <input id="autoDecanMinute" type="number" min="0" max="59" placeholder="Dakika" style="width:65px" />
+                  <input id="autoDecanMinute" type="number" min="0" max="59" placeholder="Dk" style="width:65px" />
                 </div>
               </div>
               <div class="row">
@@ -279,22 +336,19 @@
                   <select id="autoDecanCity" style="min-width:140px;max-height:200px"><option value="">Önce ülke seç</option></select>
                 </div>
               </div>
-              <!-- Hızlı Konum Seçimi -->
-              <div class="row" style="background:rgba(110,231,255,.03)">
-                <label style="font-size:12px">Hızlı Seçim</label>
-                <div class="inp" style="gap:6px;flex-wrap:wrap">
-                  <button type="button" class="quick-loc" data-city="İstanbul" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">İstanbul</button>
-                  <button type="button" class="quick-loc" data-city="Eskişehir" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Eskişehir</button>
-                  <button type="button" class="quick-loc" data-city="İzmir" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">İzmir</button>
-                  <button type="button" class="quick-loc" data-city="Antalya" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Antalya</button>
-                </div>
+              <!-- Hızlı Konum Seçimi - kompakt -->
+              <div class="inp" style="gap:6px;flex-wrap:wrap;padding:0 0 0 0">
+                <button type="button" class="quick-loc" data-city="İstanbul" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">İstanbul</button>
+                <button type="button" class="quick-loc" data-city="Eskişehir" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Eskişehir</button>
+                <button type="button" class="quick-loc" data-city="İzmir" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">İzmir</button>
+                <button type="button" class="quick-loc" data-city="Antalya" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Antalya</button>
+                <button type="button" class="quick-loc" data-city="Ankara" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Ankara</button>
+                <button type="button" class="quick-loc" data-city="Bursa" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Bursa</button>
               </div>
-              <div class="row" style="background:rgba(255,255,255,.01)">
-                <label style="font-size:12px">veya Manuel Koordinat</label>
-                <div class="inp">
-                  <input id="autoDecanLat" type="number" step="0.0001" placeholder="Enlem" style="width:90px" />
-                  <input id="autoDecanLng" type="number" step="0.0001" placeholder="Boylam" style="width:90px" />
-                </div>
+              <!-- Manuel Koordinat - kompakt -->
+              <div class="inp" style="gap:8px">
+                <input id="autoDecanLat" type="number" step="0.0001" placeholder="Enlem" style="width:100px" />
+                <input id="autoDecanLng" type="number" step="0.0001" placeholder="Boylam" style="width:100px" />
               </div>
               <div style="display:flex;gap:10px">
                 <button class="secondary" id="autoDecanClearBtn" style="flex:0 0 auto;padding:14px 20px;font-size:14px">🗑️ Temizle</button>
@@ -324,15 +378,17 @@
               </div>
 
               <div style="margin-top:16px" id="decanCuspGrid"></div>
+              
+              <!-- Toolbar - Manuel Veri Girişi içinde -->
+              <div class="toolbar" style="margin-top:16px">
+                <button class="secondary" id="decanClear">Temizle</button>
+                <button class="secondary preset" data-preset="D">D</button>
+                <button class="secondary preset" data-preset="S">S</button>
+                <button class="secondary preset" data-preset="K">K</button>
+                <button class="primary" id="decanCalc">Hesapla</button>
+              </div>
             </div>
           </details>
-        </div>
-        <div class="toolbar">
-          <button class="secondary" id="decanClear">Temizle</button>
-          <button class="secondary preset" data-preset="D">D</button>
-          <button class="secondary preset" data-preset="S">S</button>
-          <button class="secondary preset" data-preset="K">K</button>
-          <button class="primary" id="decanCalc">Hesapla</button>
         </div>
       </div>
       <div class="results" id="decanResults"></div>
@@ -374,15 +430,17 @@
               </div>
 
               <div style="margin-top:16px" id="sevenCuspGrid"></div>
+              
+              <!-- Toolbar - Manuel Veri Girişi içinde -->
+              <div class="toolbar" style="margin-top:16px">
+                <button class="secondary" id="sevenClear">Temizle</button>
+                <button class="secondary preset" data-preset="D">D</button>
+                <button class="secondary preset" data-preset="S">S</button>
+                <button class="secondary preset" data-preset="K">K</button>
+                <button class="primary" id="sevenCalc">Hesapla</button>
+              </div>
             </div>
           </details>
-        </div>
-        <div class="toolbar">
-          <button class="secondary" id="sevenClear">Temizle</button>
-          <button class="secondary preset" data-preset="D">D</button>
-          <button class="secondary preset" data-preset="S">S</button>
-          <button class="secondary preset" data-preset="K">K</button>
-          <button class="primary" id="sevenCalc">Hesapla</button>
         </div>
       </div>
       <div class="results" id="sevenResults"></div>
@@ -429,17 +487,25 @@
           
           <div id="solarCustomLocation" style="display:none;margin-top:12px;padding:12px;background:rgba(139,92,246,.05);border-radius:8px;border-left:2px solid #8b5cf6">
             <div class="row" style="margin:0">
-              <label>Şehir</label>
+              <label><strong>Ülke / Şehir</strong></label>
               <div class="inp">
-                <input id="solarCustomCity" type="text" placeholder="Londra, Paris, New York..." style="width:180px" />
-                <button class="quick-loc" onclick="window.setSolarQuickLoc('London',51.5074,-0.1278)">Londra</button>
-                <button class="quick-loc" onclick="window.setSolarQuickLoc('Paris',48.8566,2.3522)">Paris</button>
-                <button class="quick-loc" onclick="window.setSolarQuickLoc('New York',40.7128,-74.0060)">New York</button>
+                <select id="solarCustomCountry" style="min-width:120px"></select>
+                <select id="solarCustomCitySelect" style="min-width:140px"><option value="">Önce ülke seç</option></select>
               </div>
             </div>
+            <!-- Hızlı Seçim Butonları -->
+            <div class="inp" style="gap:6px;flex-wrap:wrap;margin-top:8px">
+              <button type="button" class="solar-quick-loc" data-city="İstanbul" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:rgba(139,92,246,.1);color:var(--accent-2);cursor:pointer">İstanbul</button>
+              <button type="button" class="solar-quick-loc" data-city="Ankara" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:rgba(139,92,246,.1);color:var(--accent-2);cursor:pointer">Ankara</button>
+              <button type="button" class="solar-quick-loc" data-city="London" data-country="GB" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:rgba(139,92,246,.1);color:var(--accent-2);cursor:pointer">Londra</button>
+              <button type="button" class="solar-quick-loc" data-city="Paris" data-country="FR" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:rgba(139,92,246,.1);color:var(--accent-2);cursor:pointer">Paris</button>
+              <button type="button" class="solar-quick-loc" data-city="New York" data-country="US" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:rgba(139,92,246,.1);color:var(--accent-2);cursor:pointer">New York</button>
+              <button type="button" class="solar-quick-loc" data-city="Berlin" data-country="DE" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:rgba(139,92,246,.1);color:var(--accent-2);cursor:pointer">Berlin</button>
+            </div>
             <div class="row" style="margin-top:8px">
-              <label>Koordinat</label>
+              <label>veya Koordinat</label>
               <div class="inp">
+                <input id="solarCustomCity" type="text" placeholder="Şehir adı" style="width:120px" />
                 <input id="solarCustomLat" type="number" step="0.0001" placeholder="Enlem" style="width:100px" />
                 <input id="solarCustomLng" type="number" step="0.0001" placeholder="Boylam" style="width:100px" />
               </div>
@@ -1177,7 +1243,7 @@
   }
 
   function buildMonthSelect(sel) {
-    sel.innerHTML = '<option value="">Ay</option>' + MONTHS.map((m,i) => `<option value="${i+1}">${m}</option>`).join('');
+    sel.innerHTML = MONTHS.map((m,i) => `<option value="${i+1}">${m}</option>`).join('');
   }
 
   function buildCountrySelect(sel) {
@@ -2507,6 +2573,28 @@
     });
   });
 
+  // Day quick pick button handlers
+  document.querySelectorAll('.day-pick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const day = btn.dataset.day;
+      $('autoDecanDay').value = day;
+      // Close the details
+      const details = document.getElementById('dayQuickPick');
+      if (details) details.open = false;
+    });
+  });
+
+  // Month quick pick button handlers
+  document.querySelectorAll('.month-pick').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const month = btn.dataset.month;
+      $('autoDecanMonth').value = month;
+      // Close the details
+      const details = document.getElementById('monthQuickPick');
+      if (details) details.open = false;
+    });
+  });
+
   // Clear button handler
   $('autoDecanClearBtn').addEventListener('click', () => {
     $('autoDecanDay').value = '';
@@ -2839,7 +2927,53 @@
     $('solarCustomLocation').style.display = 'block';
   });
   
-  // Helper for solar quick location buttons
+  // Initialize Solar country/city dropdowns
+  buildCountrySelect($('solarCustomCountry'));
+  $('solarCustomCountry').addEventListener('change', () => {
+    const code = $('solarCustomCountry').value;
+    const citySel = $('solarCustomCitySelect');
+    
+    if (!code || !COUNTRIES[code]) {
+      citySel.innerHTML = '<option value="">Önce ülke seç</option>';
+      return;
+    }
+    
+    const cities = COUNTRIES[code].cities;
+    citySel.innerHTML = '<option value="">Şehir seç</option>' + 
+      Object.keys(cities).sort().map(city => `<option value="${city}">${city}</option>`).join('');
+  });
+  
+  $('solarCustomCitySelect').addEventListener('change', () => {
+    const countryCode = $('solarCustomCountry').value;
+    const cityName = $('solarCustomCitySelect').value;
+    
+    if (countryCode && cityName && COUNTRIES[countryCode]?.cities[cityName]) {
+      const city = COUNTRIES[countryCode].cities[cityName];
+      $('solarCustomLat').value = city.lat;
+      $('solarCustomLng').value = city.lng;
+      $('solarCustomCity').value = cityName;
+    }
+  });
+  
+  // Solar quick location buttons
+  document.querySelectorAll('.solar-quick-loc').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const city = btn.dataset.city;
+      const country = btn.dataset.country || 'TR';
+      
+      // Set country
+      $('solarCustomCountry').value = country;
+      $('solarCustomCountry').dispatchEvent(new Event('change'));
+      
+      // Wait for city list to update, then select the city
+      setTimeout(() => {
+        $('solarCustomCitySelect').value = city;
+        $('solarCustomCitySelect').dispatchEvent(new Event('change'));
+      }, 50);
+    });
+  });
+  
+  // Legacy helper for solar quick location buttons (for manual input)
   window.setSolarQuickLoc = function(city, lat, lng) {
     $('solarCustomCity').value = city;
     $('solarCustomLat').value = lat;
