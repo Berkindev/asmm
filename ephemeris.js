@@ -204,7 +204,7 @@ async function calculateChart(params) {
     { key: 'uranus', id: PLANETS.URANUS },
     { key: 'neptune', id: PLANETS.NEPTUNE },
     { key: 'pluto', id: PLANETS.PLUTO },
-    { key: 'north', id: PLANETS.TRUE_NODE },
+    { key: 'north', id: PLANETS.MEAN_NODE },  // Mean Node - SolarFire ile uyumlu
     { key: 'chiron', id: PLANETS.CHIRON }
   ];
   

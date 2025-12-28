@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
   <title>Astroharmony</title>
   <style>
     :root {
@@ -28,9 +29,9 @@
     }
     body::before { content: ""; position: fixed; inset: 0; background: var(--bg); z-index: -1; }
 
-    .wrap { max-width: 1600px; margin: 0 auto; padding: 0 16px 32px; }
-    .wrap.view-1 { max-width: 980px; }
-    .wrap.view-2 { max-width: 1600px; }
+    .wrap { max-width: 1800px; margin: 0 auto; padding: 0 24px 32px; }
+    .wrap.view-1 { max-width: 1200px; }
+    .wrap.view-2 { max-width: 1800px; }
     
     /* View Toggle */
     .view-toggle {
@@ -178,7 +179,9 @@
     .el-water { background: rgba(29,24,251,.14); }
     .el-earth { background: rgba(0,255,0,.10); }
 
-    .footer { margin: 24px 0; text-align: center; color: var(--muted); font-size: 12px; }
+    .footer { margin: 24px 0; padding: 16px 24px 32px; text-align: center; color: var(--muted); font-size: 12px; }
+    @media (max-width: 800px) { .footer { padding: 12px 16px 24px; } }
+    @media (min-width: 1200px) { .footer { margin: 24px 0 48px; padding: 24px 32px 48px; } }
 
     /* Mobile Responsive */
     @media (max-width: 1024px) {
@@ -218,6 +221,8 @@
       .nav-btn { padding: 8px 10px; font-size: 11px; }
       .view-toggle { top: 8px; right: 8px; }
       .view-btn { width: 28px; height: 28px; font-size: 12px; }
+      /* Mobilde yıl aralığını gizle */
+      .year-range { display: none !important; }
     }
     
     @media (max-width: 420px) { 
@@ -245,7 +250,8 @@
       <button class="main-tab" data-tab="seven">7'ler Kanunu</button>
       <button class="main-tab" data-tab="solar">☉ Solar Harita</button>
       <button class="main-tab" data-tab="chart">🎯 Harita</button>
-      <button class="main-tab" data-tab="veriler">📊 Veriler</button>
+      <!-- Veriler sekmesi gizlendi, kod kaldı -->
+      <button class="main-tab" data-tab="veriler" style="display:none">📊 Veriler</button>
     </div>
 
     <!-- ==================== DEKAN PANEL ==================== -->
@@ -255,101 +261,118 @@
           <!-- Otomatik Hesaplama Bölümü (Açık Gelecek) -->
           <details open style="margin-bottom:16px;background:rgba(110,231,255,.05);border:1px solid rgba(110,231,255,.2);border-radius:12px;padding:2px" id="autoCalcDecan">
             <summary style="cursor:pointer;font-weight:800;color:var(--accent);padding:14px">🔮 Otomatik Hesapla (Doğum Bilgisi)</summary>
-            <div style="padding:0 14px 14px 14px;display:grid;gap:12px">
+            <div style="padding:0 14px 14px 14px;display:grid;gap:14px">
+              
+              <!-- Doğum Tarihi - Yeni Tasarım -->
+              <div class="row" style="align-items:flex-start">
+                <label><strong>📅 Doğum Tarihi</strong></label>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                  <input id="autoDecanDay" type="number" min="1" max="31" placeholder="GG" 
+                    style="width:50px;text-align:center;font-size:14px;font-weight:600;padding:10px 6px;background:rgba(110,231,255,0.08);border:1px solid rgba(110,231,255,0.3);border-radius:8px;color:#fff" />
+                  <span style="color:var(--muted);font-size:14px">/</span>
+                  <input id="autoDecanMonth" type="number" min="1" max="12" placeholder="AA" 
+                    style="width:50px;text-align:center;font-size:14px;font-weight:600;padding:10px 6px;background:rgba(110,231,255,0.08);border:1px solid rgba(110,231,255,0.3);border-radius:8px;color:#fff" />
+                  <span style="color:var(--muted);font-size:14px">/</span>
+                  <input id="autoDecanYear" type="number" min="1900" max="2100" placeholder="YYYY" 
+                    style="width:70px;text-align:center;font-size:14px;font-weight:600;padding:10px 6px;background:rgba(110,231,255,0.08);border:1px solid rgba(110,231,255,0.3);border-radius:8px;color:#fff" />
+                </div>
+              </div>
+              
+              <!-- Doğum Saati -->
               <div class="row">
-                <label><strong>Doğum Tarihi</strong></label>
-                <div class="inp" style="flex-wrap:wrap;gap:8px">
-                  <div style="display:flex;flex-direction:column;gap:4px">
-                    <input id="autoDecanDay" type="number" min="1" max="31" placeholder="Gün" style="width:65px" />
-                    <details id="dayQuickPick" style="font-size:11px">
-                      <summary style="cursor:pointer;color:var(--muted);padding:2px">▼ Gün</summary>
-                      <div id="dayButtonsGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px;background:var(--card);border-radius:6px;margin-top:4px">
-                        <button type="button" class="day-pick" data-day="1" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">1</button>
-                        <button type="button" class="day-pick" data-day="2" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">2</button>
-                        <button type="button" class="day-pick" data-day="3" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">3</button>
-                        <button type="button" class="day-pick" data-day="4" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">4</button>
-                        <button type="button" class="day-pick" data-day="5" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">5</button>
-                        <button type="button" class="day-pick" data-day="6" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">6</button>
-                        <button type="button" class="day-pick" data-day="7" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">7</button>
-                        <button type="button" class="day-pick" data-day="8" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">8</button>
-                        <button type="button" class="day-pick" data-day="9" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">9</button>
-                        <button type="button" class="day-pick" data-day="10" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">10</button>
-                        <button type="button" class="day-pick" data-day="11" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">11</button>
-                        <button type="button" class="day-pick" data-day="12" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">12</button>
-                        <button type="button" class="day-pick" data-day="13" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">13</button>
-                        <button type="button" class="day-pick" data-day="14" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">14</button>
-                        <button type="button" class="day-pick" data-day="15" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">15</button>
-                        <button type="button" class="day-pick" data-day="16" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">16</button>
-                        <button type="button" class="day-pick" data-day="17" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">17</button>
-                        <button type="button" class="day-pick" data-day="18" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">18</button>
-                        <button type="button" class="day-pick" data-day="19" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">19</button>
-                        <button type="button" class="day-pick" data-day="20" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">20</button>
-                        <button type="button" class="day-pick" data-day="21" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">21</button>
-                        <button type="button" class="day-pick" data-day="22" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">22</button>
-                        <button type="button" class="day-pick" data-day="23" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">23</button>
-                        <button type="button" class="day-pick" data-day="24" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">24</button>
-                        <button type="button" class="day-pick" data-day="25" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">25</button>
-                        <button type="button" class="day-pick" data-day="26" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">26</button>
-                        <button type="button" class="day-pick" data-day="27" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">27</button>
-                        <button type="button" class="day-pick" data-day="28" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">28</button>
-                        <button type="button" class="day-pick" data-day="29" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">29</button>
-                        <button type="button" class="day-pick" data-day="30" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">30</button>
-                        <button type="button" class="day-pick" data-day="31" style="padding:4px;font-size:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">31</button>
-                      </div>
-                    </details>
+                <label><strong>🕐 Doğum Saati</strong></label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input id="autoDecanHour" type="number" min="0" max="23" placeholder="SS" 
+                    style="width:50px;text-align:center;font-size:14px;font-weight:600;padding:10px 6px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.3);border-radius:8px;color:#fff" />
+                  <span style="font-weight:bold;color:var(--accent-2);font-size:18px">:</span>
+                  <input id="autoDecanMinute" type="number" min="0" max="59" placeholder="DD" 
+                    style="width:50px;text-align:center;font-size:14px;font-weight:600;padding:10px 6px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.3);border-radius:8px;color:#fff" />
+                </div>
+              </div>
+              
+              <!-- Doğum Yeri -->
+              <div style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:10px;padding:12px">
+                <div style="margin-bottom:10px;font-weight:700;color:var(--accent-2);font-size:13px">📍 Doğum Yeri</div>
+                
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+                  <select id="autoDecanCountry" style="min-width:110px;font-size:12px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#fff"></select>
+                  <select id="autoDecanCity" style="min-width:130px;max-height:200px;font-size:12px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#fff"><option value="">Önce ülke seç</option></select>
+                </div>
+                
+                <!-- Hızlı Şehir Butonları -->
+                <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">
+                  <button type="button" class="quick-loc" data-city="İstanbul" style="padding:6px 12px;font-size:11px;border-radius:6px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer;transition:all 0.2s">İstanbul</button>
+                  <button type="button" class="quick-loc" data-city="Eskişehir" style="padding:6px 12px;font-size:11px;border-radius:6px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer;transition:all 0.2s">Eskişehir</button>
+                  <button type="button" class="quick-loc" data-city="İzmir" style="padding:6px 12px;font-size:11px;border-radius:6px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer;transition:all 0.2s">İzmir</button>
+                  <button type="button" class="quick-loc" data-city="Antalya" style="padding:6px 12px;font-size:11px;border-radius:6px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer;transition:all 0.2s">Antalya</button>
+                  <button type="button" class="quick-loc" data-city="Ankara" style="padding:6px 12px;font-size:11px;border-radius:6px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer;transition:all 0.2s">Ankara</button>
+                  <button type="button" class="quick-loc" data-city="Bursa" style="padding:6px 12px;font-size:11px;border-radius:6px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer;transition:all 0.2s">Bursa</button>
+                </div>
+                
+                <!-- Manuel Koordinat -->
+                <div style="display:flex;gap:8px;align-items:center;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08)">
+                  <input id="autoDecanLat" type="number" step="0.0001" placeholder="Enlem" 
+                    style="width:100px;font-size:12px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#fff" />
+                  <input id="autoDecanLng" type="number" step="0.0001" placeholder="Boylam" 
+                    style="width:100px;font-size:12px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#fff" />
+                </div>
+              </div>
+              
+              <!-- Hızlı Seçim Panel - Alta ve Açılır Kapanır -->
+              <details style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:2px">
+                <summary style="cursor:pointer;font-weight:600;color:#22C55E;padding:10px;font-size:13px">⚡ Hızlı Seçim Tuşları</summary>
+                <div style="padding:0 10px 10px 10px">
+                  <!-- Gün Hızlı Seçim -->
+                  <div style="margin-bottom:10px">
+                    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">GÜN</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px">
+                      <button type="button" class="quick-day" data-day="1" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">1</button>
+                      <button type="button" class="quick-day" data-day="5" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">5</button>
+                      <button type="button" class="quick-day" data-day="10" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">10</button>
+                      <button type="button" class="quick-day" data-day="13" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">13</button>
+                      <button type="button" class="quick-day" data-day="15" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">15</button>
+                      <button type="button" class="quick-day" data-day="20" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">20</button>
+                      <button type="button" class="quick-day" data-day="25" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">25</button>
+                      <button type="button" class="quick-day" data-day="28" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">28</button>
+                      <button type="button" class="quick-day" data-day="31" style="padding:6px 10px;font-size:11px;border:1px solid rgba(110,231,255,.2);background:rgba(110,231,255,.08);border-radius:4px;cursor:pointer;color:var(--accent)">31</button>
+                    </div>
                   </div>
-                  <div style="display:flex;flex-direction:column;gap:4px">
-                    <select id="autoDecanMonth" style="min-width:90px"></select>
-                    <details id="monthQuickPick" style="font-size:11px">
-                      <summary style="cursor:pointer;color:var(--muted);padding:2px">▼ Ay</summary>
-                      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:4px;background:var(--card);border-radius:6px;margin-top:4px">
-                        <button type="button" class="month-pick" data-month="1" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Oca</button>
-                        <button type="button" class="month-pick" data-month="2" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Şub</button>
-                        <button type="button" class="month-pick" data-month="3" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Mar</button>
-                        <button type="button" class="month-pick" data-month="4" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Nis</button>
-                        <button type="button" class="month-pick" data-month="5" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">May</button>
-                        <button type="button" class="month-pick" data-month="6" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Haz</button>
-                        <button type="button" class="month-pick" data-month="7" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Tem</button>
-                        <button type="button" class="month-pick" data-month="8" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Ağu</button>
-                        <button type="button" class="month-pick" data-month="9" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Eyl</button>
-                        <button type="button" class="month-pick" data-month="10" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Eki</button>
-                        <button type="button" class="month-pick" data-month="11" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Kas</button>
-                        <button type="button" class="month-pick" data-month="12" style="padding:4px;font-size:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:4px;cursor:pointer">Ara</button>
-                      </div>
-                    </details>
+                  <!-- Ay Hızlı Seçim -->
+                  <div style="margin-bottom:10px">
+                    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">AY</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px">
+                      <button type="button" class="quick-month" data-month="1" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Oca</button>
+                      <button type="button" class="quick-month" data-month="2" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Şub</button>
+                      <button type="button" class="quick-month" data-month="3" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Mar</button>
+                      <button type="button" class="quick-month" data-month="4" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Nis</button>
+                      <button type="button" class="quick-month" data-month="5" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">May</button>
+                      <button type="button" class="quick-month" data-month="6" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Haz</button>
+                      <button type="button" class="quick-month" data-month="7" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Tem</button>
+                      <button type="button" class="quick-month" data-month="8" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Ağu</button>
+                      <button type="button" class="quick-month" data-month="9" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Eyl</button>
+                      <button type="button" class="quick-month" data-month="10" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Eki</button>
+                      <button type="button" class="quick-month" data-month="11" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Kas</button>
+                      <button type="button" class="quick-month" data-month="12" style="padding:6px 8px;font-size:10px;border:1px solid rgba(139,92,246,.2);background:rgba(139,92,246,.08);border-radius:4px;cursor:pointer;color:var(--accent-2)">Ara</button>
+                    </div>
                   </div>
-                  <input id="autoDecanYear" type="number" min="1900" max="2100" placeholder="Yıl" style="width:75px" />
+                  <!-- Yıl Hızlı Seçim -->
+                  <div>
+                    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">YIL</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px">
+                      <button type="button" class="quick-year" data-year="1985" style="padding:6px 10px;font-size:11px;border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.08);border-radius:4px;cursor:pointer;color:#22C55E">1985</button>
+                      <button type="button" class="quick-year" data-year="1990" style="padding:6px 10px;font-size:11px;border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.08);border-radius:4px;cursor:pointer;color:#22C55E">1990</button>
+                      <button type="button" class="quick-year" data-year="1993" style="padding:6px 10px;font-size:11px;border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.08);border-radius:4px;cursor:pointer;color:#22C55E">1993</button>
+                      <button type="button" class="quick-year" data-year="1994" style="padding:6px 10px;font-size:11px;border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.08);border-radius:4px;cursor:pointer;color:#22C55E">1994</button>
+                      <button type="button" class="quick-year" data-year="1995" style="padding:6px 10px;font-size:11px;border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.08);border-radius:4px;cursor:pointer;color:#22C55E">1995</button>
+                      <button type="button" class="quick-year" data-year="1998" style="padding:6px 10px;font-size:11px;border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.08);border-radius:4px;cursor:pointer;color:#22C55E">1998</button>
+                      <button type="button" class="quick-year" data-year="2000" style="padding:6px 10px;font-size:11px;border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.08);border-radius:4px;cursor:pointer;color:#22C55E">2000</button>
+                      <button type="button" class="quick-year" data-year="2005" style="padding:6px 10px;font-size:11px;border:1px solid rgba(34,197,94,.2);background:rgba(34,197,94,.08);border-radius:4px;cursor:pointer;color:#22C55E">2005</button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div class="row">
-                <label><strong>Doğum Saati</strong></label>
-                <div class="inp">
-                  <input id="autoDecanHour" type="number" min="0" max="23" placeholder="Saat" style="width:65px" />
-                  <span style="font-weight:bold">:</span>
-                  <input id="autoDecanMinute" type="number" min="0" max="59" placeholder="Dk" style="width:65px" />
-                </div>
-              </div>
-              <div class="row">
-                <label><strong>Doğum Yeri</strong></label>
-                <div class="inp">
-                  <select id="autoDecanCountry" style="min-width:120px"></select>
-                  <select id="autoDecanCity" style="min-width:140px;max-height:200px"><option value="">Önce ülke seç</option></select>
-                </div>
-              </div>
-              <!-- Hızlı Konum Seçimi - kompakt -->
-              <div class="inp" style="gap:6px;flex-wrap:wrap;padding:0 0 0 0">
-                <button type="button" class="quick-loc" data-city="İstanbul" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">İstanbul</button>
-                <button type="button" class="quick-loc" data-city="Eskişehir" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Eskişehir</button>
-                <button type="button" class="quick-loc" data-city="İzmir" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">İzmir</button>
-                <button type="button" class="quick-loc" data-city="Antalya" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Antalya</button>
-                <button type="button" class="quick-loc" data-city="Ankara" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Ankara</button>
-                <button type="button" class="quick-loc" data-city="Bursa" style="padding:6px 12px;font-size:12px;border-radius:8px;border:1px solid rgba(110,231,255,.3);background:rgba(110,231,255,.1);color:var(--accent);cursor:pointer">Bursa</button>
-              </div>
-              <!-- Manuel Koordinat - kompakt -->
-              <div class="inp" style="gap:8px">
-                <input id="autoDecanLat" type="number" step="0.0001" placeholder="Enlem" style="width:100px" />
-                <input id="autoDecanLng" type="number" step="0.0001" placeholder="Boylam" style="width:100px" />
-              </div>
+              </details>
+              
+              <!-- Butonlar -->
               <div style="display:flex;gap:10px">
                 <button class="secondary" id="autoDecanClearBtn" style="flex:0 0 auto;padding:14px 20px;font-size:14px">🗑️ Temizle</button>
                 <button class="primary" id="autoDecanCalcBtn" style="flex:1;padding:14px;font-size:15px">
@@ -360,8 +383,8 @@
             </div>
           </details>
 
-          <!-- Manuel Giriş Bölümü (Kapalı Gelecek) -->
-          <details style="margin-bottom:12px;background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:2px" id="manualEntryDecan">
+          <!-- Manuel Giriş Bölümü - GİZLİ -->
+          <details style="display:none" id="manualEntryDecan">
             <summary style="cursor:pointer;font-weight:800;color:var(--accent-2);padding:14px">⚙️ Manuel Veri Girişi (Opsiyonel)</summary>
             <div style="padding:0 14px 14px 14px">
               <div class="hint" style="margin-bottom:12px"><strong>Yükselen (1. ev burcu)</strong></div>
@@ -403,8 +426,8 @@
             <strong>💡 İpucu:</strong> Dekan Hesaplama sekmesindeki "Otomatik Hesapla" butonu hem Dekan hem de 7'ler hesaplamasını otomatik yapar.
           </div>
           
-          <!-- Manuel Giriş Bölümü (Kapalı Gelecek) -->
-          <details style="margin-bottom:12px;background:rgba(139,92,246,.05);border:1px solid rgba(139,92,246,.2);border-radius:12px;padding:2px" id="manualEntrySeven">
+          <!-- Manuel Giriş Bölümü - GİZLİ -->
+          <details style="display:none" id="manualEntrySeven">
             <summary style="cursor:pointer;font-weight:800;color:var(--accent-2);padding:14px">⚙️ Manuel Veri Girişi (Opsiyonel)</summary>
             <div style="padding:0 14px 14px 14px">
               <div class="hint" style="margin-bottom:12px"><strong>Yükselen (1. ev burcu)</strong></div>
@@ -443,7 +466,18 @@
           </details>
         </div>
       </div>
-      <div class="results" id="sevenResults"></div>
+      
+      <!-- Tam Ekran Ev Dekanı -->
+      <div id="sevenColumnsContainer">
+        <div style="margin-bottom:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border-radius:10px;border-left:4px solid var(--accent-3)">
+          <div style="font-weight:700;font-size:15px;color:var(--accent-3)">🏠 7'ler Kanunu - Ev Dekanları</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Yaş pozisyonunun Dekan Hesaplama'daki hangi ev dekanına denk geldiğini gösterir</div>
+        </div>
+        <div class="results" id="sevenEvDekanResults"></div>
+        
+        <!-- Eski Asli Dekan için gizli div (JavaScript uyumu için) -->
+        <div id="sevenResults" style="display:none"></div>
+      </div>
     </div>
 
     <!-- ==================== SOLAR PANEL ==================== -->
@@ -522,13 +556,19 @@
           <button class="primary" id="solarCalc" style="background:linear-gradient(135deg,#f59e0b,#d97706)">☉ Solar Hesapla</button>
         </div>
       </div>
-      <div class="results" id="solarResults" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div id="solarDekanResults" style="border-right:1px solid rgba(255,255,255,.1);padding-right:16px">
-          <!-- Solar Return Dekan calculation will appear here -->
+      <!-- Solar Return Özet Bilgileri (üstte maddeler halinde) -->
+      <div id="solarInfoSummary" style="display:none;margin-bottom:16px;padding:16px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));border-radius:12px;border-left:4px solid #f59e0b">
+        <!-- JavaScript ile doldurulacak -->
+      </div>
+      
+      <!-- Solar Dekan Takvimi (tam ekran) -->
+      <div class="results" id="solarResults">
+        <div id="solarDekanCalendar" style="width:100%">
+          <!-- Solar Dekan Calendar will appear here -->
         </div>
-        <div id="solarMonthResults">
-          <!-- Monthly planetary events will appear here -->
-        </div>
+        <!-- Gizli paneller (JavaScript uyumu için) -->
+        <div id="solarDekanResults" style="display:none"></div>
+        <div id="solarMonthResults" style="display:none"></div>
       </div>
     </div>
 
@@ -540,7 +580,7 @@
             <strong>🎯 Görsel Harita</strong> — Dekan Hesaplama sekmesinde doğum bilgilerini girin ve hesaplayın. Harita otomatik güncellenir.
           </div>
           <div id="chartContainer" style="display:flex;justify-content:center;align-items:center;min-height:800px">
-            <svg id="wheelChart" viewBox="0 0 1000 1000" width="950" height="950" style="max-width:100%">
+            <svg id="wheelChart" viewBox="0 0 1200 1200" width="1000" height="1000" style="max-width:100%">
               <!-- Chart will be drawn here -->
               <text x="500" y="500" text-anchor="middle" fill="#6EE7FF" font-size="18" opacity="0.5">
                 Harita için doğum bilgisi hesaplayın
@@ -548,6 +588,37 @@
             </svg>
           </div>
           <div id="chartLegend" style="margin-top:16px;text-align:left"></div>
+          
+          <!-- Açı Filtreleri -->
+          <div id="aspectFilters" style="margin-top:20px;display:none;padding:16px;background:rgba(139,92,246,0.1);border-radius:12px;border:1px solid rgba(139,92,246,0.3)">
+            <div style="font-weight:600;color:var(--accent-2);margin-bottom:12px;font-size:14px">📐 Açı Filtreleri</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+              <label class="aspect-toggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;background:rgba(59,130,246,0.15);border-radius:8px;border:1px solid rgba(59,130,246,0.4);transition:all 0.2s">
+                <input type="checkbox" id="aspect_opposition" checked style="width:16px;height:16px;accent-color:#3B82F6">
+                <span style="color:#3B82F6;font-weight:600">☍ Karşıt (180°)</span>
+              </label>
+              <label class="aspect-toggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;background:rgba(34,197,94,0.15);border-radius:8px;border:1px solid rgba(34,197,94,0.4);transition:all 0.2s">
+                <input type="checkbox" id="aspect_trine" checked style="width:16px;height:16px;accent-color:#22C55E">
+                <span style="color:#22C55E;font-weight:600">△ Üçgen (120°)</span>
+              </label>
+              <label class="aspect-toggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;background:rgba(239,68,68,0.15);border-radius:8px;border:1px solid rgba(239,68,68,0.4);transition:all 0.2s">
+                <input type="checkbox" id="aspect_square" checked style="width:16px;height:16px;accent-color:#EF4444">
+                <span style="color:#EF4444;font-weight:600">□ Kare (90°)</span>
+              </label>
+              <label class="aspect-toggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;background:rgba(56,189,248,0.15);border-radius:8px;border:1px solid rgba(56,189,248,0.4);transition:all 0.2s">
+                <input type="checkbox" id="aspect_sextile" checked style="width:16px;height:16px;accent-color:#38BDF8">
+                <span style="color:#38BDF8;font-weight:600">⚹ 60'lık (60°)</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- Gezegen Filtreleri -->
+          <div id="planetFilters" style="margin-top:16px;display:none;padding:16px;background:rgba(110,231,255,0.08);border-radius:12px;border:1px solid rgba(110,231,255,0.2)">
+            <div style="font-weight:600;color:var(--accent);margin-bottom:12px;font-size:14px">🪐 Gezegen Filtreleri <span style="font-weight:400;opacity:0.7;font-size:12px">(tıklayarak haritadan gizle/göster)</span></div>
+            <div id="planetToggleContainer" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+              <!-- Will be filled by JavaScript -->
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -614,6 +685,12 @@
 
     <div class="footer">Değerli hocalarım Beyza &amp; Serkan Aslan için hazırlanmıştır. ❤️ Kerem</div>
   </div>
+
+<!-- 7'ler Ev Dekanı Modülü -->
+<script src="./js/seven-dekan.js"></script>
+
+<!-- Solar Dekan Takvimi Modülü -->
+<script src="./js/solar-dekan.js"></script>
 
 <!-- Swiss Ephemeris WASM Module -->
 <script type="module">
@@ -1413,7 +1490,7 @@
         const runIdx=(bs[i]+signAdv)%12, band=within<10*DEG_IN_MIN?0:within<20*DEG_IN_MIN?1:2;
         const elem=[0,4,8].includes(runIdx)?'fire':[1,5,9].includes(runIdx)?'earth':[2,6,10].includes(runIdx)?'air':'water';
         const cyc=ELEMENT_CYCLE[elem], pos=cyc.indexOf(runIdx), decSignIdx=cyc[(pos+band)%3];
-        return {index:idx+1, start:{deg,min}, startText:fmt({deg,min}), absStartMin:off, decanSign:SIGNS[decSignIdx], ruler:RULERS[decSignIdx]};
+        return {index:idx+1, start:{deg,min}, startText:fmt({deg,min}), absStartMin:off, positionSign:SIGNS[runIdx], positionSignIdx:runIdx, decanSign:SIGNS[decSignIdx], ruler:RULERS[decSignIdx]};
       });
       results.push(ev);
     }
@@ -1650,6 +1727,45 @@
         return jdToDateTime(newJD);
       }
       
+      // Calculate Dekan for Solar Return chart FIRST (before the loop that uses it!)
+      // computeDekan parameters: (cusps, sameFlags, add30Flags, asc)
+      const srCusps = srChart.houses.map(h => ({
+        deg: h.deg,
+        min: h.min
+      }));
+      
+      // CRITICAL: Use intercepted axes and same-sign houses from the SR chart!
+      // sameFlags: which houses (by index 0-5) have same sign as next house
+      // add30Flags: which axes (by index 0-5) have intercepted signs (need +30° adjustment)
+      const sameFlags = new Array(12).fill(false);
+      const add30Flags = new Array(12).fill(false);
+      
+      // Fill sameFlags from sameSignHouses (1-based to 0-based index)
+      if (srChart.sameSignHouses && srChart.sameSignHouses.length > 0) {
+        srChart.sameSignHouses.forEach(houseNum => {
+          if (houseNum >= 1 && houseNum <= 6) {
+            sameFlags[houseNum - 1] = true;
+            // Opposite house also has same flag (7th house if 1st has it, etc.)
+            sameFlags[houseNum - 1 + 6] = true;
+          }
+        });
+        console.log(`☀️ SR Same Sign Houses: ${srChart.sameSignHouses.join(', ')}`);
+      }
+      
+      // Fill add30Flags from interceptedAxes (1-based to 0-based index)
+      if (srChart.interceptedAxes && srChart.interceptedAxes.length > 0) {
+        srChart.interceptedAxes.forEach(axisNum => {
+          if (axisNum >= 1 && axisNum <= 6) {
+            add30Flags[axisNum - 1] = true;
+            // Opposite axis also has add30 flag
+            add30Flags[axisNum - 1 + 6] = true;
+          }
+        });
+        console.log(`☀️ SR Intercepted Axes: ${srChart.interceptedAxes.join(', ')}`);
+      }
+      
+      const srDekan = computeDecan(srCusps, sameFlags, add30Flags, srChart.asc.signIdx);
+      
       // Build solar months (12 segments of 30° each)
       const months = [];
       for (let i = 0; i < 12; i++) {
@@ -1670,6 +1786,100 @@
         
         // Calculate actual days in this solar month
         const monthDays = monthEndDays - monthStartDays;
+        
+        // ===== DEKAN CALCULATION FOR THIS MONTH =====
+        // Find which SR house the Sun is in at month start
+        const srSunLong = srChart.planets.sun.signIdx * 30 + srChart.planets.sun.deg + srChart.planets.sun.min / 60;
+        const monthStartLong = (srSunLong + i * 30) % 360;
+        
+        // Find which house contains this longitude
+        let houseForMonth = 1;
+        const srHouseCusps = srChart.houses.map(h => h.signIdx * 30 + h.deg + h.min / 60);
+        for (let hi = 0; hi < 12; hi++) {
+          const nextHi = (hi + 1) % 12;
+          const startCusp = srHouseCusps[hi];
+          const endCusp = srHouseCusps[nextHi];
+          
+          // Handle wrap-around
+          if (startCusp <= endCusp) {
+            if (monthStartLong >= startCusp && monthStartLong < endCusp) {
+              houseForMonth = hi + 1;
+              break;
+            }
+          } else {
+            if (monthStartLong >= startCusp || monthStartLong < endCusp) {
+              houseForMonth = hi + 1;
+              break;
+            }
+          }
+        }
+        
+        // Find which dekan within that house
+        const srDekanForHouse = srDekan[houseForMonth - 1];
+        let dekanNum = 1;
+        let dekanInfo = srDekanForHouse?.decans[0];
+        
+        if (srDekanForHouse && srDekanForHouse.decans) {
+          const houseStartLong = srHouseCusps[houseForMonth - 1];
+          let posInHouse = monthStartLong - houseStartLong;
+          if (posInHouse < 0) posInHouse += 360;
+          
+          // Find which dekan
+          for (let di = 0; di < srDekanForHouse.decans.length; di++) {
+            const dStart = srDekanForHouse.decans[di].absStartMin / 60; // Convert minutes to degrees
+            const dEnd = di < 2 ? srDekanForHouse.decans[di + 1].absStartMin / 60 : srDekanForHouse.meta.spanMin / 60;
+            
+            if (posInHouse >= dStart && posInHouse < dEnd) {
+              dekanNum = di + 1;
+              dekanInfo = srDekanForHouse.decans[di];
+              break;
+            }
+          }
+        }
+        
+        // Calculate dekan transitions within this solar month
+        // Each dekan is ~10 degrees, solar month is 30 degrees
+        // So there will be 2 dekan transitions in most months
+        const dekanTransitions = [];
+        const degreesPerDekan = 10; // Approximately
+        
+        for (let dt = 1; dt <= 3; dt++) {
+          const transitionDegree = dt * 10; // 10°, 20°, 30° within month
+          if (transitionDegree < 30) {
+            const transitionOffset = monthStartDegOffset + transitionDegree;
+            const transitionDays = transitionOffset * daysPerDegree;
+            const transitionDate = addDaysToDate(srJD, transitionDays);
+            
+            // What dekan starts here?
+            const transLong = (srSunLong + transitionOffset) % 360;
+            let transHouse = houseForMonth;
+            let transDekanNum = Math.min(3, dekanNum + dt);
+            
+            // Check if we're moving to next house
+            for (let hi = 0; hi < 12; hi++) {
+              const nextHi = (hi + 1) % 12;
+              const startCusp = srHouseCusps[hi];
+              const endCusp = srHouseCusps[nextHi];
+              if (startCusp <= endCusp) {
+                if (transLong >= startCusp && transLong < endCusp) { transHouse = hi + 1; break; }
+              } else {
+                if (transLong >= startCusp || transLong < endCusp) { transHouse = hi + 1; break; }
+              }
+            }
+            
+            const transDekanData = srDekan[transHouse - 1]?.decans[(transDekanNum - 1) % 3];
+            
+            dekanTransitions.push({
+              degreeInMonth: transitionDegree,
+              dateStr: `${transitionDate.day} ${MONTHS[transitionDate.month - 1]}`,
+              fullDateStr: `${transitionDate.day} ${MONTHS[transitionDate.month - 1]} ${transitionDate.year} ~${String(transitionDate.hour).padStart(2,'0')}:${String(transitionDate.minute).padStart(2,'0')}`,
+              house: transHouse,
+              dekanNum: transDekanNum > 3 ? ((transDekanNum - 1) % 3) + 1 : transDekanNum,
+              dekanSign: transDekanData?.decanSign || '?',
+              ruler: transDekanData?.ruler || '?'
+            });
+          }
+        }
         
         // Find planets in this solar house
         const inMonth = [];
@@ -1714,19 +1924,17 @@
           startDeg, 
           endDeg, 
           monthDays: Math.round(monthDays),
+          // Dekan info for this month
+          srHouse: houseForMonth,
+          srDekanNum: dekanNum,
+          srDekanSign: dekanInfo?.decanSign,
+          srDekanRuler: dekanInfo?.ruler,
+          dekanTransitions: dekanTransitions,
           planets: inMonth 
         });
       }
       
-      // Calculate Dekan for Solar Return chart (using SR ASC and houses)
-      // computeDekan parameters: (cusps, sameFlags, add30Flags, asc)
-      const srCusps = srChart.houses.map(h => ({
-        deg: h.deg,
-        min: h.min
-      }));
-      const sameFlags = new Array(12).fill(false);  // No same-sign flags for SR
-      const add30Flags = new Array(12).fill(false); // No add30 flags for SR
-      const srDekan = computeDecan(srCusps, sameFlags, add30Flags, srChart.asc.signIdx);
+      // srDekan is already calculated above before the loop
       
       return {
         solarYear: solarYear,
@@ -1812,36 +2020,75 @@
     results.forEach(h => {
       const hi=h.house-1, html = document.createElement('div');
       html.className = 'house';
-      html.innerHTML = `<div class="title"><span class="badge">${h.house}</span> Ev <span style="color:var(--muted);font-size:14px">• ${SIGN_SYM[h.houseSign]} ${h.houseSign}</span></div>`;
+      // Güzelleştirilmiş ev başlığı
+      html.innerHTML = `
+        <div class="title" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(110,231,255,.05));border-radius:10px;margin-bottom:8px">
+          <span class="badge" style="font-size:16px;font-weight:800">${h.house}</span>
+          <span style="font-weight:700;font-size:16px">Ev</span>
+          <span style="color:var(--muted);font-size:14px">•</span>
+          <span style="font-size:15px;color:var(--accent)">${SIGN_SYM[h.houseSign]} ${h.houseSign}</span>
+        </div>
+      `;
       const list = document.createElement('div'); list.className = 'list';
       const decSize = h.meta.decanSizeMin;
+      
       h.decans.forEach((d,di) => {
-        const kv = document.createElement('div'); kv.className = `kv el-${elementOf(d.decanSign)}`;
-        kv.innerHTML = `<div>${di+1}.dekan</div><div class="degval" style="font-weight:900">${d.startText}</div><div class="pills"><span class="pill">Ev: ${SIGN_SYM[h.houseSign]} ${h.houseSign}</span><span class="pill">Dekan: ${SIGN_SYM[d.decanSign]} ${d.decanSign} (${RULER_SYM[d.ruler]||''} ${d.ruler})</span></div>`;
+        const kv = document.createElement('div'); 
+        kv.className = `kv el-${elementOf(d.decanSign)}`;
+        kv.style.cssText = 'padding:12px 14px';
+        
+        // Format: 2. dekan • 11° 45' Kova → ♒ Kova (♅ Uranüs)
+        const posSign = d.positionSign || h.houseSign;
+        kv.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;line-height:1.6">
+            <span style="font-weight:700;color:var(--accent-2)">${di+1}. dekan</span>
+            <span style="color:var(--muted)">•</span>
+            <span style="font-family:monospace;font-weight:600">${d.startText}</span>
+            <span style="color:var(--muted)">${SIGN_SYM[posSign]} ${posSign}</span>
+            <span style="color:var(--muted)">→</span>
+            <span style="color:var(--accent)">${SIGN_SYM[d.decanSign]} ${d.decanSign}</span>
+            <span style="color:var(--muted);font-size:12px">(${RULER_SYM[d.ruler] || ''} ${d.ruler})</span>
+          </div>
+        `;
         list.appendChild(kv);
+        
+        // Planets in this dekan
         const start=di*decSize, end=di===2?h.meta.spanMin:start+decSize;
         byHouse[hi].filter(p=>p.delta>=start&&p.delta<end).forEach(p=>{
           const pAspects = planetAspects[p.key];
           const hasAspects = pAspects && pAspects.length > 0;
           
-          const pk=document.createElement('div');pk.className='kv planet';
-          pk.style.cursor = hasAspects ? 'pointer' : 'default';
-          pk.innerHTML=`<div style="font-weight:900">${p.sym} ${p.name} ${hasAspects ? '<span style="font-size:11px;color:var(--accent);margin-left:6px">▼ ' + pAspects.length + ' açı</span>' : ''}</div><div>${SIGN_SYM[SIGNS[p.signIdx]]} ${Math.floor(p.posMin/60)}°${String(p.posMin%60).padStart(2,'0')}'</div>`;
+          const signName = SIGNS[p.signIdx];
+          const degStr = `${Math.floor(p.posMin/60)}°${String(p.posMin%60).padStart(2,'0')}'`;
+          const aspectBadge = hasAspects ? `<span class="aspect-toggle" style="color:var(--accent);font-size:12px;cursor:pointer;margin-left:auto"> ▼ ${pAspects.length} açı</span>` : '';
+          
+          const pk = document.createElement('div');
+          pk.className = 'kv planet';
+          pk.style.cssText = 'margin-left:16px;padding:10px 14px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent-3);cursor:' + (hasAspects ? 'pointer' : 'default');
+          pk.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
+              <span style="font-weight:700">${p.sym} ${p.name}</span>
+              <span style="color:var(--muted)">•</span>
+              <span>${signName} ${SIGN_SYM[signName]}</span>
+              <span style="color:var(--muted)">•</span>
+              <span style="font-family:monospace">${degStr}</span>
+              ${aspectBadge}
+            </div>
+          `;
           list.appendChild(pk);
           
-          // Add collapsible aspects container for this planet
+          // Collapsible aspects
           if (hasAspects) {
             const aspectsContainer = document.createElement('div');
             aspectsContainer.className = 'planet-aspects';
-            aspectsContainer.style.cssText = 'display:none;margin-left:32px;padding:4px 0;border-left:2px solid rgba(139,92,246,0.3);margin-bottom:8px';
+            aspectsContainer.style.cssText = 'display:none;margin-left:32px;padding:6px 0;border-left:2px solid rgba(139,92,246,0.3);margin-bottom:8px';
             
-            // Sort aspects: Kavuşum (0), Altmışlık (60), Kare (90), Üçgen (120), Karşıt (180)
             const aspectOrder = { 0: 0, 60: 1, 90: 2, 120: 3, 180: 4 };
             const sortedAspects = [...pAspects].sort((a, b) => (aspectOrder[a.angle] || 99) - (aspectOrder[b.angle] || 99));
             
             sortedAspects.forEach(asp => {
               const aspEl = document.createElement('div');
-              aspEl.style.cssText = 'padding:4px 12px;font-size:12px;background:rgba(139,92,246,0.05);margin:2px 0;border-radius:4px';
+              aspEl.style.cssText = 'padding:6px 14px;font-size:13px;background:rgba(139,92,246,0.05);margin:3px 0;border-radius:6px';
               const otherSym = PLANET_SYMS[asp.otherPlanet] || '?';
               const otherName = PLANET_NAMES[asp.otherPlanet] || asp.otherPlanet;
               aspEl.innerHTML = `<span style="color:${asp.color};font-weight:bold">${asp.symbol}</span> ${asp.aspect} <span style="color:var(--muted)">${otherSym} ${otherName}</span> <span style="font-size:11px;opacity:0.7">(${asp.orb}°)</span>`;
@@ -1849,15 +2096,16 @@
             });
             list.appendChild(aspectsContainer);
             
-            // Toggle on click
             pk.addEventListener('click', () => {
+              const toggle = pk.querySelector('.aspect-toggle');
               const isOpen = aspectsContainer.style.display !== 'none';
               aspectsContainer.style.display = isOpen ? 'none' : 'block';
-              pk.querySelector('span').textContent = (isOpen ? '▼ ' : '▲ ') + pAspects.length + ' açı';
+              if (toggle) toggle.innerHTML = ` ${isOpen ? '▼' : '▲'} ${pAspects.length} açı`;
             });
           }
         });
       });
+      
       html.appendChild(list);
       const meta = document.createElement('div');
       meta.className = 'meta';
@@ -1867,7 +2115,7 @@
     });
   }
 
-  function renderSeven(houses, planets, cusps, sameFlags, add30Flags, asc, container, aspects) {
+  function renderSeven(houses, planets, cusps, sameFlags, add30Flags, asc, container, aspects, dekanResults) {
     const cm=cusps.map(c=>toMin(c.deg,c.min)), bs=computeBaseSigns(asc,sameFlags,add30Flags);
     const byHouse=Array.from({length:12},()=>[]);
     (planets||[]).forEach(pl=>{
@@ -1893,41 +2141,111 @@
     const PLANET_NAMES = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',chiron:'Chiron',north:'KAD',south:'GAD',fortune:'Şans',mc:'MC',asc:'ASC'};
 
     container.innerHTML = '';
-    houses.forEach(h => {
-      const hi=h.house-1, html = document.createElement('div');
-      html.className = 'house';
-      html.innerHTML = `<div class="title"><span class="badge">${h.house}</span> Ev <span style="color:var(--muted);font-size:14px">• ${SIGN_SYM[h.houseSign]} ${h.houseSign}</span></div>`;
-      const list = document.createElement('div'); list.className = 'list';
-      h.segments.forEach(seg => {
-        const kv = document.createElement('div'); kv.className = `kv el-${elementOf(seg.signStart)}`;
-        const ageL = `${seg.startAge}–${seg.endAge} yaş`;
-        const yearL = h.birthYear ? ` • ${h.birthYear+seg.startAge}–${h.birthYear+seg.endAge}` : '';
-        const sameS = seg.signStart===seg.signEnd;
-        const decanInfo = seg.decanSign ? ` <span style="color:var(--accent-2);font-size:12px">[${SIGN_SYM[seg.decanSign]} ${seg.decanSign}]</span>` : '';
-        kv.innerHTML = `<div>${ageL}${yearL}</div><div>${seg.startText} ${SIGN_SYM[seg.signStart]} ${seg.signStart}${decanInfo}${sameS?` — ${seg.endText}`:`  →  ${seg.endText} ${SIGN_SYM[seg.signEnd]} ${seg.signEnd}`}</div>`;
+    
+    // Asli dekan hesaplama fonksiyonu
+    // 0-10° = 1. dekan (aynı burç), 10-20° = 2. dekan (element cycle), 20-30° = 3. dekan
+    function getAsliDekan(signIdx, degMin) {
+      const deg = degMin / 60; // dakikadan dereceye
+      const dekanBand = deg < 10 ? 0 : deg < 20 ? 1 : 2;
+      const elem = [0,4,8].includes(signIdx) ? 'fire' : 
+                   [1,5,9].includes(signIdx) ? 'earth' : 
+                   [2,6,10].includes(signIdx) ? 'air' : 'water';
+      const cycle = ELEMENT_CYCLE[elem];
+      const startPos = cycle.indexOf(signIdx);
+      const dekanSignIdx = cycle[(startPos + dekanBand) % 3];
+      return {
+        band: dekanBand + 1,
+        signIdx: dekanSignIdx,
+        sign: SIGNS[dekanSignIdx],
+        ruler: RULERS[dekanSignIdx]
+      };
+    }
+    
+    // Iterate through each house (0-83 yaş = 12 ev x 7 yaş)
+    houses.forEach((h, hi) => {
+      const houseDiv = document.createElement('div');
+      houseDiv.className = 'house';
+      // Güzelleştirilmiş ev başlığı (Dekan ile aynı stil)
+      houseDiv.innerHTML = `
+        <div class="title" style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(110,231,255,.05));border-radius:10px;margin-bottom:8px">
+          <span class="badge" style="font-size:16px;font-weight:800">${h.house}</span>
+          <span style="font-weight:700;font-size:16px">Ev</span>
+          <span style="color:var(--muted);font-size:14px">•</span>
+          <span style="font-size:15px;color:var(--accent)">${SIGN_SYM[h.houseSign]} ${h.houseSign}</span>
+        </div>
+      `;
+      
+      const list = document.createElement('div'); 
+      list.className = 'list';
+      
+      // Each house has 7 year segments
+      h.segments.forEach((seg, segIdx) => {
+        // Asli dekan hesaplama - pozisyonun kendi asli dekanı
+        // seg.signStart ve derece bilgisini kullanarak
+        const signIdx = SIGNS.indexOf(seg.signStart);
+        const startDeg = parseInt(seg.startText.split('°')[0]) || 0;
+        const startDegMin = startDeg * 60; // dereceyi dakikaya çevir
+        const asliDekan = getAsliDekan(signIdx, startDegMin);
+        
+        const kv = document.createElement('div'); 
+        kv.className = `kv el-${elementOf(seg.signStart)}`;
+        kv.style.cssText = 'padding:12px 14px';
+        
+        // Format: 0–1 yaş • 1994–1995 • 3° 00' • 1. dekan • ♎ Terazi (♀ Venüs)
+        const ageStr = `${seg.startAge}–${seg.endAge} yaş`;
+        const yearStr = h.birthYear ? `${h.birthYear + seg.startAge}–${h.birthYear + seg.endAge}` : '';
+        
+        kv.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;line-height:1.6">
+            <span style="font-weight:700">${ageStr}</span>
+            ${yearStr ? `<span style="color:var(--muted)">•</span> <span class="year-range" style="color:var(--muted)">${yearStr}</span>` : ''}
+            <span style="color:var(--muted)">•</span>
+            <span style="font-family:monospace">${seg.startText}</span>
+            <span style="color:var(--muted)">•</span>
+            <span style="color:var(--accent-2);font-weight:600">${asliDekan.band}. dekan</span>
+            <span style="color:var(--muted)">•</span>
+            <span style="color:var(--accent)">${SIGN_SYM[asliDekan.sign]} ${asliDekan.sign}</span>
+            <span style="color:var(--muted);font-size:12px">(${RULER_SYM[asliDekan.ruler] || ''} ${asliDekan.ruler})</span>
+          </div>
+        `;
         list.appendChild(kv);
-        byHouse[hi].filter(p=>p.delta>=seg.absStartMin&&p.delta<seg.absEndMin).forEach(p=>{
+        
+        // Show planets within this age segment
+        byHouse[hi].filter(p => p.delta >= seg.absStartMin && p.delta < seg.absEndMin).forEach(p => {
           const pAspects = planetAspects[p.key];
           const hasAspects = pAspects && pAspects.length > 0;
           
-          const pk=document.createElement('div');pk.className='kv planet';
-          pk.style.cursor = hasAspects ? 'pointer' : 'default';
-          pk.innerHTML=`<div style="font-weight:900">${p.sym} ${p.name} ${hasAspects ? '<span style="font-size:11px;color:var(--accent);margin-left:6px">▼ ' + pAspects.length + ' açı</span>' : ''}</div><div>${SIGN_SYM[SIGNS[p.signIdx]]} ${Math.floor(p.posMin/60)}°${String(p.posMin%60).padStart(2,'0')}'</div>`;
+          const signName = SIGNS[p.signIdx];
+          const degStr = `${Math.floor(p.posMin/60)}°${String(p.posMin%60).padStart(2,'0')}'`;
+          const aspectBadge = hasAspects ? `<span class="aspect-toggle" style="color:var(--accent);font-size:12px;cursor:pointer;margin-left:auto"> ▼ ${pAspects.length} açı</span>` : '';
+          
+          const pk = document.createElement('div');
+          pk.className = 'kv planet';
+          pk.style.cssText = 'margin-left:16px;padding:10px 14px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent-3);cursor:' + (hasAspects ? 'pointer' : 'default');
+          pk.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
+              <span style="font-weight:700">${p.sym} ${p.name}</span>
+              <span style="color:var(--muted)">•</span>
+              <span>${signName} ${SIGN_SYM[signName]}</span>
+              <span style="color:var(--muted)">•</span>
+              <span style="font-family:monospace">${degStr}</span>
+              ${aspectBadge}
+            </div>
+          `;
           list.appendChild(pk);
           
-          // Add collapsible aspects container for this planet
+          // Collapsible aspects
           if (hasAspects) {
             const aspectsContainer = document.createElement('div');
             aspectsContainer.className = 'planet-aspects';
-            aspectsContainer.style.cssText = 'display:none;margin-left:32px;padding:4px 0;border-left:2px solid rgba(139,92,246,0.3);margin-bottom:8px';
+            aspectsContainer.style.cssText = 'display:none;margin-left:32px;padding:6px 0;border-left:2px solid rgba(139,92,246,0.3);margin-bottom:8px';
             
-            // Sort aspects: Kavuşum (0), Altmışlık (60), Kare (90), Üçgen (120), Karşıt (180)
             const aspectOrder = { 0: 0, 60: 1, 90: 2, 120: 3, 180: 4 };
             const sortedAspects = [...pAspects].sort((a, b) => (aspectOrder[a.angle] || 99) - (aspectOrder[b.angle] || 99));
             
             sortedAspects.forEach(asp => {
               const aspEl = document.createElement('div');
-              aspEl.style.cssText = 'padding:4px 12px;font-size:12px;background:rgba(139,92,246,0.05);margin:2px 0;border-radius:4px';
+              aspEl.style.cssText = 'padding:6px 14px;font-size:13px;background:rgba(139,92,246,0.05);margin:3px 0;border-radius:6px';
               const otherSym = PLANET_SYMS[asp.otherPlanet] || '?';
               const otherName = PLANET_NAMES[asp.otherPlanet] || asp.otherPlanet;
               aspEl.innerHTML = `<span style="color:${asp.color};font-weight:bold">${asp.symbol}</span> ${asp.aspect} <span style="color:var(--muted)">${otherSym} ${otherName}</span> <span style="font-size:11px;opacity:0.7">(${asp.orb}°)</span>`;
@@ -1935,21 +2253,23 @@
             });
             list.appendChild(aspectsContainer);
             
-            // Toggle on click
             pk.addEventListener('click', () => {
+              const toggle = pk.querySelector('.aspect-toggle');
               const isOpen = aspectsContainer.style.display !== 'none';
               aspectsContainer.style.display = isOpen ? 'none' : 'block';
-              pk.querySelector('span').textContent = (isOpen ? '▼ ' : '▲ ') + pAspects.length + ' açı';
+              if (toggle) toggle.innerHTML = ` ${isOpen ? '▼' : '▲'} ${pAspects.length} açı`;
             });
           }
         });
       });
-      html.appendChild(list);
+      
+      houseDiv.appendChild(list);
+      
       const meta = document.createElement('div');
       meta.className = 'meta';
       meta.innerHTML = `Ev: ${h.spanText} — 1 yıl: ${h.stepText}`;
-      html.appendChild(meta);
-      container.appendChild(html);
+      houseDiv.appendChild(meta);
+      container.appendChild(houseDiv);
     });
   }
 
@@ -1984,385 +2304,244 @@
   // Render Solar Return results (automatic calculation)
   function renderSolarReturn(data, container) {
     if (!data || data.error) {
+      const infoSummary = $('solarInfoSummary');
+      if (infoSummary) infoSummary.style.display = 'none';
       container.innerHTML = `<p class="hint" style="color:var(--err)">${data?.error || 'Solar Return verisi bulunamadı.'}</p>`;
       return;
     }
     
-    // Initialize the two-panel layout inside container
-    container.innerHTML = `
-      <div id="solarDekanResults" style="border-right:1px solid rgba(255,255,255,.1);padding-right:16px"></div>
-      <div id="solarMonthResults"></div>
-    `;
-    
-    const dekanPanel = $('solarDekanResults');
-    const monthPanel = $('solarMonthResults');
-    
-    // ===== LEFT PANEL: Solar Return Chart Info + Dekan Calculation =====
+    // ===== ÜST KISIM: ÖZET BİLGİLER =====
     const srChart = data.srChart;
     const natalSunSign = SIGNS[data.natalSun.signIdx];
-    const srSunLong = srChart.planets.sun.signIdx * 30 + srChart.planets.sun.deg + srChart.planets.sun.min / 60;
-    
-    // Header with SR info
-    const infoHeader = document.createElement('div');
-    infoHeader.className = 'house';
-    infoHeader.style.borderLeft = '3px solid #f59e0b';
+    const srSunSign = SIGNS[srChart.planets.sun.signIdx];
+    const srAscSign = SIGNS[srChart.asc.signIdx];
     
     // Format precise time
     const timeStr = data.solarReturnDate.hour !== undefined 
-      ? `${String(data.solarReturnDate.hour).padStart(2,'0')}:${String(data.solarReturnDate.minute).padStart(2,'0')}` 
+      ? `${String(data.solarReturnDate.hour).padStart(2,'0')}:${String(data.solarReturnDate.minute).padStart(2,'0')} UT` 
       : '';
-    const precisionBadge = data.solarReturnDate.approximate 
-      ? '<span style="color:var(--muted)">(yaklaşık)</span>' 
-      : '<span style="color:#22c55e">✓ Hassas</span>';
     
-    infoHeader.innerHTML = `
-      <div class="title">
-        <span class="badge" style="background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.4)">☉</span> 
-        Solar Return ${data.solarYear} Haritası
-      </div>
-      <div class="kv" style="background:rgba(245,158,11,.08)">
-        <div>Natal Güneş</div>
-        <div>${SIGN_SYM[natalSunSign]} ${natalSunSign} ${data.natalSun.deg}°${String(data.natalSun.min).padStart(2,'0')}' <span style="color:var(--muted)">(${data.natalSun.longitude.toFixed(4)}°)</span></div>
-      </div>
-      <div class="kv" style="background:rgba(110,231,255,.05)">
-        <div>SR Güneş</div>
-        <div>${SIGN_SYM[SIGNS[srChart.planets.sun.signIdx]]} ${SIGNS[srChart.planets.sun.signIdx]} ${srChart.planets.sun.deg}°${String(srChart.planets.sun.min).padStart(2,'0')}' <span style="color:var(--muted)">(${srSunLong.toFixed(4)}°)</span></div>
-      </div>
-      <div class="kv" style="background:rgba(34,197,94,.1)">
-        <div>Solar Return Tarihi</div>
-        <div><strong>${data.solarReturnDate.day} ${MONTHS[data.solarReturnDate.month - 1]} ${data.solarReturnDate.year}</strong> ${timeStr} ${precisionBadge}</div>
-      </div>
-      <div class="kv" style="background:rgba(139,92,246,.1)">
-        <div>SR Yükselen</div>
-        <div><strong>${SIGN_SYM[SIGNS[srChart.asc.signIdx]]} ${SIGNS[srChart.asc.signIdx]} ${srChart.asc.deg}°${String(srChart.asc.min).padStart(2,'0')}'</strong></div>
-      </div>
-      <div class="kv" style="background:rgba(59,130,246,.08)">
-        <div>📍 Konum</div>
-        <div>${data.chartLocation?.name || 'Doğum Yeri'} <span style="color:var(--muted)">(${data.chartLocation?.lat?.toFixed(2) || '?'}°, ${data.chartLocation?.lng?.toFixed(2) || '?'}°)</span></div>
-      </div>
-    `;
-    dekanPanel.appendChild(infoHeader);
-    
-    // Now render Dekan results for SR chart
-    if (data.srDekan && data.srDekan.length > 0) {
-      const dekanTitle = document.createElement('h3');
-      dekanTitle.style.cssText = 'color:var(--accent);margin:16px 0 12px;font-size:16px;';
-      dekanTitle.innerHTML = '🔮 Solar Return Dekanları';
-      dekanPanel.appendChild(dekanTitle);
-      
-      data.srDekan.forEach(h => {
-        const box = document.createElement('div');
-        box.className = 'house';
-        
-        // Color based on house sign element
-        const elIdx = h.houseSignIdx % 4;
-        const elColors = {0:'#EF4444',1:'#22C55E',2:'#38BDF8',3:'#3B82F6'};
-        box.style.borderLeft = `3px solid ${elColors[elIdx]}`;
-        
-        box.innerHTML = `
-          <div class="title">
-            <span class="badge">${h.house}</span> 
-            ${h.house}. Ev 
-            <span style="color:var(--muted);font-size:13px">• ${SIGN_SYM[h.houseSign]} ${h.houseSign}</span>
-          </div>
-        `;
-        
-        const list = document.createElement('div');
-        list.className = 'list';
-        
-        h.decans.forEach((d, di) => {
-          const kv = document.createElement('div');
-          kv.className = 'kv';
-          kv.innerHTML = `
-            <div><strong>${d.index}. Dekan</strong> <span style="color:var(--muted)">${d.startText}</span></div>
-            <div>${SIGN_SYM[d.decanSign]} ${d.decanSign} — ${RULER_SYM[d.ruler] || ''} ${d.ruler}</div>
-          `;
-          list.appendChild(kv);
-        });
-        
-        box.appendChild(list);
-        dekanPanel.appendChild(box);
-      });
+    // Yerel saat
+    let localTimeStr = '';
+    if (data.solarReturnDate.localHour !== undefined) {
+      const offset = data.solarReturnDate.turkeyOffset || 3;
+      localTimeStr = `${String(data.solarReturnDate.localHour).padStart(2,'0')}:${String(data.solarReturnDate.localMinute).padStart(2,'0')} (TR)`;
     }
     
-    // ===== RIGHT PANEL: Monthly Events =====
-    const monthTitle = document.createElement('h3');
-    monthTitle.style.cssText = 'color:var(--accent);margin:0 0 12px;font-size:16px;';
-    monthTitle.innerHTML = '📅 Solar Yıl Ayları (Gezegen Geçişleri)';
-    monthPanel.appendChild(monthTitle);
-    
-    // Solar months (12)
-    data.months.forEach(m => {
-      const box = document.createElement('div');
-      box.className = 'house';
-      
-      // Color based on sign at start
-      const startSignIdx = Math.floor(m.startDeg / 30) % 12;
-      const elementColors = { 0: '#EF4444', 1: '#22C55E', 2: '#38BDF8', 3: '#3B82F6' };
-      const elIdx = startSignIdx % 4;
-      box.style.borderLeft = `3px solid ${elementColors[elIdx]}`;
-      
-      // Show month duration if available
-      const daysInfo = m.monthDays ? `<span style="color:#22c55e;font-size:11px;margin-left:8px">(~${m.monthDays} gün)</span>` : '';
-      
-      box.innerHTML = `
-        <div class="title">
-          <span class="badge">${m.solarHouse}</span> 
-          ${m.solarHouse}. Ay ${daysInfo}
-          <span style="color:var(--muted);font-size:12px;display:block;margin-top:4px">• ${m.startDateStr} → ${m.endDateStr}</span>
+    const infoSummary = $('solarInfoSummary');
+    if (infoSummary) {
+      infoSummary.style.display = 'block';
+      infoSummary.innerHTML = `
+        <div style="font-weight:700;font-size:16px;margin-bottom:12px;color:var(--accent-3)">☉ Solar Return ${data.solarYear} Özeti</div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+          <span style="padding:8px 14px;background:rgba(245,158,11,.15);border-radius:8px;font-size:13px">
+            <strong>📅 Tarih:</strong> ${data.solarReturnDate.day} ${MONTHS[data.solarReturnDate.month - 1]} ${data.solarReturnDate.year} ${timeStr}
+          </span>
+          ${localTimeStr ? `<span style="padding:8px 14px;background:rgba(34,197,94,.1);border-radius:8px;font-size:13px">
+            <strong>🇹🇷 Yerel:</strong> ${localTimeStr}
+          </span>` : ''}
+          <span style="padding:8px 14px;background:rgba(139,92,246,.15);border-radius:8px;font-size:13px">
+            <strong>↑ Yükselen:</strong> ${SIGN_SYM[srAscSign]} ${srAscSign} ${srChart.asc.deg}°${String(srChart.asc.min).padStart(2,'0')}'
+          </span>
+          <span style="padding:8px 14px;background:rgba(110,231,255,.1);border-radius:8px;font-size:13px">
+            <strong>☉ Güneş:</strong> ${SIGN_SYM[srSunSign]} ${srChart.planets.sun.deg}°${String(srChart.planets.sun.min).padStart(2,'0')}' (${srChart.planets.sun.house}. Ev)
+          </span>
+          <span style="padding:8px 14px;background:rgba(59,130,246,.1);border-radius:8px;font-size:13px">
+            <strong>📍 Konum:</strong> ${data.chartLocation?.name || 'Doğum Yeri'}
+          </span>
         </div>
       `;
-      
-      const list = document.createElement('div');
-      list.className = 'list';
-      
-      if (m.planets.length === 0) {
-        list.innerHTML = '<div class="kv"><div style="color:var(--muted);font-style:italic;font-size:13px">Bu ayda gezegen yok</div></div>';
-      } else {
-        m.planets.forEach(p => {
-          const kv = document.createElement('div');
-          kv.className = `kv ${p.isStart ? 'el-fire' : 'el-air'}`;
-          
-          // Show full date with approx time if available
-          const dateDisplay = p.fullDateStr || p.dateStr;
-          const dateText = p.isStart 
-            ? `<strong>${dateDisplay}</strong> <span style="color:#f59e0b">(Solar başlangıç)</span>` 
-            : `<strong>${dateDisplay}</strong>`;
-          
-          // Show degree offset info
-          const degInfo = p.degreeOffset ? `<span style="color:var(--muted);font-size:11px;margin-left:6px">[${p.degreeOffset}°]</span>` : '';
-          
-          kv.innerHTML = `
-            <div><strong>${p.sym} ${p.name}</strong>${degInfo}</div>
-            <div>${SIGN_SYM[SIGNS[p.signIdx]]} ${p.deg}°${String(p.min).padStart(2,'0')}' → ${dateText}</div>
-          `;
-          list.appendChild(kv);
-        });
-      }
-      
-      box.appendChild(list);
-      
-      // Degree range info
-      const startS = SIGNS[Math.floor(m.startDeg / 30) % 12];
-      const endS = SIGNS[Math.floor(m.endDeg / 30) % 12];
-      box.innerHTML += `<div class="meta">${Math.round(m.startDeg)}° → ${Math.round(m.endDeg)}° (${SIGN_SYM[startS]} → ${SIGN_SYM[endS]})</div>`;
-      
-      monthPanel.appendChild(box);
-    });
+    }
+    
+    // Eski panelleri gizle
+    const dekanPanel = $('solarDekanResults');
+    const monthPanel = $('solarMonthResults');
+    if (dekanPanel) dekanPanel.style.display = 'none';
+    if (monthPanel) monthPanel.style.display = 'none';
   }
 
   // ========== WHEEL CHART DRAWING ==========
   // Store last chart data for re-rendering
   let lastChartData = null;
 
+  // Aspect definitions for wheel chart
+  const CHART_ASPECTS = {
+    conjunction: { angle: 0, orb: 8, symbol: '☌', name: 'Kavuşum', color: '#EF4444' },
+    opposition: { angle: 180, orb: 8, symbol: '☍', name: 'Karşıt', color: '#3B82F6' },
+    trine: { angle: 120, orb: 8, symbol: '△', name: 'Üçgen', color: '#22C55E' },
+    square: { angle: 90, orb: 7, symbol: '□', name: 'Kare', color: '#EF4444' },
+    sextile: { angle: 60, orb: 6, symbol: '⚹', name: '60\'lık', color: '#38BDF8' }
+  };
+
+  // Calculate aspects between planets for wheel chart
+  function calculateChartAspects(planets) {
+    const aspects = [];
+    const planetList = Object.entries(planets).filter(([k,v]) => v && v.signIdx !== undefined);
+    
+    for (let i = 0; i < planetList.length; i++) {
+      for (let j = i + 1; j < planetList.length; j++) {
+        const [key1, p1] = planetList[i];
+        const [key2, p2] = planetList[j];
+        
+        const lon1 = p1.signIdx * 30 + p1.deg + p1.min / 60;
+        const lon2 = p2.signIdx * 30 + p2.deg + p2.min / 60;
+        let diff = Math.abs(lon1 - lon2);
+        if (diff > 180) diff = 360 - diff;
+        
+        for (const [aspectKey, aspect] of Object.entries(CHART_ASPECTS)) {
+          const distance = Math.abs(diff - aspect.angle);
+          if (distance <= aspect.orb) {
+            aspects.push({
+              planet1: key1,
+              planet2: key2,
+              lon1, lon2,
+              type: aspectKey,
+              ...aspect,
+              exactness: 1 - (distance / aspect.orb)
+            });
+            break;
+          }
+        }
+      }
+    }
+    return aspects;
+  }
+
+
   function drawWheelChart(chartData, decanResults) {
     lastChartData = { chartData, decanResults };
     const svg = $('wheelChart');
     if (!svg || !chartData) return;
     
-    const cx = 500, cy = 500; // Center (1000/2)
-    const radiusOuter = 470;
-    const radiusZodiac = 420;
-    const radiusHouse = 360;
-    const radiusInner = 280;
-    const radiusPlanet = 210;
-    const radiusCenter = 120;
+    const cx = 600, cy = 600;  // Merkez genişletildi
+    const radiusOuter = 470;      // Dış çember
+    const radiusZodiac = 420;     // Burç halkası iç kenarı
+    const radiusHouse = 360;      // Ev halkası dış kenarı
+    const radiusInner = 280;      // İç çember - açılar burada
+    const radiusPlanetLabel = 510; // Gezegen etiketleri - dışarıda
+    const radiusAspect = 265;     // Açı çizgileri - iç çemberin hemen altında
     
-    // Element colors: fire=red, earth=green, air=light blue, water=dark blue
+    // Element colors
     const EL_COLORS = {
-      fire: '#EF4444',    // Red
-      earth: '#22C55E',   // Green
-      air: '#38BDF8',     // Light blue/Sky blue
-      water: '#3B82F6'    // Dark blue
+      fire: '#EF4444',
+      earth: '#22C55E',
+      air: '#38BDF8',
+      water: '#3B82F6'
     };
     const SIGN_EL = ['fire','earth','air','water','fire','earth','air','water','fire','earth','air','water'];
     
-    // Convert ecliptic degree to SVG angle
-    // Standard astrology: ASC on LEFT (180°), counter-clockwise
-    // ecliptic 0° Aries = ascDeg position, going counter-clockwise
     const ascLong = chartData.asc.longitude || (chartData.asc.signIdx * 30 + chartData.asc.deg + chartData.asc.min / 60);
     
-    // Convert ecliptic longitude to chart angle (radians)
-    // ASC is at 180° (left side), degrees increase counter-clockwise
     const toAngle = (eclipticDeg) => {
-      const relDeg = eclipticDeg - ascLong; // Relative to ASC
-      const chartDeg = 180 + relDeg; // ASC at 180° (left)
+      const relDeg = eclipticDeg - ascLong;
+      const chartDeg = 180 + relDeg;
       return chartDeg * Math.PI / 180;
     };
     
     const polarX = (r, eclipticDeg) => cx + r * Math.cos(toAngle(eclipticDeg));
     const polarY = (r, eclipticDeg) => cy - r * Math.sin(toAngle(eclipticDeg));
     
+    // Planet definitions - with GAD (south node) added
+    const planetList = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','south','fortune'];
+    const planetSyms = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',south:'☋',fortune:'⊕'};
+    const planetNames = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',chiron:'Chiron',north:'KAD',south:'GAD',fortune:'Şans'};
+    const planetColors = {sun:'#F59E0B',moon:'#E2E8F0',mercury:'#A78BFA',venus:'#EC4899',mars:'#EF4444',jupiter:'#3B82F6',saturn:'#6B7280',uranus:'#06B6D4',neptune:'#8B5CF6',pluto:'#78716C',chiron:'#10B981',north:'#6EE7FF',south:'#FF6EE7',fortune:'#22C55E'};
+    
     let html = '';
     
     // Background
     html += `<circle cx="${cx}" cy="${cy}" r="${radiusOuter}" fill="#0D1B2A" stroke="rgba(110,231,255,0.2)" stroke-width="2"/>`;
     
-    // Zodiac wheel (outer ring with 12 signs) - fixed position
+    // Zodiac wheel
     for (let i = 0; i < 12; i++) {
       const startDeg = i * 30;
       const endDeg = (i + 1) * 30;
       const midDeg = startDeg + 15;
       const color = EL_COLORS[SIGN_EL[i]];
       
-      // Draw zodiac arc segment
       const a1 = toAngle(startDeg), a2 = toAngle(endDeg);
       const x1o = cx + radiusOuter * Math.cos(a1), y1o = cy - radiusOuter * Math.sin(a1);
       const x2o = cx + radiusOuter * Math.cos(a2), y2o = cy - radiusOuter * Math.sin(a2);
       const x1z = cx + radiusZodiac * Math.cos(a1), y1z = cy - radiusZodiac * Math.sin(a1);
       const x2z = cx + radiusZodiac * Math.cos(a2), y2z = cy - radiusZodiac * Math.sin(a2);
       
-      // Arc path for zodiac segment
       html += `<path d="M ${x1z} ${y1z} L ${x1o} ${y1o} A ${radiusOuter} ${radiusOuter} 0 0 0 ${x2o} ${y2o} L ${x2z} ${y2z} A ${radiusZodiac} ${radiusZodiac} 0 0 1 ${x1z} ${y1z}" fill="${color}" fill-opacity="0.12" stroke="${color}" stroke-opacity="0.4" stroke-width="1"/>`;
       
-      // Zodiac symbol
       const symX = polarX((radiusOuter + radiusZodiac) / 2, midDeg);
       const symY = polarY((radiusOuter + radiusZodiac) / 2, midDeg);
       html += `<text x="${symX}" y="${symY}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="20" font-weight="bold">${SIGN_SYM[SIGNS[i]]}</text>`;
-      
-      // Zodiac degree markers (every 10°)
-      for (let d = 0; d < 30; d += 10) {
-        const tickDeg = startDeg + d;
-        const tx1 = polarX(radiusZodiac, tickDeg);
-        const ty1 = polarY(radiusZodiac, tickDeg);
-        const tx2 = polarX(radiusZodiac - 5, tickDeg);
-        const ty2 = polarY(radiusZodiac - 5, tickDeg);
-        html += `<line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="${color}" stroke-opacity="0.5" stroke-width="1"/>`;
-      }
     }
     
-    // House lines and cusps
+    // House lines
     if (chartData.houses) {
-      // House divider circle
       html += `<circle cx="${cx}" cy="${cy}" r="${radiusHouse}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
       
-      // First pass: Draw house segment backgrounds with element colors
       chartData.houses.forEach((h, i) => {
         const deg = h.signIdx * 30 + h.deg + h.min / 60;
         const nextH = chartData.houses[(i + 1) % 12];
         let nextDeg = nextH.signIdx * 30 + nextH.deg + nextH.min / 60;
         if (nextDeg < deg) nextDeg += 360;
         
-        // Get element color based on house sign
         const houseElement = SIGN_EL[h.signIdx];
         const houseColor = EL_COLORS[houseElement];
         
-        // Draw arc segment for house background
         const a1 = toAngle(deg), a2 = toAngle(nextDeg);
         const x1h = cx + radiusHouse * Math.cos(a1), y1h = cy - radiusHouse * Math.sin(a1);
         const x2h = cx + radiusHouse * Math.cos(a2), y2h = cy - radiusHouse * Math.sin(a2);
         const x1i = cx + radiusInner * Math.cos(a1), y1i = cy - radiusInner * Math.sin(a1);
         const x2i = cx + radiusInner * Math.cos(a2), y2i = cy - radiusInner * Math.sin(a2);
         
-        // Determine arc direction
         const largeArc = (nextDeg - deg) > 180 ? 1 : 0;
-        
-        html += `<path d="M ${x1i} ${y1i} L ${x1h} ${y1h} A ${radiusHouse} ${radiusHouse} 0 ${largeArc} 0 ${x2h} ${y2h} L ${x2i} ${y2i} A ${radiusInner} ${radiusInner} 0 ${largeArc} 1 ${x1i} ${y1i}" fill="${houseColor}" fill-opacity="0.08" stroke="none"/>`;
+        html += `<path d="M ${x1i} ${y1i} L ${x1h} ${y1h} A ${radiusHouse} ${radiusHouse} 0 ${largeArc} 0 ${x2h} ${y2h} L ${x2i} ${y2i} A ${radiusInner} ${radiusInner} 0 ${largeArc} 1 ${x1i} ${y1i}" fill="${houseColor}" fill-opacity="0.06" stroke="none"/>`;
       });
       
-      // Second pass: Draw house lines and labels
       chartData.houses.forEach((h, i) => {
         const deg = h.signIdx * 30 + h.deg + h.min / 60;
-        const x1 = polarX(radiusCenter, deg);
-        const y1 = polarY(radiusCenter, deg);
+        const x1 = polarX(radiusInner, deg);
+        const y1 = polarY(radiusInner, deg);
         const x2 = polarX(radiusZodiac, deg);
         const y2 = polarY(radiusZodiac, deg);
         
-        // House line - ASC/DESC/MC/IC are thicker
         const isCardinal = (i === 0 || i === 3 || i === 6 || i === 9);
         const lineColor = isCardinal ? 'rgba(110,231,255,0.9)' : 'rgba(255,255,255,0.25)';
-        const lineWidth = isCardinal ? 2.5 : 1;
+        const lineWidth = isCardinal ? 2 : 1;
         html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lineColor}" stroke-width="${lineWidth}"/>`;
         
-        // House number in the middle of the house
+        // House number
         const nextH = chartData.houses[(i + 1) % 12];
         let nextDeg = nextH.signIdx * 30 + nextH.deg + nextH.min / 60;
         let midDeg = (deg + nextDeg) / 2;
         if (nextDeg < deg) midDeg = ((deg + nextDeg + 360) / 2) % 360;
         const numX = polarX((radiusHouse + radiusInner) / 2, midDeg);
         const numY = polarY((radiusHouse + radiusInner) / 2, midDeg);
-        html += `<text x="${numX}" y="${numY}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.6)" font-size="18" font-weight="bold">${i + 1}</text>`;
+        html += `<text x="${numX}" y="${numY}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.4)" font-size="14">${i + 1}</text>`;
         
-        // Cusp degree label (show degree inside zodiac ring)
+        // House cusp degree - show for ALL houses
         const degText = `${h.deg}°${String(h.min).padStart(2,'0')}'`;
-        const degLabelX = polarX(radiusZodiac - 25, deg + 4);
-        const degLabelY = polarY(radiusZodiac - 25, deg + 4);
-        html += `<text x="${degLabelX}" y="${degLabelY}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.7)" font-size="12" font-weight="bold">${degText}</text>`;
+        const degLabelX = polarX(radiusZodiac - 18, deg + 3);
+        const degLabelY = polarY(radiusZodiac - 18, deg + 3);
+        const degColor = isCardinal ? 'rgba(110,231,255,0.95)' : 'rgba(255,255,255,0.55)';
+        html += `<text x="${degLabelX}" y="${degLabelY}" text-anchor="middle" dominant-baseline="central" fill="${degColor}" font-size="8" font-weight="600">${degText}</text>`;
         
-        // Labels for ASC, IC, DESC, MC with degrees
+        // ASC/IC/DES/MC labels
         if (i === 0) {
-          html += `<text x="${polarX(radiusZodiac + 20, deg)}" y="${polarY(radiusZodiac + 20, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="14" font-weight="bold">ASC</text>`;
+          html += `<text x="${polarX(radiusOuter + 25, deg)}" y="${polarY(radiusOuter + 25, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="12" font-weight="bold">ASC</text>`;
         } else if (i === 3) {
-          html += `<text x="${polarX(radiusZodiac + 20, deg)}" y="${polarY(radiusZodiac + 20, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="14" font-weight="bold">IC</text>`;
+          html += `<text x="${polarX(radiusOuter + 25, deg)}" y="${polarY(radiusOuter + 25, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="12" font-weight="bold">IC</text>`;
         } else if (i === 6) {
-          html += `<text x="${polarX(radiusZodiac + 20, deg)}" y="${polarY(radiusZodiac + 20, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="14" font-weight="bold">DES</text>`;
+          html += `<text x="${polarX(radiusOuter + 25, deg)}" y="${polarY(radiusOuter + 25, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="12" font-weight="bold">DES</text>`;
         } else if (i === 9) {
-          html += `<text x="${polarX(radiusZodiac + 20, deg)}" y="${polarY(radiusZodiac + 20, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="14" font-weight="bold">MC</text>`;
+          html += `<text x="${polarX(radiusOuter + 25, deg)}" y="${polarY(radiusOuter + 25, deg)}" text-anchor="middle" dominant-baseline="central" fill="#6EE7FF" font-size="12" font-weight="bold">MC</text>`;
         }
       });
     }
     
-    // Inner circles
-    html += `<circle cx="${cx}" cy="${cy}" r="${radiusInner}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
-    html += `<circle cx="${cx}" cy="${cy}" r="${radiusCenter}" fill="#0D1B2A" stroke="rgba(139,92,246,0.5)" stroke-width="2"/>`;
-    
-    // Planets
-    if (chartData.planets) {
-      const planetList = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','fortune'];
-      const planetSyms = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',fortune:'⊕'};
-      const planetColors = {sun:'#F59E0B',moon:'#E2E8F0',mercury:'#A78BFA',venus:'#EC4899',mars:'#EF4444',jupiter:'#3B82F6',saturn:'#6B7280',uranus:'#06B6D4',neptune:'#8B5CF6',pluto:'#78716C',chiron:'#10B981',north:'#6EE7FF',fortune:'#22C55E'};
-      
-      // Sort planets by longitude to avoid overlap
-      const sortedPlanets = planetList
-        .filter(key => chartData.planets[key])
-        .map(key => ({
-          key, 
-          ...chartData.planets[key],
-          longitude: chartData.planets[key].longitude || (chartData.planets[key].signIdx * 30 + chartData.planets[key].deg + chartData.planets[key].min / 60)
-        }))
-        .sort((a, b) => a.longitude - b.longitude);
-      
-      // Spread out overlapping planets
-      let lastDeg = -999;
-      sortedPlanets.forEach((p, idx) => {
-        let displayDeg = p.longitude;
-        if (displayDeg - lastDeg < 10) displayDeg = lastDeg + 10;
-        lastDeg = displayDeg;
-        
-        const x = polarX(radiusPlanet, displayDeg);
-        const y = polarY(radiusPlanet, displayDeg);
-        const sym = planetSyms[p.key] || '?';
-        const color = planetColors[p.key] || '#FFF';
-        
-        // Planet symbol (larger)
-        html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="28" font-weight="bold" style="filter: drop-shadow(0 0 5px ${color}60)">${sym}</text>`;
-        
-        // Planet degree below symbol
-        const degX = polarX(radiusPlanet - 25, displayDeg);
-        const degY = polarY(radiusPlanet - 25, displayDeg);
-        html += `<text x="${degX}" y="${degY}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="12" opacity="0.85">${p.deg}°</text>`;
-        
-        // Line from planet to wheel edge
-        const edgeX = polarX(radiusInner, p.longitude);
-        const edgeY = polarY(radiusInner, p.longitude);
-        html += `<line x1="${x}" y1="${y}" x2="${edgeX}" y2="${edgeY}" stroke="${color}" stroke-width="1" stroke-opacity="0.5" stroke-dasharray="3,3"/>`;
-      });
-    }
-    
-    // Dekan markers - draw small ticks and dekan info
+    // Dekan markers - draw decan boundaries and symbols inside houses
     if (decanResults && decanResults.length > 0) {
-      // Use same element colors as the rest of the chart
-      
       decanResults.forEach(house => {
-        if (!house.decans) return;
+        if (!house.decans || !house.meta) return;
         
         house.decans.forEach((decan, di) => {
-          // Calculate the ecliptic degree for this decan start
-          // house.houseSign gives the sign name, we need the sign index
-          const houseSignIdx = SIGNS.indexOf(house.houseSign);
-          const startAbsMin = decan.startMin || 0;
-          
-          // Get house cusp from chartData for accurate positioning
           if (chartData.houses && chartData.houses[house.house - 1]) {
             const houseCusp = chartData.houses[house.house - 1];
             const cuspDeg = houseCusp.signIdx * 30 + houseCusp.deg + houseCusp.min / 60;
@@ -2371,16 +2550,17 @@
             const decanOffsetMin = di * (house.meta.decanSizeMin);
             const decanDeg = cuspDeg + decanOffsetMin / 60;
             
-            // Draw dekan tick mark
-            const decanSignEl = elementOf(decan.decanSign);
-            const decanColor = EL_COLORS[decanSignEl] || '#a855f7';
+            // Get dekan color based on element
+            const decanSignEl = SIGN_EL[SIGNS.indexOf(decan.decanSign)] || 0;
+            const decanColor = EL_COLORS[['fire','earth','air','water'][decanSignEl % 4]] || '#a855f7';
             
-            if (di > 0) { // Don't draw tick for first dekan (it's the house cusp)
+            // Draw dekan boundary line (not for first dekan - that's the house cusp)
+            if (di > 0) {
               const tx1 = polarX(radiusHouse, decanDeg);
               const ty1 = polarY(radiusHouse, decanDeg);
-              const tx2 = polarX(radiusInner, decanDeg);
-              const ty2 = polarY(radiusInner, decanDeg);
-              html += `<line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="${decanColor}" stroke-opacity="0.5" stroke-width="1" stroke-dasharray="3,3"/>`;
+              const tx2 = polarX(radiusInner + 15, decanDeg);
+              const ty2 = polarY(radiusInner + 15, decanDeg);
+              html += `<line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="${decanColor}" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3,3"/>`;
             }
             
             // Add dekan symbol in the middle of each dekan section
@@ -2389,37 +2569,189 @@
             const decanSymX = polarX((radiusHouse + radiusInner) / 2 - 20, midDecanDeg);
             const decanSymY = polarY((radiusHouse + radiusInner) / 2 - 20, midDecanDeg);
             
-            // Small dekan sign symbol
-            html += `<text x="${decanSymX}" y="${decanSymY}" text-anchor="middle" dominant-baseline="central" fill="${decanColor}" font-size="14" opacity="0.8">${SIGN_SYM[decan.decanSign]}</text>`;
+            // Dekan sign symbol
+            html += `<text x="${decanSymX}" y="${decanSymY}" text-anchor="middle" dominant-baseline="central" fill="${decanColor}" font-size="12" opacity="0.7">${SIGN_SYM[decan.decanSign]}</text>`;
           }
         });
       });
     }
     
-    // Center info
-    if (chartData.asc) {
-      html += `<text x="${cx}" y="${cy - 20}" text-anchor="middle" fill="#6EE7FF" font-size="16">Yükselen</text>`;
-      html += `<text x="${cx}" y="${cy + 8}" text-anchor="middle" fill="#FFF" font-size="20" font-weight="bold">${SIGN_SYM[SIGNS[chartData.asc.signIdx]]} ${chartData.asc.deg}°${String(chartData.asc.min).padStart(2,'0')}'</text>`;
-      html += `<text x="${cx}" y="${cy + 35}" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="14">${SIGNS[chartData.asc.signIdx]}</text>`;
+    // Inner circle for aspects
+    html += `<circle cx="${cx}" cy="${cy}" r="${radiusInner}" fill="#0D1B2A" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>`;
+    
+    // Get enabled planets from toggles
+    const enabledPlanets = {};
+    planetList.forEach(key => {
+      const toggle = $(`planet_toggle_${key}`);
+      enabledPlanets[key] = toggle ? toggle.checked : true;
+    });
+    
+    // Planets - OUTSIDE the chart with arrows pointing in
+    const planetPositions = {};
+    if (chartData.planets) {
+      const sortedPlanets = planetList
+        .filter(key => chartData.planets[key] && enabledPlanets[key])
+        .map(key => ({
+          key, 
+          ...chartData.planets[key],
+          longitude: chartData.planets[key].longitude || (chartData.planets[key].signIdx * 30 + chartData.planets[key].deg + chartData.planets[key].min / 60)
+        }))
+        .sort((a, b) => a.longitude - b.longitude);
+      
+      // Spread planets outside - alternate between two outer radii
+      const radiusOuter1 = 540;
+      const radiusOuter2 = 590;
+      let lastDeg = -999;
+      let useOuter2 = false;
+      
+      sortedPlanets.forEach((p, idx) => {
+        if (p.longitude - lastDeg < 15) {
+          useOuter2 = !useOuter2;
+        } else {
+          useOuter2 = false;
+        }
+        p.displayRadius = useOuter2 ? radiusOuter2 : radiusOuter1;
+        lastDeg = p.longitude;
+      });
+      
+      sortedPlanets.forEach(p => {
+        const outerX = polarX(p.displayRadius, p.longitude);
+        const outerY = polarY(p.displayRadius, p.longitude);
+        const innerX = polarX(radiusAspect, p.longitude);
+        const innerY = polarY(radiusAspect, p.longitude);
+        const edgeX = polarX(radiusZodiac, p.longitude);
+        const edgeY = polarY(radiusZodiac, p.longitude);
+        const sym = planetSyms[p.key] || '?';
+        const color = planetColors[p.key] || '#FFF';
+        const signSym = SIGN_SYM[SIGNS[p.signIdx]] || '';
+        
+        // Store position for aspects
+        planetPositions[p.key] = { x: innerX, y: innerY, color, longitude: p.longitude };
+        
+        // Line from outer label to inner aspect circle (full connection)
+        html += `<line x1="${outerX}" y1="${outerY}" x2="${innerX}" y2="${innerY}" stroke="${color}" stroke-width="1.5" stroke-opacity="0.5"/>`;
+        
+        // Small arrow head at zodiac edge
+        const angle = toAngle(p.longitude);
+        const arrowSize = 6;
+        const ax1 = edgeX + arrowSize * Math.cos(angle + Math.PI - 0.4);
+        const ay1 = edgeY - arrowSize * Math.sin(angle + Math.PI - 0.4);
+        const ax2 = edgeX + arrowSize * Math.cos(angle + Math.PI + 0.4);
+        const ay2 = edgeY - arrowSize * Math.sin(angle + Math.PI + 0.4);
+        html += `<polygon points="${edgeX},${edgeY} ${ax1},${ay1} ${ax2},${ay2}" fill="${color}" fill-opacity="0.8"/>`;
+        
+        // Planet info outside - show degree and minute
+        html += `<text x="${outerX}" y="${outerY - 10}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="18" font-weight="bold" style="filter: drop-shadow(0 0 3px ${color})">${sym}</text>`;
+        html += `<text x="${outerX}" y="${outerY + 8}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="9" opacity="0.9">${p.deg}°${String(p.min).padStart(2,'0')}'(${signSym})</text>`;
+        
+        // Planet marker on aspect circle (inside) - connected to outer line
+        html += `<circle cx="${innerX}" cy="${innerY}" r="8" fill="${color}" fill-opacity="0.9" stroke="${color}" stroke-width="1.5"/>`;
+        html += `<text x="${innerX}" y="${innerY}" text-anchor="middle" dominant-baseline="central" fill="#0D1B2A" font-size="10" font-weight="bold">${sym}</text>`;
+      });
+    }
+    
+    // Calculate and draw aspects in the center
+    if (chartData.planets) {
+      const aspects = calculateChartAspects(chartData.planets);
+      
+      const showConjunction = $('aspect_conjunction')?.checked ?? true;
+      const showOpposition = $('aspect_opposition')?.checked ?? true;
+      const showTrine = $('aspect_trine')?.checked ?? true;
+      const showSquare = $('aspect_square')?.checked ?? true;
+      const showSextile = $('aspect_sextile')?.checked ?? true;
+      
+      const filterMap = {
+        conjunction: showConjunction,
+        opposition: showOpposition,
+        trine: showTrine,
+        square: showSquare,
+        sextile: showSextile
+      };
+      
+      aspects.forEach(aspect => {
+        if (!filterMap[aspect.type]) return;
+        if (!enabledPlanets[aspect.planet1] || !enabledPlanets[aspect.planet2]) return;
+        
+        const pos1 = planetPositions[aspect.planet1];
+        const pos2 = planetPositions[aspect.planet2];
+        if (!pos1 || !pos2) return;
+        
+        const strokeWidth = 1.5 + aspect.exactness * 1.5;
+        const opacity = 0.5 + aspect.exactness * 0.4;
+        const dashArray = aspect.type === 'sextile' ? '4,3' : (aspect.type === 'square' ? '6,3' : 'none');
+        
+        html += `<line x1="${pos1.x}" y1="${pos1.y}" x2="${pos2.x}" y2="${pos2.y}" stroke="${aspect.color}" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" stroke-dasharray="${dashArray}"/>`;
+      });
+      
+      // Show filter panels
+      const filterPanel = $('aspectFilters');
+      const planetPanel = $('planetFilters');
+      if (filterPanel) filterPanel.style.display = 'block';
+      if (planetPanel) planetPanel.style.display = 'block';
     }
     
     svg.innerHTML = html;
     
-    // Legend
-    const legend = $('chartLegend');
-    if (legend && chartData.planets) {
-      const planetNames = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',chiron:'Chiron',north:'KAD',fortune:'Şans'};
-      const planetSyms = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',fortune:'⊕'};
-      let legendHtml = '<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">';
-      for (const key of ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','fortune']) {
+    // Build planet toggle UI
+    const toggleContainer = $('planetToggleContainer');
+    if (toggleContainer && chartData.planets) {
+      let toggleHtml = '';
+      planetList.forEach(key => {
         const p = chartData.planets[key];
-        if (!p) continue;
-        legendHtml += `<span style="font-size:12px;color:rgba(255,255,255,0.7)">${planetSyms[key]} ${planetNames[key]}: ${SIGN_SYM[SIGNS[p.signIdx]]} ${p.deg}°${String(p.min).padStart(2,'0')}' (${p.house}. ev)</span>`;
-      }
-      legendHtml += '</div>';
-      legend.innerHTML = legendHtml;
+        if (!p) return;
+        const color = planetColors[key];
+        const sym = planetSyms[key];
+        const name = planetNames[key];
+        const signSym = SIGN_SYM[SIGNS[p.signIdx]] || '';
+        const isChecked = enabledPlanets[key] ? 'checked' : '';
+        
+        toggleHtml += `
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;background:rgba(${hexToRgb(color)},0.15);border-radius:6px;border:1px solid ${color}40;transition:all 0.2s">
+            <input type="checkbox" id="planet_toggle_${key}" ${isChecked} style="width:14px;height:14px;accent-color:${color}">
+            <span style="color:${color};font-weight:600;font-size:12px">${sym} ${name}</span>
+            <span style="color:rgba(255,255,255,0.5);font-size:10px">${signSym} ${p.deg}° (${p.house}. ev)</span>
+          </label>
+        `;
+      });
+      toggleContainer.innerHTML = toggleHtml;
+      
+      // Add event listeners to planet toggles
+      planetList.forEach(key => {
+        const toggle = $(`planet_toggle_${key}`);
+        if (toggle) {
+          toggle.addEventListener('change', () => {
+            if (lastChartData) {
+              drawWheelChart(lastChartData.chartData, lastChartData.decanResults);
+            }
+          });
+        }
+      });
     }
+    
+    // Hide old legend
+    const legend = $('chartLegend');
+    if (legend) legend.style.display = 'none';
   }
+  
+  // Helper: hex to rgb
+  function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '255,255,255';
+  }
+
+  // Add event listeners for aspect filters
+  document.addEventListener('DOMContentLoaded', () => {
+    ['aspect_conjunction', 'aspect_opposition', 'aspect_trine', 'aspect_square', 'aspect_sextile'].forEach(id => {
+      const el = $(id);
+      if (el) {
+        el.addEventListener('change', () => {
+          if (lastChartData) {
+            drawWheelChart(lastChartData.chartData, lastChartData.decanResults);
+          }
+        });
+      }
+    });
+  });
 
   // ========== PRESETS ==========
   const PRESETS = {
@@ -2573,25 +2905,22 @@
     });
   });
 
-  // Day quick pick button handlers
-  document.querySelectorAll('.day-pick').forEach(btn => {
+  // Quick select button handlers for new UI
+  document.querySelectorAll('.quick-day').forEach(btn => {
     btn.addEventListener('click', () => {
-      const day = btn.dataset.day;
-      $('autoDecanDay').value = day;
-      // Close the details
-      const details = document.getElementById('dayQuickPick');
-      if (details) details.open = false;
+      $('autoDecanDay').value = btn.dataset.day;
     });
   });
-
-  // Month quick pick button handlers
-  document.querySelectorAll('.month-pick').forEach(btn => {
+  
+  document.querySelectorAll('.quick-month').forEach(btn => {
     btn.addEventListener('click', () => {
-      const month = btn.dataset.month;
-      $('autoDecanMonth').value = month;
-      // Close the details
-      const details = document.getElementById('monthQuickPick');
-      if (details) details.open = false;
+      $('autoDecanMonth').value = btn.dataset.month;
+    });
+  });
+  
+  document.querySelectorAll('.quick-year').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $('autoDecanYear').value = btn.dataset.year;
     });
   });
 
@@ -2687,8 +3016,19 @@
       if (sevenInput) {
         const asc = readAsc('sevenAscGrid');
         const planets = readPlanets('seven', true);
-        const sev = computeSeven(sevenInput.cusps, sevenInput.flags, sevenInput.add30, asc, day, month, year);
-        renderSeven(sev, planets, sevenInput.cusps, sevenInput.flags, sevenInput.add30, asc, $('sevenResults'), aspects);
+        const sev = computeSeven(sevenInput.cusps, sevenInput.flags, sevenInput.add30, asc, year);
+        
+        // Sol panel: Asli Dekan
+        renderSeven(sev, planets, sevenInput.cusps, sevenInput.flags, sevenInput.add30, asc, $('sevenResults'), aspects, decanResults);
+        
+        // Sağ panel: Ev Dekanı (yeni sistem)
+        if (typeof SevenDekan !== 'undefined' && decanResults) {
+          const evDekanData = SevenDekan.calculate(sev, decanResults);
+          if (evDekanData) {
+            // Pass cusps so we can calculate planet delta (position within house)
+            SevenDekan.render(evDekanData, planets, aspects, $('sevenEvDekanResults'), sevenInput.cusps);
+          }
+        }
       }
       
       // Draw wheel chart
@@ -2847,7 +3187,7 @@
     const asc = readAsc('sevenAscGrid'), planets = readPlanets('seven', true);
     const by = Number($('sevenBirthYear').value) || null;
     const sev = computeSeven(input.cusps, input.flags, input.add30, asc, by);
-    renderSeven(sev, planets, input.cusps, input.flags, input.add30, asc, $('sevenResults'));
+    renderSeven(sev, planets, input.cusps, input.flags, input.add30, asc, $('sevenResults'), null, null);
   });
 
   // Solar calc - now automatic using global natal data
@@ -2862,18 +3202,30 @@
       return;
     }
     
+    // Doğum bilgisi kontrol
     if (!globalNatalData) {
-      resultsEl.innerHTML = '<p class="hint" style="color:var(--err)">Önce Dekan Hesaplama sekmesinde doğum bilgilerinizi hesaplayın.</p>';
+      const solarCalendarEl = $('solarDekanCalendar');
+      if (solarCalendarEl) {
+        solarCalendarEl.innerHTML = '<p class="hint" style="color:var(--err)">Önce Dekan Hesaplama sekmesinde doğum bilgilerinizi hesaplayın.</p>';
+      }
       return;
     }
     
-    resultsEl.innerHTML = '<p class="hint" style="color:var(--accent)">⏳ Solar Return hesaplanıyor...</p>';
+    // solarDekanCalendar'ı koru, sadece içeriğini temizle
+    const solarCalendarEl = $('solarDekanCalendar');
+    if (solarCalendarEl) {
+      solarCalendarEl.innerHTML = '<p class="hint" style="color:var(--accent)">⏳ Solar Return hesaplanıyor...</p>';
+    }
+    
+    // solarInfoSummary'yi gizle
+    const infoSummary = $('solarInfoSummary');
+    if (infoSummary) infoSummary.style.display = 'none';
     
     try {
       const data = await computeSolarReturn(sYear);
       
       if (data.error) {
-        resultsEl.innerHTML = `<p class="hint" style="color:var(--err)">${data.error}</p>`;
+        if (solarCalendarEl) solarCalendarEl.innerHTML = `<p class="hint" style="color:var(--err)">${data.error}</p>`;
         dateInfoEl.style.display = 'none';
         return;
       }
@@ -2884,10 +3236,18 @@
         dateInfoEl.style.display = 'block';
       }
       
-      // Render results
+      // Render results (sadece özet bilgileri üstte gösterir)
       renderSolarReturn(data, resultsEl);
+      
+      // Render Solar Dekan Calendar
+      if (typeof SolarDekan !== 'undefined' && solarCalendarEl) {
+        const solarDekanData = SolarDekan.calculate(data);
+        if (solarDekanData) {
+          SolarDekan.render(solarDekanData, solarCalendarEl);
+        }
+      }
     } catch (err) {
-      resultsEl.innerHTML = `<p class="hint" style="color:var(--err)">Hata: ${err.message}</p>`;
+      if (solarCalendarEl) solarCalendarEl.innerHTML = `<p class="hint" style="color:var(--err)">Hata: ${err.message}</p>`;
     }
   });
 

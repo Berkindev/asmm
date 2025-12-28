@@ -196,6 +196,50 @@ export async function computeSolarReturn(solarYear) {
   console.log(`📅 Solar Year Length: ${solarYearDays.toFixed(4)} days | Days per degree: ${daysPerDegree.toFixed(6)}`);
   console.log(`📍 Chart Location: ${chartLocationName} (${chartLat.toFixed(4)}, ${chartLng.toFixed(4)})`);
   
+  // Calculate Turkey local time for display
+  // Import getTurkeyOffset from ephemeris
+  let turkeyOffset = 3; // Default to UTC+3
+  try {
+    const ephemeris = await import('../ephemeris.js');
+    if (ephemeris.getTurkeyOffset) {
+      turkeyOffset = ephemeris.getTurkeyOffset(srDate.year, srDate.month, srDate.day);
+    }
+  } catch (e) {
+    console.warn('Could not get Turkey offset, using default +3');
+  }
+  
+  // Convert UT to Turkey local time for DISPLAY only
+  let localHour = (srDate.hour || 0) + turkeyOffset;
+  let localMinute = srDate.minute || 0;
+  let localDay = srDate.day;
+  let localMonth = srDate.month;
+  let localYear = srDate.year;
+  
+  if (localHour >= 24) {
+    localHour -= 24;
+    localDay += 1;
+    // Handle month overflow (simplified)
+    const daysInMonth = new Date(localYear, localMonth, 0).getDate();
+    if (localDay > daysInMonth) {
+      localDay = 1;
+      localMonth += 1;
+      if (localMonth > 12) {
+        localMonth = 1;
+        localYear += 1;
+      }
+    }
+  }
+  
+  // Add local time to srDate for display
+  srDate.localHour = localHour;
+  srDate.localMinute = localMinute;
+  srDate.localDay = localDay;
+  srDate.localMonth = localMonth;
+  srDate.localYear = localYear;
+  srDate.turkeyOffset = turkeyOffset;
+  
+  console.log(`🕐 Solar Return UT: ${srDate.hour}:${String(srDate.minute).padStart(2,'0')} → Turkey: ${localHour}:${String(localMinute).padStart(2,'0')} (UTC+${turkeyOffset})`);
+  
   try {
     const srHour = srDate.hour || 12;
     const srMinute = srDate.minute || 0;
@@ -217,6 +261,7 @@ export async function computeSolarReturn(solarYear) {
     function addDaysToDate(baseJD, days) {
       return jdToDateTime(baseJD + days);
     }
+
     
     // Build solar months
     const months = [];
@@ -391,16 +436,26 @@ export function renderSolarReturn(data, container) {
     return;
   }
   
-  // Main container with two columns
-  container.innerHTML = `
-    <div class="solar-results-container" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-      <div class="solar-dekan-col" id="solarDekanResults"></div>
-      <div class="solar-month-col" id="solarMonthResults"></div>
-    </div>
-  `;
+  // Use existing panel structure instead of creating new one
+  // HTML'de zaten solarDekanResults, solarMonthResults, solarDekanCalendar var
+  let dekanPanel = document.getElementById('solarDekanResults');
+  let monthPanel = document.getElementById('solarMonthResults');
   
-  const dekanPanel = container.querySelector('#solarDekanResults');
-  const monthPanel = container.querySelector('#solarMonthResults');
+  // Check if panels exist and are visible
+  if (!dekanPanel || !monthPanel) {
+    console.warn('Solar panels not found in DOM, creating fallback structure');
+    // Fallback: Create structure inside container
+    container.innerHTML = `
+      <div class="solar-results-container" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+        <div id="solarDekanResults" style="border-right:1px solid rgba(255,255,255,.08);padding-right:12px"></div>
+        <div id="solarMonthResults" style="border-right:1px solid rgba(255,255,255,.08);padding-right:12px"></div>
+        <div id="solarDekanCalendar"></div>
+      </div>
+    `;
+    // Re-get references after creating
+    dekanPanel = document.getElementById('solarDekanResults');
+    monthPanel = document.getElementById('solarMonthResults');
+  }
   
   // Solar Return info header
   const srDate = data.solarReturnDate;
@@ -411,6 +466,14 @@ export function renderSolarReturn(data, container) {
   const srSunSign = SIGNS[srChart.planets.sun.signIdx];
   const srAscSign = SIGNS[srChart.asc.signIdx];
   
+  // Format times
+  const utTime = `${String(srDate.hour || 0).padStart(2,'0')}:${String(srDate.minute || 0).padStart(2,'0')}`;
+  const localTime = srDate.localHour !== undefined ? 
+    `${String(srDate.localHour).padStart(2,'0')}:${String(srDate.localMinute || 0).padStart(2,'0')}` : null;
+  const localDateStr = srDate.localDay !== undefined ?
+    `${srDate.localDay} ${MONTHS[srDate.localMonth - 1]} ${srDate.localYear}` :
+    `${srDate.day} ${MONTHS[srDate.month - 1]} ${srDate.year}`;
+  
   const infoHeader = `
     <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:16px;margin-bottom:16px">
       <div style="font-size:18px;font-weight:800;color:var(--accent-3);margin-bottom:12px">
@@ -420,7 +483,7 @@ export function renderSolarReturn(data, container) {
         <div><strong>📍 Konum:</strong> ${data.chartLocation.name}</div>
         <div><strong>🎂 Natal Güneş:</strong> ${SIGN_SYM[natalSunSign]} ${natalSunSign} ${natalSun.deg}°${String(natalSun.min).padStart(2,'0')}' <span style="color:var(--muted)">(${natalSun.longitude.toFixed(2)}°)</span></div>
         <div><strong>☀️ SR Güneş:</strong> ${SIGN_SYM[srSunSign]} ${srSunSign} ${srChart.planets.sun.deg}°${String(srChart.planets.sun.min).padStart(2,'0')}'</div>
-        <div><strong>📅 SR Tarihi:</strong> ${srDate.day} ${MONTHS[srDate.month - 1]} ${srDate.year} ${String(srDate.hour || 0).padStart(2,'0')}:${String(srDate.minute || 0).padStart(2,'0')} UT</div>
+        <div><strong>📅 SR Tarihi:</strong> ${localDateStr} <strong style="color:var(--accent)">${localTime || utTime}</strong> ${localTime ? `<span style="color:var(--muted)">(Türkiye, UTC+${srDate.turkeyOffset || 3})</span>` : '<span style="color:var(--muted)">(UT)</span>'}</div>
         <div><strong>⬆️ SR Yükselen:</strong> ${SIGN_SYM[srAscSign]} ${srAscSign} ${srChart.asc.deg}°${String(srChart.asc.min).padStart(2,'0')}'</div>
       </div>
     </div>
