@@ -232,9 +232,93 @@
       .main-panel { padding: 16px 12px; }
       .house { padding: 12px; margin-bottom: 12px; }
       .main-tab { padding: 6px 4px; font-size: 10px; min-width: 50px; }
+      
+      /* Mobile View Toggle Hide */
+      .view-toggle { display: none !important; }
       #wheelChart { max-width: 100%; width: 100%; height: auto; margin: 0 auto; display: block; }
     }
-  </style>
+
+    /* Premium Side Panel Styles */
+    #chartSidePanel {
+      backdrop-filter: blur(10px);
+      box-shadow: -5px 0 25px rgba(0,0,0,0.5);
+    }
+    .side-panel-header {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(110,231,255,0.2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .side-panel-header:first-child { margin-top: 0; }
+    
+    .side-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: var(--text-main);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap; /* Mobilde taşmasın */
+    }
+    .side-item:hover {
+      background: rgba(255,255,255,0.07);
+      transform: translateX(2px);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .side-item strong {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+    .side-item span.val {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    /* Solar List Styles */
+    .solar-decan-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    .solar-decan-row-1 {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .solar-decan-row-2 {
+      font-size: 13px;
+      color: var(--accent-2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .solar-decan-row-3 {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      justify-content: space-between;
+    }  </style>
 </head>
 <body>
   <!-- View Toggle -->
@@ -251,6 +335,8 @@
       <button class="main-tab" data-tab="solar">☉ Solar Harita</button>
       <button class="main-tab" data-tab="chart">🎯 Harita</button>
       <button class="main-tab" data-tab="prompt">📋 Prompt Oluştur</button>
+      <!-- Harita Bilgileri Toggle - Sadece Harita sekmesinde görünür -->
+      <button id="chartInfoToggle" onclick="const panel = document.getElementById('chartSidePanel'); panel.style.display = panel.style.display === 'none' ? 'block' : 'none';" style="display:none;margin-left:auto;background:rgba(110,231,255,0.15);border:1px solid rgba(110,231,255,0.4);color:var(--accent);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">📊 Harita Bilgileri</button>
       <!-- Veriler sekmesi gizlendi, kod kaldı -->
       <button class="main-tab" data-tab="veriler" style="display:none">📊 Veriler</button>
     </div>
@@ -471,8 +557,12 @@
       <!-- Tam Ekran Ev Dekanı -->
       <div id="sevenColumnsContainer">
         <div style="margin-bottom:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border-radius:10px;border-left:4px solid var(--accent-3)">
-          <div style="font-weight:700;font-size:15px;color:var(--accent-3)">🏠 7'ler Kanunu - Ev Dekanları</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px">Yaş pozisyonunun Dekan Hesaplama'daki hangi ev dekanına denk geldiğini gösterir</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-weight:700;font-size:15px;color:var(--accent-3)">🏠 7'ler Kanunu - Asli Dekan Sistemi</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px">Her yaş pozisyonunun asli dekanını gösterir (0-10°: 1.dekan, 10-20°: 2.dekan, 20-30°: 3.dekan)</div>
+            </div>
+          </div>
         </div>
         <div class="results" id="sevenEvDekanResults"></div>
         
@@ -576,19 +666,19 @@
     <!-- ==================== HARİTA (WHEEL CHART) PANEL ==================== -->
     <div class="main-panel" id="panelChart">
       <div class="card">
-        <div class="card-body" style="text-align:center">
-          <div class="hint" style="margin-bottom:16px">
-            <strong>🎯 Görsel Harita</strong> — Dekan Hesaplama sekmesinde doğum bilgilerini girin ve hesaplayın. Harita otomatik güncellenir.
-          </div>
-          <div id="chartContainer" style="display:flex;justify-content:center;align-items:center;min-height:800px">
-            <svg id="wheelChart" viewBox="0 0 1200 1200" width="1000" height="1000" style="max-width:100%">
+        <div class="card-body" style="padding:8px">
+          
+          <!-- HARİTA - TAM GENİŞLİK, TEK BAŞINA -->
+          <div id="chartContainer" style="width:100%;display:flex;justify-content:center;align-items:flex-start">
+            <svg id="wheelChart" viewBox="0 0 1400 1400" style="width:100%;height:auto;max-height:95vh">
               <!-- Chart will be drawn here -->
-              <text x="500" y="500" text-anchor="middle" fill="#6EE7FF" font-size="18" opacity="0.5">
+              <text x="700" y="700" text-anchor="middle" fill="#6EE7FF" font-size="18" opacity="0.5">
                 Harita için doğum bilgisi hesaplayın
               </text>
             </svg>
           </div>
-          <div id="chartLegend" style="margin-top:16px;text-align:left"></div>
+          
+          <div id="chartLegend" style="display:none"></div>
           
           <!-- Açı Filtreleri -->
           <div id="aspectFilters" style="margin-top:20px;display:none;padding:16px;background:rgba(139,92,246,0.1);border-radius:12px;border:1px solid rgba(139,92,246,0.3)">
@@ -618,6 +708,40 @@
             <div style="font-weight:600;color:var(--accent);margin-bottom:12px;font-size:14px">🪐 Gezegen Filtreleri <span style="font-weight:400;opacity:0.7;font-size:12px">(tıklayarak haritadan gizle/göster)</span></div>
             <div id="planetToggleContainer" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
               <!-- Will be filled by JavaScript -->
+            </div>
+          </div>
+          
+          <!-- Element-Nitelik Modülü -->
+          <div id="elementNitelikPanel" style="margin-top:24px;display:none;padding:20px;background:rgba(139,92,246,0.08);border-radius:12px;border:1px solid rgba(139,92,246,0.3)">
+            <div style="font-weight:700;color:var(--accent-2);margin-bottom:16px;font-size:16px">📊 Harita Özeti & Element-Nitelik Analizi</div>
+            
+            <!-- Harita Bilgileri -->
+            <div id="chartInfoSummary" style="margin-bottom:16px;padding:12px;background:rgba(110,231,255,0.1);border-radius:8px">
+              <div style="font-weight:600;color:var(--accent);margin-bottom:8px;font-size:13px">📌 Harita Bilgileri</div>
+              <div id="chartInfoContent" style="font-size:13px;color:var(--muted)">Hesaplama bekleniyor...</div>
+            </div>
+            
+            <!-- Ev Dereceleri -->
+            <div id="houseDegreesPanel" style="margin-bottom:16px;padding:12px;background:rgba(245,158,11,0.1);border-radius:8px">
+              <div style="font-weight:600;color:var(--accent-3);margin-bottom:8px;font-size:13px">🏠 Ev Dereceleri</div>
+              <div id="houseDegreesContent" style="font-size:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div>
+            </div>
+            
+            <!-- Gezegen Pozisyonları -->
+            <div id="planetPositionsPanel" style="margin-bottom:16px;padding:12px;background:rgba(34,197,94,0.1);border-radius:8px">
+              <div style="font-weight:600;color:#22c55e;margin-bottom:8px;font-size:13px">🪐 Gezegen Pozisyonları</div>
+              <div id="planetPositionsContent" style="font-size:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+            </div>
+            
+            <!-- Element-Nitelik Tablosu -->
+            <div id="elementQualityPanel" style="padding:12px;background:rgba(139,92,246,0.1);border-radius:8px">
+              <div style="font-weight:600;color:var(--accent-2);margin-bottom:12px;font-size:13px">🔮 Element & Nitelik Dağılımı</div>
+              
+              <!-- Ana Tablo -->
+              <div id="elementQualityTable" style="margin-bottom:12px"></div>
+              
+              <!-- Özet Sayılar -->
+              <div id="elementQualitySummary" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center"></div>
             </div>
           </div>
         </div>
@@ -2595,20 +2719,21 @@
     const svg = $('wheelChart');
     if (!svg || !chartData) return;
     
-    const cx = 600, cy = 600;  // Merkez genişletildi
-    const radiusOuter = 470;      // Dış çember
-    const radiusZodiac = 420;     // Burç halkası iç kenarı
-    const radiusHouse = 360;      // Ev halkası dış kenarı
-    const radiusInner = 280;      // İç çember - açılar burada
-    const radiusPlanetLabel = 510; // Gezegen etiketleri - dışarıda
-    const radiusAspect = 265;     // Açı çizgileri - iç çemberin hemen altında
+    // Büyütülmüş merkez ve yarıçaplar (1400x1400 viewBox için)
+    const cx = 700, cy = 700;
+    const radiusOuter = 570;      // Dış çember
+    const radiusZodiac = 510;     // Burç halkası iç kenarı
+    const radiusHouse = 440;      // Ev halkası dış kenarı
+    const radiusInner = 340;      // İç çember - açılar burada
+    const radiusPlanetLabel = 620; // Gezegen etiketleri - dışarıda
+    const radiusAspect = 320;     // Açı çizgileri - iç çemberin hemen altında
     
-    // Element colors
+    // Yeni canlı element renkleri - TAM OPAK, şeffaflık yok
     const EL_COLORS = {
-      fire: '#EF4444',
-      earth: '#22C55E',
-      air: '#38BDF8',
-      water: '#3B82F6'
+      fire: '#ff0000',   // Ateş - Kırmızı
+      earth: '#00ff00',  // Toprak - Yeşil
+      air: '#01ccc8',    // Hava - Turkuaz
+      water: '#1b00ff'   // Su - Mavi
     };
     const SIGN_EL = ['fire','earth','air','water','fire','earth','air','water','fire','earth','air','water'];
     
@@ -2632,9 +2757,9 @@
     let html = '';
     
     // Background
-    html += `<circle cx="${cx}" cy="${cy}" r="${radiusOuter}" fill="#0D1B2A" stroke="rgba(110,231,255,0.2)" stroke-width="2"/>`;
+    html += `<circle cx="${cx}" cy="${cy}" r="${radiusOuter}" fill="#0D1B2A" stroke="#6EE7FF" stroke-width="2"/>`;
     
-    // Zodiac wheel
+    // Zodiac wheel - daha canlı renkler
     for (let i = 0; i < 12; i++) {
       const startDeg = i * 30;
       const endDeg = (i + 1) * 30;
@@ -2647,36 +2772,68 @@
       const x1z = cx + radiusZodiac * Math.cos(a1), y1z = cy - radiusZodiac * Math.sin(a1);
       const x2z = cx + radiusZodiac * Math.cos(a2), y2z = cy - radiusZodiac * Math.sin(a2);
       
-      html += `<path d="M ${x1z} ${y1z} L ${x1o} ${y1o} A ${radiusOuter} ${radiusOuter} 0 0 0 ${x2o} ${y2o} L ${x2z} ${y2z} A ${radiusZodiac} ${radiusZodiac} 0 0 1 ${x1z} ${y1z}" fill="${color}" fill-opacity="0.12" stroke="${color}" stroke-opacity="0.4" stroke-width="1"/>`;
+      // Burç segmenti - daha opak arka plan
+      html += `<path d="M ${x1z} ${y1z} L ${x1o} ${y1o} A ${radiusOuter} ${radiusOuter} 0 0 0 ${x2o} ${y2o} L ${x2z} ${y2z} A ${radiusZodiac} ${radiusZodiac} 0 0 1 ${x1z} ${y1z}" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="2"/>`;
       
+      // Burç sembolü - daha büyük
       const symX = polarX((radiusOuter + radiusZodiac) / 2, midDeg);
       const symY = polarY((radiusOuter + radiusZodiac) / 2, midDeg);
-      html += `<text x="${symX}" y="${symY}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="20" font-weight="bold">${SIGN_SYM[SIGNS[i]]}</text>`;
+      html += `<text x="${symX}" y="${symY}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="28" font-weight="bold">${SIGN_SYM[SIGNS[i]]}</text>`;
+      
+      // 10° işaretleri (her burçta 0°, 10°, 20° için)
+      for (let d = 0; d < 30; d += 10) {
+        const markerDeg = startDeg + d;
+        const markerA = toAngle(markerDeg);
+        const x1 = cx + radiusOuter * Math.cos(markerA);
+        const y1 = cy - radiusOuter * Math.sin(markerA);
+        const r2 = d === 0 ? radiusOuter - 12 : radiusOuter - 8; // Burç başı daha uzun
+        const x2 = cx + r2 * Math.cos(markerA);
+        const y2 = cy - r2 * Math.sin(markerA);
+        const strokeWidth = d === 0 ? 2 : 1;
+        html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${strokeWidth}"/>`;
+      }
     }
     
-    // House lines
+    // House lines - daha belirgin
     if (chartData.houses) {
-      html += `<circle cx="${cx}" cy="${cy}" r="${radiusHouse}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
+      html += `<circle cx="${cx}" cy="${cy}" r="${radiusHouse}" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>`;
       
-      chartData.houses.forEach((h, i) => {
-        const deg = h.signIdx * 30 + h.deg + h.min / 60;
-        const nextH = chartData.houses[(i + 1) % 12];
-        let nextDeg = nextH.signIdx * 30 + nextH.deg + nextH.min / 60;
-        if (nextDeg < deg) nextDeg += 360;
-        
-        const houseElement = SIGN_EL[h.signIdx];
-        const houseColor = EL_COLORS[houseElement];
-        
-        const a1 = toAngle(deg), a2 = toAngle(nextDeg);
-        const x1h = cx + radiusHouse * Math.cos(a1), y1h = cy - radiusHouse * Math.sin(a1);
-        const x2h = cx + radiusHouse * Math.cos(a2), y2h = cy - radiusHouse * Math.sin(a2);
-        const x1i = cx + radiusInner * Math.cos(a1), y1i = cy - radiusInner * Math.sin(a1);
-        const x2i = cx + radiusInner * Math.cos(a2), y2i = cy - radiusInner * Math.sin(a2);
-        
-        const largeArc = (nextDeg - deg) > 180 ? 1 : 0;
-        html += `<path d="M ${x1i} ${y1i} L ${x1h} ${y1h} A ${radiusHouse} ${radiusHouse} 0 ${largeArc} 0 ${x2h} ${y2h} L ${x2i} ${y2i} A ${radiusInner} ${radiusInner} 0 ${largeArc} 1 ${x1i} ${y1i}" fill="${houseColor}" fill-opacity="0.06" stroke="none"/>`;
-      });
+      // ===== DEKAN ARKAPLAN RENKLERİ (EVE GÖRE DEĞİL, DEKAN BURCUNA GÖRE) =====
+      // Önce tüm dekan segmentlerini çiz
+      if (decanResults && decanResults.length > 0) {
+        decanResults.forEach(house => {
+          if (!house.decans || !house.meta || !chartData.houses[house.house - 1]) return;
+          
+          const houseCusp = chartData.houses[house.house - 1];
+          const cuspDeg = houseCusp.signIdx * 30 + houseCusp.deg + houseCusp.min / 60;
+          
+          house.decans.forEach((decan, di) => {
+            // Dekan başlangıç ve bitiş pozisyonları
+            const decanStart = cuspDeg + di * (house.meta.decanSizeMin / 60);
+            const decanEnd = cuspDeg + (di + 1) * (house.meta.decanSizeMin / 60);
+            
+            // Dekan burcunun element rengi
+            const decanSignIdx = SIGNS.indexOf(decan.decanSign);
+            const decanElement = SIGN_EL[decanSignIdx] || 'fire';
+            const decanBgColor = EL_COLORS[decanElement];
+            
+            // Dekan segment arc çiz
+            const a1 = toAngle(decanStart), a2 = toAngle(decanEnd);
+            const x1h = cx + radiusHouse * Math.cos(a1), y1h = cy - radiusHouse * Math.sin(a1);
+            const x2h = cx + radiusHouse * Math.cos(a2), y2h = cy - radiusHouse * Math.sin(a2);
+            const x1i = cx + radiusInner * Math.cos(a1), y1i = cy - radiusInner * Math.sin(a1);
+            const x2i = cx + radiusInner * Math.cos(a2), y2i = cy - radiusInner * Math.sin(a2);
+            
+            const spanDeg = decanEnd - decanStart;
+            const largeArc = spanDeg > 180 ? 1 : 0;
+            
+            // Dekan arka planı - dekan burcunun rengiyle
+            html += `<path d="M ${x1i} ${y1i} L ${x1h} ${y1h} A ${radiusHouse} ${radiusHouse} 0 ${largeArc} 0 ${x2h} ${y2h} L ${x2i} ${y2i} A ${radiusInner} ${radiusInner} 0 ${largeArc} 1 ${x1i} ${y1i}" fill="${decanBgColor}" fill-opacity="0.35" stroke="none"/>`;
+          });
+        });
+      }
       
+      // Ev çizgileri
       chartData.houses.forEach((h, i) => {
         const deg = h.signIdx * 30 + h.deg + h.min / 60;
         const x1 = polarX(radiusInner, deg);
@@ -2718,7 +2875,7 @@
       });
     }
     
-    // Dekan markers - draw decan boundaries and symbols inside houses
+    // Dekan çizgileri ve sembolleri
     if (decanResults && decanResults.length > 0) {
       decanResults.forEach(house => {
         if (!house.decans || !house.meta) return;
@@ -2733,26 +2890,27 @@
             const decanDeg = cuspDeg + decanOffsetMin / 60;
             
             // Get dekan color based on element
-            const decanSignEl = SIGN_EL[SIGNS.indexOf(decan.decanSign)] || 0;
-            const decanColor = EL_COLORS[['fire','earth','air','water'][decanSignEl % 4]] || '#a855f7';
+            const decanSignIdx = SIGNS.indexOf(decan.decanSign);
+            const decanElement = SIGN_EL[decanSignIdx] || 'fire';
+            const decanColor = EL_COLORS[decanElement];
             
             // Draw dekan boundary line (not for first dekan - that's the house cusp)
             if (di > 0) {
               const tx1 = polarX(radiusHouse, decanDeg);
               const ty1 = polarY(radiusHouse, decanDeg);
-              const tx2 = polarX(radiusInner + 15, decanDeg);
-              const ty2 = polarY(radiusInner + 15, decanDeg);
-              html += `<line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="${decanColor}" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="3,3"/>`;
+              const tx2 = polarX(radiusInner, decanDeg);
+              const ty2 = polarY(radiusInner, decanDeg);
+              html += `<line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="${decanColor}" stroke-width="2" stroke-dasharray="6,4"/>`;
             }
             
             // Add dekan symbol in the middle of each dekan section
             const nextDecanDeg = cuspDeg + (di + 1) * (house.meta.decanSizeMin) / 60;
             const midDecanDeg = (decanDeg + nextDecanDeg) / 2;
-            const decanSymX = polarX((radiusHouse + radiusInner) / 2 - 20, midDecanDeg);
-            const decanSymY = polarY((radiusHouse + radiusInner) / 2 - 20, midDecanDeg);
+            const decanSymX = polarX((radiusHouse + radiusInner) / 2, midDecanDeg);
+            const decanSymY = polarY((radiusHouse + radiusInner) / 2, midDecanDeg);
             
-            // Dekan sign symbol
-            html += `<text x="${decanSymX}" y="${decanSymY}" text-anchor="middle" dominant-baseline="central" fill="${decanColor}" font-size="12" opacity="0.7">${SIGN_SYM[decan.decanSign]}</text>`;
+            // Dekan sign symbol - BÜYÜTÜLDÜ
+            html += `<text x="${decanSymX}" y="${decanSymY}" text-anchor="middle" dominant-baseline="central" fill="${decanColor}" font-size="26" font-weight="700">${SIGN_SYM[decan.decanSign]}</text>`;
           }
         });
       });
@@ -2780,9 +2938,9 @@
         }))
         .sort((a, b) => a.longitude - b.longitude);
       
-      // Spread planets outside - alternate between two outer radii
-      const radiusOuter1 = 540;
-      const radiusOuter2 = 590;
+      // Gezegenler haritanın DIŞINDA - iki farklı yarıçapta yayılacak
+      const radiusPlanetOuter1 = 620;  // Birinci dış halka
+      const radiusPlanetOuter2 = 670;  // İkinci dış halka (yakın gezegenler için)
       let lastDeg = -999;
       let useOuter2 = false;
       
@@ -2792,43 +2950,48 @@
         } else {
           useOuter2 = false;
         }
-        p.displayRadius = useOuter2 ? radiusOuter2 : radiusOuter1;
+        p.displayRadius = useOuter2 ? radiusPlanetOuter2 : radiusPlanetOuter1;
         lastDeg = p.longitude;
       });
       
       sortedPlanets.forEach(p => {
+        // Gezegen etiketi DIŞ HALKADA
         const outerX = polarX(p.displayRadius, p.longitude);
         const outerY = polarY(p.displayRadius, p.longitude);
-        const innerX = polarX(radiusAspect, p.longitude);
-        const innerY = polarY(radiusAspect, p.longitude);
-        const edgeX = polarX(radiusZodiac, p.longitude);
-        const edgeY = polarY(radiusZodiac, p.longitude);
+        // İç marker TAM radiusInner ÜZERİNDE (çemberin kenarında)
+        const innerX = polarX(radiusInner, p.longitude);
+        const innerY = polarY(radiusInner, p.longitude);
+        // Açı çizgileri için merkeze yakın pozisyon
+        const aspectX = polarX(radiusAspect, p.longitude);
+        const aspectY = polarY(radiusAspect, p.longitude);
+        const edgeX = polarX(radiusOuter, p.longitude);
+        const edgeY = polarY(radiusOuter, p.longitude);
         const sym = planetSyms[p.key] || '?';
         const color = planetColors[p.key] || '#FFF';
         const signSym = SIGN_SYM[SIGNS[p.signIdx]] || '';
         
-        // Store position for aspects
-        planetPositions[p.key] = { x: innerX, y: innerY, color, longitude: p.longitude };
+        // Store position for aspects - içten çizilecek
+        planetPositions[p.key] = { x: aspectX, y: aspectY, color, longitude: p.longitude };
         
-        // Line from outer label to inner aspect circle (full connection)
-        html += `<line x1="${outerX}" y1="${outerY}" x2="${innerX}" y2="${innerY}" stroke="${color}" stroke-width="1.5" stroke-opacity="0.5"/>`;
+        // Dıştan içe bağlantı çizgisi (gezegen etiketinden iç çembere)
+        html += `<line x1="${outerX}" y1="${outerY}" x2="${innerX}" y2="${innerY}" stroke="${color}" stroke-width="1.5" stroke-opacity="0.6"/>`;
         
-        // Small arrow head at zodiac edge
+        // Ok ucu - dış burç halkasının kenarında
         const angle = toAngle(p.longitude);
-        const arrowSize = 6;
+        const arrowSize = 7;
         const ax1 = edgeX + arrowSize * Math.cos(angle + Math.PI - 0.4);
         const ay1 = edgeY - arrowSize * Math.sin(angle + Math.PI - 0.4);
         const ax2 = edgeX + arrowSize * Math.cos(angle + Math.PI + 0.4);
         const ay2 = edgeY - arrowSize * Math.sin(angle + Math.PI + 0.4);
-        html += `<polygon points="${edgeX},${edgeY} ${ax1},${ay1} ${ax2},${ay2}" fill="${color}" fill-opacity="0.8"/>`;
+        html += `<polygon points="${edgeX},${edgeY} ${ax1},${ay1} ${ax2},${ay2}" fill="${color}" fill-opacity="0.9"/>`;
         
-        // Planet info outside - show degree and minute
-        html += `<text x="${outerX}" y="${outerY - 10}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="18" font-weight="bold" style="filter: drop-shadow(0 0 3px ${color})">${sym}</text>`;
-        html += `<text x="${outerX}" y="${outerY + 8}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="9" opacity="0.9">${p.deg}°${String(p.min).padStart(2,'0')}'(${signSym})</text>`;
+        // Gezegen bilgisi DIŞTA - sembol ve derece/dakika
+        html += `<text x="${outerX}" y="${outerY - 12}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="20" font-weight="bold" style="filter: drop-shadow(0 0 4px ${color})">${sym}</text>`;
+        html += `<text x="${outerX}" y="${outerY + 10}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="10" opacity="0.95">${p.deg}°${String(p.min).padStart(2,'0')}'(${signSym})</text>`;
         
-        // Planet marker on aspect circle (inside) - connected to outer line
-        html += `<circle cx="${innerX}" cy="${innerY}" r="8" fill="${color}" fill-opacity="0.9" stroke="${color}" stroke-width="1.5"/>`;
-        html += `<text x="${innerX}" y="${innerY}" text-anchor="middle" dominant-baseline="central" fill="#0D1B2A" font-size="10" font-weight="bold">${sym}</text>`;
+        // İç çember üzerinde marker - TAM radiusInner kenarında
+        html += `<circle cx="${innerX}" cy="${innerY}" r="9" fill="${color}" stroke="#0D1B2A" stroke-width="2"/>`;
+        html += `<text x="${innerX}" y="${innerY}" text-anchor="middle" dominant-baseline="central" fill="#0D1B2A" font-size="11" font-weight="bold">${sym}</text>`;
       });
     }
     
@@ -2913,6 +3076,307 @@
     // Hide old legend
     const legend = $('chartLegend');
     if (legend) legend.style.display = 'none';
+    
+    // ===== Element-Nitelik Modülü Render =====
+    renderElementNitelik(chartData);
+  }
+  
+  // Element-Nitelik Hesaplama ve Render
+  function renderElementNitelik(chartData) {
+    if (!chartData || !chartData.planets) return;
+    
+    const panel = $('elementNitelikPanel');
+    if (panel) panel.style.display = 'block';
+    
+    // Sabitler
+    const SIGNS = ['Koç','Boğa','İkizler','Yengeç','Aslan','Başak','Terazi','Akrep','Yay','Oğlak','Kova','Balık'];
+    const SIGN_SYM = {Koç:'♈',Boğa:'♉',İkizler:'♊',Yengeç:'♋',Aslan:'♌',Başak:'♍',Terazi:'♎',Akrep:'♏',Yay:'♐',Oğlak:'♑',Kova:'♒',Balık:'♓'};
+    const PLANET_SYMS = {sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷',north:'☊',south:'☋',fortune:'⊕',asc:'↑',mc:'MC'};
+    const PLANET_NAMES = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',chiron:'Chiron',north:'KAD',south:'GAD',fortune:'Şans',asc:'ASC',mc:'MC'};
+    
+    // Puan sistemi
+    const POINTS = {
+      sun: 2, moon: 2,
+      asc: 1, mc: 1,
+      mercury: 1, venus: 1, mars: 1, jupiter: 1, saturn: 1,
+      uranus: 1, neptune: 1, pluto: 1, chiron: 1
+    };
+    
+    // Element ve nitelik haritaları
+    const ELEMENTS = {
+      Koç: 'fire', Aslan: 'fire', Yay: 'fire',
+      Boğa: 'earth', Başak: 'earth', Oğlak: 'earth',
+      İkizler: 'air', Terazi: 'air', Kova: 'air',
+      Yengeç: 'water', Akrep: 'water', Balık: 'water'
+    };
+    const QUALITIES = {
+      Koç: 'cardinal', Yengeç: 'cardinal', Terazi: 'cardinal', Oğlak: 'cardinal',
+      Boğa: 'fixed', Aslan: 'fixed', Akrep: 'fixed', Kova: 'fixed',
+      İkizler: 'mutable', Başak: 'mutable', Yay: 'mutable', Balık: 'mutable'
+    };
+    
+    // Element renkleri
+    const EL_COLORS = { fire: '#ff0000', earth: '#00ff00', air: '#01ccc8', water: '#1b00ff' };
+    const EL_NAMES = { fire: 'Ateş', earth: 'Toprak', air: 'Hava', water: 'Su' };
+    const QUAL_NAMES = { cardinal: 'Öncü', fixed: 'Sabit', mutable: 'Değişken' };
+    
+    // Hesaplama tablosu
+    const counts = {
+      fire: { cardinal: 0, fixed: 0, mutable: 0 },
+      earth: { cardinal: 0, fixed: 0, mutable: 0 },
+      air: { cardinal: 0, fixed: 0, mutable: 0 },
+      water: { cardinal: 0, fixed: 0, mutable: 0 }
+    };
+    
+    // Gezegenleri işle
+    const planetsToProcess = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron'];
+    
+    planetsToProcess.forEach(key => {
+      const p = chartData.planets[key];
+      if (!p) return;
+      const sign = SIGNS[p.signIdx];
+      const el = ELEMENTS[sign];
+      const qual = QUALITIES[sign];
+      const pts = POINTS[key] || 1;
+      if (el && qual) counts[el][qual] += pts;
+    });
+    
+    // ASC ve MC ekle
+    if (chartData.asc) {
+      const ascSign = SIGNS[chartData.asc.signIdx];
+      const el = ELEMENTS[ascSign];
+      const qual = QUALITIES[ascSign];
+      if (el && qual) counts[el][qual] += 1;
+    }
+    if (chartData.mc) {
+      const mcSign = SIGNS[chartData.mc.signIdx];
+      const el = ELEMENTS[mcSign];
+      const qual = QUALITIES[mcSign];
+      if (el && qual) counts[el][qual] += 1;
+    }
+    
+    // Toplamlar
+    const elTotals = { fire: 0, earth: 0, air: 0, water: 0 };
+    const qualTotals = { cardinal: 0, fixed: 0, mutable: 0 };
+    let grandTotal = 0;
+    
+    Object.keys(counts).forEach(el => {
+      Object.keys(counts[el]).forEach(qual => {
+        elTotals[el] += counts[el][qual];
+        qualTotals[qual] += counts[el][qual];
+        grandTotal += counts[el][qual];
+      });
+    });
+    
+    // Eril-Dişil (Hava+Ateş = Eril, Toprak+Su = Dişil)
+    const eril = elTotals.fire + elTotals.air;
+    const disil = elTotals.earth + elTotals.water;
+    
+    // === RENDER ===
+    
+    // 1. Harita Bilgileri
+    const chartInfo = $('chartInfoContent');
+    if (chartInfo && globalNatalData) {
+      const nd = globalNatalData;
+      chartInfo.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+          <span><strong>Doğum:</strong> ${nd.birthDay}/${nd.birthMonth}/${nd.birthYear}</span>
+          <span><strong>Saat:</strong> ${nd.birthHour}:${String(nd.birthMinute).padStart(2,'0')}</span>
+          <span><strong>Konum:</strong> ${nd.lat?.toFixed(2)}°N, ${nd.lng?.toFixed(2)}°E</span>
+          <span><strong>Yükselen:</strong> ${SIGN_SYM[SIGNS[chartData.asc?.signIdx]]} ${SIGNS[chartData.asc?.signIdx] || '-'}</span>
+        </div>
+      `;
+    }
+    
+    // 2. Ev Dereceleri
+    const houseContent = $('houseDegreesContent');
+    if (houseContent && chartData.houses) {
+      let hHtml = '';
+      chartData.houses.forEach((h, i) => {
+        const sign = SIGNS[h.signIdx];
+        hHtml += `<span style="padding:4px 6px;background:rgba(255,255,255,0.05);border-radius:4px">${i+1}. ${SIGN_SYM[sign]} ${h.deg}°${String(h.min).padStart(2,'0')}'</span>`;
+      });
+      houseContent.innerHTML = hHtml;
+    }
+    
+    // 3. Gezegen Pozisyonları
+    const planetContent = $('planetPositionsContent');
+    if (planetContent) {
+      let pHtml = '';
+      [...planetsToProcess, 'north', 'south', 'fortune'].forEach(key => {
+        const p = chartData.planets[key];
+        if (!p) return;
+        const sign = SIGNS[p.signIdx];
+        const sym = PLANET_SYMS[key];
+        const name = PLANET_NAMES[key];
+        pHtml += `<span style="padding:4px 6px;background:rgba(255,255,255,0.05);border-radius:4px">${sym} ${name}: ${SIGN_SYM[sign]} ${p.deg}°${String(p.min).padStart(2,'0')}'</span>`;
+      });
+      planetContent.innerHTML = pHtml;
+    }
+    
+    // 4. Element-Nitelik Tablosu
+    const tableDiv = $('elementQualityTable');
+    if (tableDiv) {
+      let tableHtml = `
+        <table style="width:100%;border-collapse:collapse;text-align:center;font-size:12px">
+          <thead>
+            <tr style="background:rgba(255,255,255,0.1)">
+              <th style="padding:8px;border:1px solid rgba(255,255,255,0.2)"></th>
+              <th style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.fire}">🔥 Ateş</th>
+              <th style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.earth}">🌍 Toprak</th>
+              <th style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.air}">💨 Hava</th>
+              <th style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.water}">💧 Su</th>
+              <th style="padding:8px;border:1px solid rgba(255,255,255,0.2)">Toplam</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      ['cardinal', 'fixed', 'mutable'].forEach(qual => {
+        tableHtml += `
+          <tr>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);font-weight:600">${QUAL_NAMES[qual]}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.fire}">${counts.fire[qual] || '-'}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.earth}">${counts.earth[qual] || '-'}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.air}">${counts.air[qual] || '-'}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.water}">${counts.water[qual] || '-'}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);font-weight:600">${qualTotals[qual]}</td>
+          </tr>
+        `;
+      });
+      
+      tableHtml += `
+          <tr style="background:rgba(255,255,255,0.05)">
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);font-weight:600">Toplam</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.fire};font-weight:600">${elTotals.fire}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.earth};font-weight:600">${elTotals.earth}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.air};font-weight:600">${elTotals.air}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);color:${EL_COLORS.water};font-weight:600">${elTotals.water}</td>
+            <td style="padding:8px;border:1px solid rgba(255,255,255,0.2);font-weight:700">${grandTotal}</td>
+          </tr>
+        </tbody>
+        </table>
+      `;
+      tableDiv.innerHTML = tableHtml;
+    }
+    // 5. Özet Kartlar
+    const summaryDiv = $('elementQualitySummary');
+    if (summaryDiv) {
+      summaryDiv.innerHTML = `
+        <span style="padding:8px 14px;background:${EL_COLORS.fire}30;border:1px solid ${EL_COLORS.fire};border-radius:8px;color:${EL_COLORS.fire};font-weight:600">🔥 Ateş: ${elTotals.fire}</span>
+        <span style="padding:8px 14px;background:${EL_COLORS.earth}30;border:1px solid ${EL_COLORS.earth};border-radius:8px;color:${EL_COLORS.earth};font-weight:600">🌍 Toprak: ${elTotals.earth}</span>
+        <span style="padding:8px 14px;background:${EL_COLORS.air}30;border:1px solid ${EL_COLORS.air};border-radius:8px;color:${EL_COLORS.air};font-weight:600">💨 Hava: ${elTotals.air}</span>
+        <span style="padding:8px 14px;background:${EL_COLORS.water}30;border:1px solid ${EL_COLORS.water};border-radius:8px;color:${EL_COLORS.water};font-weight:600">💧 Su: ${elTotals.water}</span>
+        <span style="padding:8px 14px;background:rgba(139,92,246,0.2);border:1px solid #8b5cf6;border-radius:8px;color:#8b5cf6;font-weight:600">♂ Eril: ${eril}</span>
+        <span style="padding:8px 14px;background:rgba(236,72,153,0.2);border:1px solid #ec4899;border-radius:8px;color:#ec4899;font-weight:600">♀ Dişil: ${disil}</span>
+        <span style="padding:8px 14px;background:rgba(245,158,11,0.2);border:1px solid #f59e0b;border-radius:8px;color:#f59e0b;font-weight:600">⬆ Öncü: ${qualTotals.cardinal}</span>
+        <span style="padding:8px 14px;background:rgba(34,197,94,0.2);border:1px solid #22c55e;border-radius:8px;color:#22c55e;font-weight:600">■ Sabit: ${qualTotals.fixed}</span>
+        <span style="padding:8px 14px;background:rgba(59,130,246,0.2);border:1px solid #3b82f6;border-radius:8px;color:#3b82f6;font-weight:600">⟳ Değişken: ${qualTotals.mutable}</span>
+      `;
+    }
+    
+    // ===== SAĞ PANEL RENDER =====
+    // ===== SAĞ PANEL RENDER =====
+    const sidePanel = $('chartSidePanel');
+    const panelToggle = $('chartInfoToggle');
+    if (sidePanel) {
+      sidePanel.style.display = 'block';
+      if (panelToggle) panelToggle.style.display = 'block';
+      
+      // Burç renk fonksiyonu
+      const getSignColor = (signIdx) => {
+        const SIGN_EL = ['fire','earth','air','water','fire','earth','air','water','fire','earth','air','water'];
+        const el = SIGN_EL[signIdx];
+        return EL_COLORS[el] || '#fff';
+      };
+      
+      // 1. Ev Dereceleri
+      const sideHouseDiv = $('sideHouseDegrees');
+      if (sideHouseDiv && chartData.houses) {
+        let houseHtml = '<div class="side-panel-header">🏠 Evler</div>';
+        chartData.houses.forEach((h, i) => {
+          const color = getSignColor(h.signIdx);
+          const signName = SIGNS[h.signIdx];
+          const signSym = SIGN_SYM[signName];
+          houseHtml += `
+            <div class="side-item" style="border-left:3px solid ${color}">
+              <strong>${i+1}. Ev</strong>
+              <span class="val" style="color:${color}">${signName} ${signSym} • ${h.deg}°${String(h.min).padStart(2,'0')}'</span>
+            </div>
+          `;
+        });
+        sideHouseDiv.innerHTML = houseHtml;
+      }
+      
+      // 2. Gezegen Pozisyonları
+      const sidePlanetDiv = $('sidePlanetPositions');
+      if (sidePlanetDiv && chartData.planets && chartData.houses) {
+        let planetHtml = '<div class="side-panel-header">🪐 Gezegenler</div>';
+        const planetKeys = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','south','fortune'];
+        
+        // ASC derecesini hesapla (0-360)
+        const ascH = chartData.houses[0];
+        const ascDeg = ascH.signIdx * 30 + ascH.deg + ascH.min/60;
+        
+        // Gezegenleri ASC'ye göre uzaklıklarına göre sırala
+        const sortedPlanets = planetKeys.map(key => {
+          const p = chartData.planets[key];
+          if (!p) return null;
+          let pDeg = p.signIdx * 30 + p.deg + p.min/60;
+          let relDeg = (pDeg - ascDeg + 360) % 360; // ASC'ye göre 0-360 arası açı
+          return { key, p, relDeg };
+        }).filter(item => item !== null).sort((a, b) => a.relDeg - b.relDeg);
+        
+        sortedPlanets.forEach(item => {
+          const { key, p } = item;
+          const color = getSignColor(p.signIdx);
+          const signName = SIGNS[p.signIdx];
+          const signSym = SIGN_SYM[signName];
+          const sym = PLANET_SYMS[key];
+          const name = PLANET_NAMES[key];
+          planetHtml += `
+            <div class="side-item" style="border-left:3px solid ${color}">
+              <strong style="color:${color}">${sym} ${name}</strong>
+              <span class="val">${signName} ${signSym} • ${p.deg}°${String(p.min).padStart(2,'0')}'</span>
+            </div>
+          `;
+        });
+        sidePlanetDiv.innerHTML = planetHtml;
+      }
+      
+      // 3. Element Dağılımı
+      const sideElementDiv = $('sideElementCounts');
+      if (sideElementDiv) {
+        sideElementDiv.innerHTML = `
+          <div class="side-panel-header">🔥 Elementler</div>
+          <div class="side-item" style="border-left:3px solid ${EL_COLORS.fire}"><strong>Ateş</strong> <span class="val">${elTotals.fire}</span></div>
+          <div class="side-item" style="border-left:3px solid ${EL_COLORS.earth}"><strong>Toprak</strong> <span class="val">${elTotals.earth}</span></div>
+          <div class="side-item" style="border-left:3px solid ${EL_COLORS.air}"><strong>Hava</strong> <span class="val">${elTotals.air}</span></div>
+          <div class="side-item" style="border-left:3px solid ${EL_COLORS.water}"><strong>Su</strong> <span class="val">${elTotals.water}</span></div>
+        `;
+      }
+      
+      // 4. Nitelik Dağılımı
+      const sideQualityDiv = $('sideQualityCounts');
+      if (sideQualityDiv) {
+        sideQualityDiv.innerHTML = `
+          <div class="side-panel-header">⚡ Nitelik</div>
+          <div class="side-item" style="border-left:3px solid #f59e0b"><strong>Öncü</strong> <span class="val">${qualTotals.cardinal}</span></div>
+          <div class="side-item" style="border-left:3px solid #22c55e"><strong>Sabit</strong> <span class="val">${qualTotals.fixed}</span></div>
+          <div class="side-item" style="border-left:3px solid #3b82f6"><strong>Değişken</strong> <span class="val">${qualTotals.mutable}</span></div>
+        `;
+      }
+      
+      // 5. Eril/Dişil
+      const sideGenderDiv = $('sideGenderBalance');
+      if (sideGenderDiv) {
+        sideGenderDiv.innerHTML = `
+          <div class="side-panel-header">⚥ Eril / Dişil</div>
+          <div class="side-item" style="border-left:3px solid #8b5cf6"><strong>Eril</strong> <span class="val">${eril}</span></div>
+          <div class="side-item" style="border-left:3px solid #ec4899"><strong>Dişil</strong> <span class="val">${disil}</span></div>
+        `;
+      }
+    }
   }
   
   // Helper: hex to rgb
@@ -3290,7 +3754,23 @@
       document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
       document.querySelectorAll('.main-panel').forEach(p=>p.classList.remove('active'));
       tab.classList.add('active');
-      $(`panel${tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)}`).classList.add('active');
+      const targetPanel = $(`panel${tab.dataset.tab.charAt(0).toUpperCase()+tab.dataset.tab.slice(1)}`);
+      if (targetPanel) targetPanel.classList.add('active');
+      
+      // Harita Bilgileri Toggle ve Panel Yönetimi
+      const infoToggle = $('chartInfoToggle');
+      const sidePanel = $('chartSidePanel');
+      
+      // Harita, Solar ve 7'ler sekmelerinde toggle butonu görünsün
+      if (['chart', 'solar', 'seven'].includes(tab.dataset.tab)) {
+        if (lastChartData && infoToggle) {
+          infoToggle.style.display = 'block'; // Hesaplama yapılmışsa butonu göster
+        }
+      } else {
+        // Diğer sekmelerde (Dekan, Prompt vb.) gizle
+        if (infoToggle) infoToggle.style.display = 'none';
+        if (sidePanel) sidePanel.style.display = 'none';
+      }
     });
   });
 
@@ -3981,5 +4461,47 @@
   });
 })();
 </script>
+
+<!-- ===== FIXED SAĞ PANEL - HARİTA BİLGİLERİ ===== -->
+<div id="chartSidePanel" style="position:fixed;top:60px;right:10px;width:260px;height:calc(100vh - 70px);overflow-y:auto;display:none;background:#0a1628;border:2px solid rgba(110,231,255,0.4);border-radius:12px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);z-index:1000">
+  
+  <!-- Başlık + Kapat Butonu -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid rgba(110,231,255,0.3)">
+    <div style="font-weight:800;color:var(--accent);font-size:14px">📊 Harita Bilgileri</div>
+    <button onclick="document.getElementById('chartSidePanel').style.display='none'" style="background:none;border:none;color:#ff6b6b;font-size:16px;cursor:pointer;padding:2px 6px">✕</button>
+  </div>
+  
+  <!-- 🏠 Evler -->
+  <div style="margin-bottom:10px">
+    <div style="font-weight:700;color:var(--accent-3);font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(245,158,11,0.3)">🏠 Evler</div>
+    <div id="sideHouseDegrees" style="font-size:11px;line-height:1.5"></div>
+  </div>
+  
+  <!-- 🪐 Gezegenler -->
+  <div style="margin-bottom:10px">
+    <div style="font-weight:700;color:#22c55e;font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,0.3)">🪐 Gezegenler</div>
+    <div id="sidePlanetPositions" style="font-size:11px;line-height:1.5"></div>
+  </div>
+  
+  <!-- 🔥 Elementler -->
+  <div style="margin-bottom:10px">
+    <div style="font-weight:700;color:var(--accent);font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(110,231,255,0.3)">🔥 Elementler</div>
+    <div id="sideElementCounts" style="font-size:12px;line-height:1.4"></div>
+  </div>
+  
+  <!-- ⚡ Nitelik -->
+  <div style="margin-bottom:10px">
+    <div style="font-weight:700;color:var(--accent-2);font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(139,92,246,0.3)">⚡ Nitelik</div>
+    <div id="sideQualityCounts" style="font-size:12px;line-height:1.4"></div>
+  </div>
+  
+  <!-- ⚧ Eril / Dişil -->
+  <div>
+    <div style="font-weight:700;color:#F472B6;font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(244,114,182,0.3)">⚧ Eril / Dişil</div>
+    <div id="sideGenderBalance" style="font-size:12px;line-height:1.4"></div>
+  </div>
+  
+</div>
+
 </body>
 </html>

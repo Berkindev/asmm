@@ -174,6 +174,7 @@ const SolarDekan = {
       startJD: currentJD,
       startDate: startDate,
       startDateStr: `${startDate.day} ${this.MONTHS[startDate.month - 1]} ${startDate.year}`,
+      startText: firstDecan.startText || '',
       spanDays: Math.round(firstDecanDays),
       isFirst: true,
       planets: []
@@ -202,6 +203,7 @@ const SolarDekan = {
         startJD: currentJD,
         startDate: decanStartDate,
         startDateStr: `${decanStartDate.day} ${this.MONTHS[decanStartDate.month - 1]} ${decanStartDate.year}`,
+        startText: decan.startText || '',
         spanDays: Math.round(decanDays),
         isFirst: false,
         planets: []
@@ -322,76 +324,207 @@ const SolarDekan = {
     
     return result;
   },
-  
   /**
-   * Render Solar Dekan sonuçları
+   * Render Solar Dekan sonuçları - Dekan Hesaplama Tarzı
+   * Ev başlıkları altında 3'er dekan gösterir
    */
-  render: function(data, container) {
+  render: function(data, container, srChart) {
     if (!data || !container) return;
     
     container.innerHTML = '';
+    
+    // Açı hesaplama fonksiyonu
+    const ASPECT_DEFS = {
+      conjunction: { angle: 0, orb: 8, symbol: '☌', name: 'Kavuşum', color: '#EF4444' },
+      sextile: { angle: 60, orb: 6, symbol: '⚹', name: '60\'lık', color: '#38BDF8' },
+      square: { angle: 90, orb: 7, symbol: '□', name: 'Kare', color: '#EF4444' },
+      trine: { angle: 120, orb: 8, symbol: '△', name: 'Üçgen', color: '#22C55E' },
+      opposition: { angle: 180, orb: 8, symbol: '☍', name: 'Karşıt', color: '#3B82F6' }
+    };
+    
+    // Tüm gezegen pozisyonlarını topla (açı hesabı için)
+    const allPlanetPositions = {};
+    data.forEach(d => {
+      if (d.planets) {
+        d.planets.forEach(p => {
+          allPlanetPositions[p.key] = {
+            ...p,
+            longitude: p.signIdx * 30 + p.deg + p.min / 60
+          };
+        });
+      }
+    });
+    
+    // Bir gezegen için açıları hesapla
+    const getAspectsFor = (planetKey) => {
+      const p1 = allPlanetPositions[planetKey];
+      if (!p1) return [];
+      
+      const aspects = [];
+      Object.entries(allPlanetPositions).forEach(([key2, p2]) => {
+        if (key2 === planetKey) return;
+        
+        let diff = Math.abs(p1.longitude - p2.longitude);
+        if (diff > 180) diff = 360 - diff;
+        
+        for (const [aspectKey, aspect] of Object.entries(ASPECT_DEFS)) {
+          const distance = Math.abs(diff - aspect.angle);
+          if (distance <= aspect.orb) {
+            aspects.push({
+              planet: key2,
+              planetName: p2.name,
+              planetSym: p2.sym,
+              type: aspectKey,
+              symbol: aspect.symbol,
+              name: aspect.name,
+              color: aspect.color,
+              orb: distance.toFixed(1)
+            });
+            break;
+          }
+        }
+      });
+      return aspects;
+    };
     
     // Başlık
     const header = document.createElement('div');
     header.style.cssText = 'margin-bottom:16px;padding:14px 18px;background:linear-gradient(135deg,rgba(110,231,255,.12),rgba(139,92,246,.08));border-radius:12px;border-left:4px solid var(--accent)';
     header.innerHTML = `
       <div style="font-weight:700;font-size:16px;color:var(--accent)">🗓️ Solar Dekan Takvimi</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px">Dekan dekan tarihler ve gezegenler</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">Yükselenden başlayarak evler ve dekanlar, tarihler ve gezegenler</div>
     `;
     container.appendChild(header);
     
-    // Her dekan için kart
+    // Evlere göre dekanları grupla
+    const houseGroups = {};
     data.forEach(d => {
-      const card = document.createElement('div');
-      card.className = `house`;
-      card.style.cssText = 'margin-bottom:10px';
+      const houseNum = d.houseNum;
+      if (!houseGroups[houseNum]) {
+        houseGroups[houseNum] = {
+          houseNum: houseNum,
+          houseSign: d.houseSign,
+          decans: []
+        };
+      }
+      houseGroups[houseNum].decans.push(d);
+    });
+    
+    // Her ev için (1'den 12'ye sırayla)
+    for (let houseNum = 1; houseNum <= 12; houseNum++) {
+      const houseData = houseGroups[houseNum];
+      if (!houseData || houseData.decans.length === 0) continue;
       
-      const elemClass = this.ELEMENT_MAP[d.decanSign] || 'fire';
+      const houseDiv = document.createElement('div');
+      houseDiv.className = 'house';
+      houseDiv.style.cssText = 'margin-bottom:14px';
       
-      card.innerHTML = `
-        <div class="kv el-${elemClass}" style="padding:12px 16px">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;line-height:1.6">
-            <span style="font-weight:800;color:var(--accent);min-width:32px">${d.order}.</span>
-            <span style="font-weight:700">${d.startDateStr}</span>
-            <span style="color:var(--muted)">•</span>
-            <span style="font-weight:600">${d.houseNum}. Ev</span>
-            <span style="color:var(--muted)">•</span>
-            <span style="color:var(--accent-3);font-weight:600">${d.decanNum}. dekan</span>
-            <span style="color:var(--muted)">•</span>
-            <span style="color:var(--accent)">${this.SIGN_SYM[d.decanSign]} ${d.decanSign}</span>
-            <span style="color:var(--muted);font-size:12px">(${this.RULER_SYM[d.ruler] || ''} ${d.ruler})</span>
-            <span style="color:var(--muted);font-size:11px;margin-left:auto">~${d.spanDays} gün</span>
+      // Ev başlığı
+      houseDiv.innerHTML = `
+        <div class="title" style="display:flex;align-items:center;gap:12px;padding:16px 20px;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(110,231,255,.05));border-radius:12px;margin-bottom:12px;border:1px solid rgba(245,158,11,.2)">
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--accent-3);color:#0a1628;width:36px;height:36px;border-radius:10px;font-weight:800;font-size:20px;line-height:1">
+            ${houseNum}
+          </div>
+          <div style="font-size:18px;font-weight:700;color:var(--text-main)">Ev</div>
+          <div style="font-size:18px;color:var(--muted)">•</div>
+          <div style="font-size:18px;font-weight:600;color:var(--accent-3)">
+            ${this.SIGN_SYM[houseData.houseSign]} ${houseData.houseSign}
           </div>
         </div>
       `;
       
-      container.appendChild(card);
+      const list = document.createElement('div');
+      list.className = 'list';
       
-      // Gezegenler
-      if (d.planets && d.planets.length > 0) {
-        d.planets.forEach(p => {
-          const pCard = document.createElement('div');
-          pCard.className = 'kv planet';
-          pCard.style.cssText = 'margin-left:20px;padding:10px 14px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent-3);margin-bottom:4px';
-          
-          // Tarih bilgisi varsa göster (gün bilgisi kaldırıldı)
-          const dateInfo = p.dateStr ? `<span style="color:var(--accent);font-weight:600;margin-left:auto">→ ${p.dateStr}</span>` : '';
-          
-          pCard.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
-              <span style="font-weight:700">${p.sym} ${p.name}</span>
-              <span style="color:var(--muted)">•</span>
-              <span>${p.sign} ${this.SIGN_SYM[p.sign]}</span>
-              <span style="color:var(--muted)">•</span>
-              <span style="font-family:monospace">${p.deg}°${String(p.min).padStart(2,'0')}'</span>
-              ${dateInfo}
-            </div>
-          `;
-          
-          container.appendChild(pCard);
-        });
-      }
-    });
+      // Bu evin 3 dekanı
+      houseData.decans.forEach(d => {
+        const elemClass = this.ELEMENT_MAP[d.decanSign] || 'fire';
+        
+        // Dekanın başlangıç derecesi (ilk veride yoksa hesapla)
+        const startDegInfo = d.startText || '';
+        
+        const decanRow = document.createElement('div');
+        // Yeni CSS class ile wrapper
+        decanRow.className = `solar-decan-item el-${elemClass}`;
+        
+        // Format Güncellendi: 
+        // Satır 1: Dekan No ve Başlangıç Derecesi + Ev Burcu
+        // Satır 2: Dekan Burcu ve Yönetici
+        // Satır 3: Tarih ve Süre
+        decanRow.innerHTML = `
+          <div class="solar-decan-row-1">
+             <span style="font-weight:700;color:var(--accent-3)">${d.decanNum}. dekan</span>
+             <span style="font-family:'JetBrains Mono'">${startDegInfo} ${this.SIGN_SYM[d.houseSign]} ${d.houseSign}</span>
+          </div>
+          <div class="solar-decan-row-2">
+             → ${this.SIGN_SYM[d.decanSign]} ${d.decanSign} <span style="font-size:12px;opacity:0.8;margin-left:4px">(${this.RULER_SYM[d.ruler] || ''} ${d.ruler})</span>
+          </div>
+          <div class="solar-decan-row-3">
+             <span style="font-weight:600;color:var(--accent-3)">${d.startDateStr}</span>
+             <span>~${d.spanDays} gün</span>
+          </div>
+        `;
+        list.appendChild(decanRow);
+        
+        // Bu dekandaki gezegenler
+        if (d.planets && d.planets.length > 0) {
+          d.planets.forEach(p => {
+            const pCard = document.createElement('div');
+            pCard.className = 'kv planet';
+            pCard.style.cssText = 'margin-left:20px;padding:10px 14px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent-3);margin-bottom:4px;cursor:pointer';
+            
+            // Açıları hesapla
+            const aspects = getAspectsFor(p.key);
+            const hasAspects = aspects.length > 0;
+            
+            // Tarih bilgisi ve açı badge
+            const dateInfo = p.dateStr ? `<span style="color:var(--accent);font-weight:600">→ ${p.dateStr}</span>` : '';
+            const aspectBadge = hasAspects ? `<span class="aspect-toggle" style="color:var(--accent-2);font-size:12px;margin-left:auto;cursor:pointer"> ▼ ${aspects.length} açı</span>` : '';
+            
+            pCard.innerHTML = `
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
+                <span style="font-weight:700">${p.sym} ${p.name}</span>
+                <span style="color:var(--muted)">•</span>
+                <span>${p.sign} ${this.SIGN_SYM[p.sign]}</span>
+                <span style="color:var(--muted)">•</span>
+                <span style="font-family:monospace">${p.deg}°${String(p.min).padStart(2,'0')}'</span>
+                ${dateInfo}
+                ${aspectBadge}
+              </div>
+            `;
+            
+            list.appendChild(pCard);
+            
+            // Açılar container
+            if (hasAspects) {
+              const aspectsContainer = document.createElement('div');
+              aspectsContainer.className = 'planet-aspects';
+              aspectsContainer.style.cssText = 'display:none;margin-left:36px;padding:6px 0;border-left:2px solid rgba(139,92,246,0.3);margin-bottom:8px';
+              
+              aspects.forEach(asp => {
+                const aspEl = document.createElement('div');
+                aspEl.style.cssText = 'padding:6px 14px;font-size:13px;background:rgba(139,92,246,0.05);margin:3px 0;border-radius:6px';
+                aspEl.innerHTML = `<span style="color:${asp.color};font-weight:bold">${asp.symbol}</span> ${asp.name} <span style="color:var(--muted)">${asp.planetSym} ${asp.planetName}</span> <span style="font-size:11px;opacity:0.7">(${asp.orb}°)</span>`;
+                aspectsContainer.appendChild(aspEl);
+              });
+              
+              list.appendChild(aspectsContainer);
+              
+              // Toggle event
+              pCard.addEventListener('click', () => {
+                const toggle = pCard.querySelector('.aspect-toggle');
+                const isOpen = aspectsContainer.style.display !== 'none';
+                aspectsContainer.style.display = isOpen ? 'none' : 'block';
+                if (toggle) toggle.innerHTML = ` ${isOpen ? '▼' : '▲'} ${aspects.length} açı`;
+              });
+            }
+          });
+        }
+      });
+      
+      houseDiv.appendChild(list);
+      container.appendChild(houseDiv);
+    }
   }
 };
 

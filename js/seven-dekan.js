@@ -17,8 +17,41 @@ const SevenDekan = {
    * @param {Array} decanResults - computeDecan sonuçları
    * @returns {Array} Her yaş için ev dekanı bilgisi
    */
+  /**
+   * 7'ler için asli dekan hesapla
+   * Asli Dekan Sistemi: 0-10° = 1.dekan, 10-20° = 2.dekan, 20-30° = 3.dekan
+   * @param {Array} sevenResults - computeSeven sonuçları
+   * @param {Array} decanResults - computeDecan sonuçları
+   * @returns {Array} Her yaş için asli dekan bilgisi
+   */
   calculate: function(sevenResults, decanResults) {
     if (!sevenResults || !decanResults) return null;
+    
+    const SIGNS = ['Koç','Boğa','İkizler','Yengeç','Aslan','Başak','Terazi','Akrep','Yay','Oğlak','Kova','Balık'];
+    const RULERS = ['Mars','Venüs','Merkür','Ay','Güneş','Merkür','Venüs','Plüton','Jüpiter','Satürn','Uranüs','Neptün'];
+    const ELEMENT_CYCLE = {
+      fire: [0, 4, 8],   // Koç, Aslan, Yay
+      earth: [1, 5, 9],  // Boğa, Başak, Oğlak
+      air: [2, 6, 10],   // İkizler, Terazi, Kova
+      water: [3, 7, 11]  // Yengeç, Akrep, Balık
+    };
+    
+    // Asli dekan hesaplama fonksiyonu
+    function getAsliDekan(signIdx, degInSign) {
+      const dekanBand = degInSign < 10 ? 0 : degInSign < 20 ? 1 : 2;
+      const elem = [0,4,8].includes(signIdx) ? 'fire' : 
+                   [1,5,9].includes(signIdx) ? 'earth' : 
+                   [2,6,10].includes(signIdx) ? 'air' : 'water';
+      const cycle = ELEMENT_CYCLE[elem];
+      const startPos = cycle.indexOf(signIdx);
+      const dekanSignIdx = cycle[(startPos + dekanBand) % 3];
+      return {
+        band: dekanBand + 1,
+        signIdx: dekanSignIdx,
+        sign: SIGNS[dekanSignIdx],
+        ruler: RULERS[dekanSignIdx]
+      };
+    }
     
     const result = [];
     
@@ -35,45 +68,28 @@ const SevenDekan = {
         segments: []
       };
       
-      // Ev genişliğini 3'e böl - Dekan Hesaplama ile aynı mantık
-      const spanMin = house.spanMin;
-      const decanSizeMin = spanMin / 3; // Her dekan bu kadar dakika
-      
-      // decanHouse.decans içinde 3 dekan var:
-      // decans[0] -> absStartMin: 0, 1. dekan
-      // decans[1] -> absStartMin: decanSizeMin, 2. dekan
-      // decans[2] -> absStartMin: decanSizeMin*2, 3. dekan
-      
       house.segments.forEach((seg, segIdx) => {
-        // Yaşın ev içindeki pozisyonu (0'dan başlayarak dakika cinsinden)
-        const posInHouse = seg.absStartMin;
+        // Pozisyonun burç indexini ve derece değerini al
+        const signIdx = SIGNS.indexOf(seg.signStart);
+        const startDeg = parseInt(seg.startText.split('°')[0]) || 0;
         
-        // Bu pozisyon hangi dekana düşüyor?
-        let dekanIdx;
-        if (posInHouse < decanSizeMin) {
-          dekanIdx = 0; // 1. dekan
-        } else if (posInHouse < decanSizeMin * 2) {
-          dekanIdx = 1; // 2. dekan
-        } else {
-          dekanIdx = 2; // 3. dekan
-        }
-        
-        // Dekan bilgisini Dekan Hesaplama sonuçlarından al
-        const decan = decanHouse.decans[dekanIdx];
+        // Asli dekan hesapla
+        const asliDekan = getAsliDekan(signIdx, startDeg);
         
         houseData.segments.push({
           startAge: seg.startAge,
           endAge: seg.endAge,
           startText: seg.startText,
-          signStart: seg.signStart,  // Yaşın başladığı burç
+          signStart: seg.signStart,
+          signIdx: signIdx,
           absStartMin: seg.absStartMin,
           absEndMin: seg.absEndMin,
-          // Ev dekanı bilgisi - Dekan Hesaplama'dan gelen doğru değerler
-          evDekan: {
-            number: dekanIdx + 1,
-            positionSign: seg.signStart,               // Pozisyonun bulunduğu burç
-            sign: decan.decanSign,                     // Dekan element yöneticisi burcu
-            ruler: decan.ruler                         // Yönetici gezegen
+          // Asli dekan bilgisi
+          asliDekan: {
+            number: asliDekan.band,
+            sign: asliDekan.sign,
+            signIdx: asliDekan.signIdx,
+            ruler: asliDekan.ruler
           }
         });
       });
@@ -192,6 +208,32 @@ const SevenDekan = {
     
     container.innerHTML = '';
     
+    // Asli dekan hesaplama fonksiyonu (gezegenlerin kendi dekanları için)
+    const ELEMENT_CYCLE = {
+      fire: [0, 4, 8],
+      earth: [1, 5, 9],
+      air: [2, 6, 10],
+      water: [3, 7, 11]
+    };
+    const RULERS = ['Mars','Venüs','Merkür','Ay','Güneş','Merkür','Venüs','Plüton','Jüpiter','Satürn','Uranüs','Neptün'];
+    
+    function getAsliDekan(signIdx, degInSign) {
+      const deg = typeof degInSign === 'number' ? degInSign : 0;
+      const dekanBand = deg < 10 ? 0 : deg < 20 ? 1 : 2;
+      const elem = [0,4,8].includes(signIdx) ? 'fire' : 
+                   [1,5,9].includes(signIdx) ? 'earth' : 
+                   [2,6,10].includes(signIdx) ? 'air' : 'water';
+      const cycle = ELEMENT_CYCLE[elem];
+      const startPos = cycle.indexOf(signIdx);
+      const dekanSignIdx = cycle[(startPos + dekanBand) % 3];
+      return {
+        band: dekanBand + 1,
+        signIdx: dekanSignIdx,
+        sign: SIGNS[dekanSignIdx],
+        ruler: RULERS[dekanSignIdx]
+      };
+    }
+    
     data.forEach((h, hi) => {
       const houseDiv = document.createElement('div');
       houseDiv.className = 'house';
@@ -209,28 +251,25 @@ const SevenDekan = {
       
       // Her yaş segmenti
       h.segments.forEach((seg, segIdx) => {
+        const asliDekan = seg.asliDekan;
         const kv = document.createElement('div');
-        kv.className = `kv el-${elementOf(seg.evDekan.sign)}`;
+        kv.className = `kv el-${elementOf(asliDekan.sign)}`;
         kv.style.cssText = 'padding:12px 14px';
         
         const ageStr = `${seg.startAge}–${seg.endAge} yaş`;
         const yearStr = h.birthYear ? `${h.birthYear + seg.startAge}–${h.birthYear + seg.endAge}` : '';
-        const evDekan = seg.evDekan;
-        const posSign = evDekan.positionSign || seg.signStart;
         
-        // Format: 0–1 yaş • 1999–2000 • 1° 06' Yay • 1. dekan • ♐ Yay (♃ Jüpiter)
+        // Format: 0–1 yaş • 1999–2000 • 27° 03' ♒ Kova → ♎ Terazi (♀ Venüs)
         kv.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;line-height:1.6">
             <span style="font-weight:700">${ageStr}</span>
             ${yearStr ? `<span style="color:var(--muted)">•</span> <span class="year-range" style="color:var(--muted)">${yearStr}</span>` : ''}
             <span style="color:var(--muted)">•</span>
             <span style="font-family:monospace">${seg.startText}</span>
-            <span style="color:var(--muted)">${SIGN_SYM[posSign] || ''} ${posSign}</span>
-            <span style="color:var(--muted)">•</span>
-            <span style="color:var(--accent-3);font-weight:600">${evDekan.number}. dekan</span>
+            <span style="color:var(--muted)">${SIGN_SYM[seg.signStart] || ''} ${seg.signStart}</span>
             <span style="color:var(--muted)">→</span>
-            <span style="color:var(--accent)">${SIGN_SYM[evDekan.sign]} ${evDekan.sign}</span>
-            <span style="color:var(--muted);font-size:12px">(${RULER_SYM[evDekan.ruler] || ''} ${evDekan.ruler})</span>
+            <span style="color:var(--accent)">${SIGN_SYM[asliDekan.sign]} ${asliDekan.sign}</span>
+            <span style="color:var(--muted);font-size:12px">(${RULER_SYM[asliDekan.ruler] || ''} ${asliDekan.ruler})</span>
           </div>
         `;
         list.appendChild(kv);
@@ -251,21 +290,8 @@ const SevenDekan = {
             const pAspects = planetAspects[p.key];
             const hasAspects = pAspects && pAspects.length > 0;
             
-            // Gezegenin gerçek dekanını hesapla
-            let planetDekanIdx;
-            if (pDelta < decanSize) {
-              planetDekanIdx = 0;
-            } else if (pDelta < decanSize * 2) {
-              planetDekanIdx = 1;
-            } else {
-              planetDekanIdx = 2;
-            }
-            
-            // Yaş segmentinin dekanından farklı mı?
-            const segDekanIdx = evDekan.number - 1;
-            const isDifferentDekan = planetDekanIdx !== segDekanIdx;
-            const dekanNote = isDifferentDekan ? 
-              `<span style="color:var(--warn);font-size:11px;margin-left:4px">(${planetDekanIdx + 1}. dekan içinde)</span>` : '';
+            // Gezegenin asli dekanını hesapla (natal haritadaki pozisyonuna göre)
+            const planetAsliDekan = getAsliDekan(p.signIdx, p.deg);
             
             const signName = SIGNS[p.signIdx];
             const degStr = `${Math.floor(p.posMin/60)}°${String(p.posMin%60).padStart(2,'0')}'`;
@@ -281,7 +307,6 @@ const SevenDekan = {
                 <span>${signName} ${SIGN_SYM[signName]}</span>
                 <span style="color:var(--muted)">•</span>
                 <span style="font-family:monospace">${degStr}</span>
-                ${dekanNote}
                 ${aspectBadge}
               </div>
             `;
