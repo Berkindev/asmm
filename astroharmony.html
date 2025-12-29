@@ -3293,13 +3293,13 @@
       // 1. Ev Dereceleri
       const sideHouseDiv = $('sideHouseDegrees');
       if (sideHouseDiv && chartData.houses) {
-        let houseHtml = '<div class="side-panel-header">🏠 Evler</div>';
+        let houseHtml = '<div class="side-panel-header" style="margin-top:0;margin-bottom:6px;font-size:13px">🏠 Evler</div>';
         chartData.houses.forEach((h, i) => {
           const color = getSignColor(h.signIdx);
           const signName = SIGNS[h.signIdx];
           const signSym = SIGN_SYM[signName];
           houseHtml += `
-            <div class="side-item" style="border-left:3px solid ${color}">
+            <div class="side-item" style="border-left:3px solid ${color};padding:4px 8px;margin-bottom:3px;font-size:12px">
               <strong>${i+1}. Ev</strong>
               <span class="val" style="color:${color}">${signName} ${signSym} • ${h.deg}°${String(h.min).padStart(2,'0')}'</span>
             </div>
@@ -3311,19 +3311,19 @@
       // 2. Gezegen Pozisyonları
       const sidePlanetDiv = $('sidePlanetPositions');
       if (sidePlanetDiv && chartData.planets && chartData.houses) {
-        let planetHtml = '<div class="side-panel-header">🪐 Gezegenler</div>';
+        let planetHtml = '<div class="side-panel-header" style="margin-top:10px;margin-bottom:6px;font-size:13px">🪐 Gezegenler</div>';
         const planetKeys = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','chiron','north','south','fortune'];
         
-        // ASC derecesini hesapla (0-360)
+        // ASC derecesini hesapla
         const ascH = chartData.houses[0];
         const ascDeg = ascH.signIdx * 30 + ascH.deg + ascH.min/60;
         
-        // Gezegenleri ASC'ye göre uzaklıklarına göre sırala
+        // Sıralama
         const sortedPlanets = planetKeys.map(key => {
           const p = chartData.planets[key];
           if (!p) return null;
           let pDeg = p.signIdx * 30 + p.deg + p.min/60;
-          let relDeg = (pDeg - ascDeg + 360) % 360; // ASC'ye göre 0-360 arası açı
+          let relDeg = (pDeg - ascDeg + 360) % 360; 
           return { key, p, relDeg };
         }).filter(item => item !== null).sort((a, b) => a.relDeg - b.relDeg);
         
@@ -3335,7 +3335,7 @@
           const sym = PLANET_SYMS[key];
           const name = PLANET_NAMES[key];
           planetHtml += `
-            <div class="side-item" style="border-left:3px solid ${color}">
+            <div class="side-item" style="border-left:3px solid ${color};padding:4px 8px;margin-bottom:3px;font-size:12px">
               <strong style="color:${color}">${sym} ${name}</strong>
               <span class="val">${signName} ${signSym} • ${p.deg}°${String(p.min).padStart(2,'0')}'</span>
             </div>
@@ -3344,15 +3344,17 @@
         sidePlanetDiv.innerHTML = planetHtml;
       }
       
+      // Badge Style Helper - Büyütülmüş
+      const badgeStyle = (color) => `padding:3px 8px;border-radius:6px;background:${color}20;border:1px solid ${color}40;color:${color};font-size:11px;font-weight:600`;
+
       // 3. Element Dağılımı
       const sideElementDiv = $('sideElementCounts');
       if (sideElementDiv) {
         sideElementDiv.innerHTML = `
-          <div class="side-panel-header">🔥 Elementler</div>
-          <div class="side-item" style="border-left:3px solid ${EL_COLORS.fire}"><strong>Ateş</strong> <span class="val">${elTotals.fire}</span></div>
-          <div class="side-item" style="border-left:3px solid ${EL_COLORS.earth}"><strong>Toprak</strong> <span class="val">${elTotals.earth}</span></div>
-          <div class="side-item" style="border-left:3px solid ${EL_COLORS.air}"><strong>Hava</strong> <span class="val">${elTotals.air}</span></div>
-          <div class="side-item" style="border-left:3px solid ${EL_COLORS.water}"><strong>Su</strong> <span class="val">${elTotals.water}</span></div>
+          <div style="${badgeStyle(EL_COLORS.fire)}">🔥 Ateş: ${elTotals.fire}</div>
+          <div style="${badgeStyle(EL_COLORS.earth)}">🌍 Toprak: ${elTotals.earth}</div>
+          <div style="${badgeStyle(EL_COLORS.air)}">💨 Hava: ${elTotals.air}</div>
+          <div style="${badgeStyle(EL_COLORS.water)}">💧 Su: ${elTotals.water}</div>
         `;
       }
       
@@ -3360,10 +3362,9 @@
       const sideQualityDiv = $('sideQualityCounts');
       if (sideQualityDiv) {
         sideQualityDiv.innerHTML = `
-          <div class="side-panel-header">⚡ Nitelik</div>
-          <div class="side-item" style="border-left:3px solid #f59e0b"><strong>Öncü</strong> <span class="val">${qualTotals.cardinal}</span></div>
-          <div class="side-item" style="border-left:3px solid #22c55e"><strong>Sabit</strong> <span class="val">${qualTotals.fixed}</span></div>
-          <div class="side-item" style="border-left:3px solid #3b82f6"><strong>Değişken</strong> <span class="val">${qualTotals.mutable}</span></div>
+          <div style="${badgeStyle('#f59e0b')}">⬆ Öncü: ${qualTotals.cardinal}</div>
+          <div style="${badgeStyle('#22c55e')}">■ Sabit: ${qualTotals.fixed}</div>
+          <div style="${badgeStyle('#3b82f6')}">⟳ Değişken: ${qualTotals.mutable}</div>
         `;
       }
       
@@ -3371,9 +3372,8 @@
       const sideGenderDiv = $('sideGenderBalance');
       if (sideGenderDiv) {
         sideGenderDiv.innerHTML = `
-          <div class="side-panel-header">⚥ Eril / Dişil</div>
-          <div class="side-item" style="border-left:3px solid #8b5cf6"><strong>Eril</strong> <span class="val">${eril}</span></div>
-          <div class="side-item" style="border-left:3px solid #ec4899"><strong>Dişil</strong> <span class="val">${disil}</span></div>
+          <div style="${badgeStyle('#8b5cf6')}">♂ Eril: ${eril}</div>
+          <div style="${badgeStyle('#ec4899')}">♀ Dişil: ${disil}</div>
         `;
       }
     }
@@ -4466,42 +4466,20 @@
 <div id="chartSidePanel" style="position:fixed;top:60px;right:10px;width:260px;height:calc(100vh - 70px);overflow-y:auto;display:none;background:#0a1628;border:2px solid rgba(110,231,255,0.4);border-radius:12px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);z-index:1000">
   
   <!-- Başlık + Kapat Butonu -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid rgba(110,231,255,0.3)">
-    <div style="font-weight:800;color:var(--accent);font-size:14px">📊 Harita Bilgileri</div>
-    <button onclick="document.getElementById('chartSidePanel').style.display='none'" style="background:none;border:none;color:#ff6b6b;font-size:16px;cursor:pointer;padding:2px 6px">✕</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(110,231,255,0.2)">
+    <div style="font-weight:700;color:var(--accent);font-size:13px">📊 Harita Bilgileri</div>
+    <button onclick="document.getElementById('chartSidePanel').style.display='none'" style="background:none;border:none;color:#ff6b6b;font-size:14px;cursor:pointer;padding:0 4px">✕</button>
   </div>
   
-  <!-- 🏠 Evler -->
-  <div style="margin-bottom:10px">
-    <div style="font-weight:700;color:var(--accent-3);font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(245,158,11,0.3)">🏠 Evler</div>
-    <div id="sideHouseDegrees" style="font-size:11px;line-height:1.5"></div>
-  </div>
+  <div id="sideHouseDegrees"></div>
+  <div id="sidePlanetPositions" style="margin-top:8px"></div>
   
-  <!-- 🪐 Gezegenler -->
-  <div style="margin-bottom:10px">
-    <div style="font-weight:700;color:#22c55e;font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(34,197,94,0.3)">🪐 Gezegenler</div>
-    <div id="sidePlanetPositions" style="font-size:11px;line-height:1.5"></div>
+  <!-- Alt Bilgi (Footer) - Kompakt -->
+  <div id="sideFooterStats" style="margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);display:grid;gap:6px">
+     <div id="sideElementCounts" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+     <div id="sideQualityCounts" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+     <div id="sideGenderBalance" style="display:flex;flex-wrap:wrap;gap:4px"></div>
   </div>
-  
-  <!-- 🔥 Elementler -->
-  <div style="margin-bottom:10px">
-    <div style="font-weight:700;color:var(--accent);font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(110,231,255,0.3)">🔥 Elementler</div>
-    <div id="sideElementCounts" style="font-size:12px;line-height:1.4"></div>
-  </div>
-  
-  <!-- ⚡ Nitelik -->
-  <div style="margin-bottom:10px">
-    <div style="font-weight:700;color:var(--accent-2);font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(139,92,246,0.3)">⚡ Nitelik</div>
-    <div id="sideQualityCounts" style="font-size:12px;line-height:1.4"></div>
-  </div>
-  
-  <!-- ⚧ Eril / Dişil -->
-  <div>
-    <div style="font-weight:700;color:#F472B6;font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid rgba(244,114,182,0.3)">⚧ Eril / Dişil</div>
-    <div id="sideGenderBalance" style="font-size:12px;line-height:1.4"></div>
-  </div>
-  
-</div>
 
 </body>
 </html>
