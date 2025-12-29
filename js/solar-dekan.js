@@ -415,6 +415,9 @@ const SolarDekan = {
       const houseData = houseGroups[houseNum];
       if (!houseData || houseData.decans.length === 0) continue;
       
+      // Dekanları 1, 2, 3 sırasına göre sırala (ev içinde doğru sıralama)
+      houseData.decans.sort((a, b) => a.decanNum - b.decanNum);
+      
       const houseDiv = document.createElement('div');
       houseDiv.className = 'house';
       houseDiv.style.cssText = 'margin-bottom:14px';
@@ -455,18 +458,23 @@ const SolarDekan = {
       const list = document.createElement('div');
       list.className = 'list';
       
-      // Element renkleri (transparent background için)
+      // Element renkleri (AstroHarmony Harita Renkleri ile Uyumlu)
+      // Fire: #EF4444 (239,68,68)
+      // Earth: #22C55E (34,197,94)
+      // Air: #06B6D4 (6,182,212) - Cyan/Turkuaz
+      // Water: #3B82F6 (59,130,246) - Blue
+      
       const EL_BG = {
-        fire: 'rgba(239,68,68,0.08)',
-        earth: 'rgba(34,197,94,0.08)',
-        air: 'rgba(56,189,248,0.08)',
-        water: 'rgba(59,130,246,0.08)'
+        fire: 'rgba(239,68,68,0.12)',
+        earth: 'rgba(34,197,94,0.12)',
+        air: 'rgba(6,182,212,0.12)',
+        water: 'rgba(59,130,246,0.12)'
       };
       const EL_BORDER = {
-        fire: 'rgba(239,68,68,0.2)',
-        earth: 'rgba(34,197,94,0.2)',
-        air: 'rgba(56,189,248,0.2)',
-        water: 'rgba(59,130,246,0.2)'
+        fire: 'rgba(239,68,68,0.3)',
+        earth: 'rgba(34,197,94,0.3)',
+        air: 'rgba(6,182,212,0.3)',
+        water: 'rgba(59,130,246,0.3)'
       };
 
       // Bu evin 3 dekanı
