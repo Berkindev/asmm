@@ -277,8 +277,25 @@ const SolarDekan = {
       const planetDate = this.jdToDate(planetJD);
       const planetDateStr = `${planetDate.day} ${this.MONTHS[planetDate.month - 1]}`;
       
-      // Sonuçlarda bu dekana ekle
-      const targetDecan = result.find(d => d.houseNum === planetHouse && d.decanNum === planetDecanNum);
+      // Gezegeni TAR\u0130HE G\u00d6RE do\u011fru dekana yerle\u015ftir
+      // daysFromSR'ye g\u00f6re hangi dekana d\u00fc\u015ft\u00fc\u011f\u00fcn\u00fc bul
+      let cumulativeDays = 0;
+      let targetDecan = null;
+      
+      for (const decan of result) {
+        const decanEndDay = cumulativeDays + decan.spanDays;
+        if (daysFromSR >= cumulativeDays && daysFromSR < decanEndDay) {
+          targetDecan = decan;
+          break;
+        }
+        cumulativeDays = decanEndDay;
+      }
+      
+      // E\u011fer bulunamad\u0131ysa (y\u0131l\u0131n sonuna yak\u0131n), son dekana ekle
+      if (!targetDecan && result.length > 0) {
+        targetDecan = result[result.length - 1];
+      }
+      
       if (targetDecan) {
         const pInfo = this.PLANET_INFO[key];
         targetDecan.planets.push({
@@ -293,6 +310,13 @@ const SolarDekan = {
           fullDateStr: `${planetDate.day} ${this.MONTHS[planetDate.month - 1]} ${planetDate.year}`,
           daysFromSR: Math.round(daysFromSR)
         });
+      }
+    });
+    
+    // Gezegenleri tarihe göre sırala (her dekan için)
+    result.forEach(d => {
+      if (d.planets && d.planets.length > 1) {
+        d.planets.sort((a, b) => a.daysFromSR - b.daysFromSR);
       }
     });
     
@@ -350,9 +374,8 @@ const SolarDekan = {
           pCard.className = 'kv planet';
           pCard.style.cssText = 'margin-left:20px;padding:10px 14px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent-3);margin-bottom:4px';
           
-          // Tarih bilgisi varsa göster
+          // Tarih bilgisi varsa göster (gün bilgisi kaldırıldı)
           const dateInfo = p.dateStr ? `<span style="color:var(--accent);font-weight:600;margin-left:auto">→ ${p.dateStr}</span>` : '';
-          const daysInfo = p.daysFromSR !== undefined ? `<span style="color:var(--muted);font-size:11px">(+${p.daysFromSR} gün)</span>` : '';
           
           pCard.innerHTML = `
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
@@ -361,7 +384,6 @@ const SolarDekan = {
               <span>${p.sign} ${this.SIGN_SYM[p.sign]}</span>
               <span style="color:var(--muted)">•</span>
               <span style="font-family:monospace">${p.deg}°${String(p.min).padStart(2,'0')}'</span>
-              ${daysInfo}
               ${dateInfo}
             </div>
           `;

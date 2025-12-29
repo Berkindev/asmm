@@ -94,11 +94,16 @@ function getJulianDay(year, month, day, hour, minute, tzOffset = 0) {
 /**
  * Get Turkey timezone offset considering historical DST rules
  * Turkey used DST until September 2016 when they switched to permanent UTC+3
- * IMPORTANT: Turkey's DST transition dates changed over the years:
+ * 
+ * HISTORICAL DST RULES FOR TURKEY:
+ * - 1970-1977: DST active, ended last Sunday of OCTOBER
+ * - 1978-1982: NO DST (Turkey stayed at UTC+3 year-round)
  * - 1983-1995: DST ended last Sunday of SEPTEMBER
  * - 1996-2006: DST ended last Sunday of OCTOBER  
  * - 2007-2010: EU rules (last Sunday of October)
  * - 2011-2016: Last Sunday of October
+ * - 2016 Sept+: Permanent UTC+3 (no DST)
+ * 
  * @param {number} year Year
  * @param {number} month Month (1-12)
  * @param {number} day Day
@@ -110,6 +115,18 @@ function getTurkeyOffset(year, month, day) {
     return 3;
   }
   
+  // 1978-1982: No DST in Turkey, stayed at UTC+3 (EET+1)
+  // Actually Turkey used UTC+2 in winter and UTC+3 in summer before 1983
+  // BUT during 1978-1982 they didn't observe DST, stayed at UTC+3
+  if (year >= 1978 && year <= 1982) {
+    return 3; // Permanent summer time during this period
+  }
+  
+  // Before 1970, assume UTC+2 (no reliable DST data)
+  if (year < 1970) {
+    return 2;
+  }
+  
   // Find last Sunday of a month
   const lastSundayOfMonth = (y, m) => {
     const lastDay = new Date(y, m, 0).getDate(); // Last day of month
@@ -118,18 +135,24 @@ function getTurkeyOffset(year, month, day) {
     return lastDay - dayOfWeek;
   };
   
-  // DST start: Last Sunday of March (consistent)
+  // DST start: Last Sunday of March (consistent for most years)
+  // For 1970-1977, DST started in March but exact date varied
   const dstStartDay = lastSundayOfMonth(year, 3);
   
   // DST end: Depends on the year
-  // Before 1996: Last Sunday of September
-  // 1996 and after: Last Sunday of October
   let dstEndMonth, dstEndDay;
-  if (year < 1996) {
-    dstEndMonth = 9; // September
+  
+  if (year >= 1970 && year <= 1977) {
+    // 1970-1977: DST ended last Sunday of OCTOBER
+    dstEndMonth = 10;
+    dstEndDay = lastSundayOfMonth(year, 10);
+  } else if (year >= 1983 && year <= 1995) {
+    // 1983-1995: DST ended last Sunday of SEPTEMBER
+    dstEndMonth = 9;
     dstEndDay = lastSundayOfMonth(year, 9);
   } else {
-    dstEndMonth = 10; // October
+    // 1996-2016: DST ended last Sunday of OCTOBER
+    dstEndMonth = 10;
     dstEndDay = lastSundayOfMonth(year, 10);
   }
   

@@ -250,6 +250,7 @@
       <button class="main-tab" data-tab="seven">7'ler Kanunu</button>
       <button class="main-tab" data-tab="solar">☉ Solar Harita</button>
       <button class="main-tab" data-tab="chart">🎯 Harita</button>
+      <button class="main-tab" data-tab="prompt">📋 Prompt Oluştur</button>
       <!-- Veriler sekmesi gizlendi, kod kaldı -->
       <button class="main-tab" data-tab="veriler" style="display:none">📊 Veriler</button>
     </div>
@@ -621,6 +622,187 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- ==================== AI ANALİZ PANEL ==================== -->
+    <!-- ==================== PROMPT OLUŞTURUCU (YENİ) ==================== -->
+    <div class="main-panel" id="panelPrompt">
+      <div class="card">
+        <div class="card-header" style="background: linear-gradient(90deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0) 100%); border-bottom: 1px solid rgba(16, 185, 129, 0.2);">
+          <h2 style="display:flex;align-items:center;gap:10px;color:#6EE7B7;margin:0">
+            <span>📋</span> Astrolojik Prompt Oluşturucu
+          </h2>
+          <div style="font-size:0.9em;opacity:0.7;margin-top:4px">
+            Yapay zeka için detaylı ve özelleştirilmiş analiz komutları oluşturun
+          </div>
+        </div>
+        <div class="card-body">
+             <!-- Butonlar -->
+             <div style="margin-bottom:20px">
+               <div style="font-weight:600;color:var(--text-main);margin-bottom:12px">Analiz Türünü Seçin:</div>
+               <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:10px">
+                 <button class="ai-btn" onclick="generatePrompt('general')" style="border-left:3px solid var(--accent);text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.5em">🔮</div> <div><div style="font-weight:bold;color:#fff">Genel</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">Detaylı yorum</div></div>
+                 </button>
+                 <button class="ai-btn" onclick="generatePrompt('seven')" style="border-left:3px solid var(--accent-2);text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.5em">7️⃣</div> <div><div style="font-weight:bold;color:#fff">7'ler Kuralı</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">Yaş döngüsü</div></div>
+                 </button>
+                 <button class="ai-btn" onclick="generatePrompt('career')" style="border-left:3px solid var(--gold);text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.5em">💼</div> <div><div style="font-weight:bold;color:#fff">Kariyer</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">İş & Para</div></div>
+                 </button>
+                 <button class="ai-btn" onclick="generatePrompt('love')" style="border-left:3px solid #e11d48;text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.5em">❤️</div> <div><div style="font-weight:bold;color:#fff">Aşk & İlişki</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">Partner profili</div></div>
+                 </button>
+                 <button class="ai-btn" onclick="generatePrompt('child')" style="border-left:3px solid #8b5cf6;text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.5em">👶</div> <div><div style="font-weight:bold;color:#fff">Çocuk</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">Potansiyel</div></div>
+                 </button>
+               </div>
+             </div>
+             
+             <!-- Çıktı -->
+             <div style="position:relative">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+                    <strong style="color:var(--ok)">Oluşturulan Prompt:</strong>
+                    <button onclick="copyPromptText()" style="background:var(--ok);color:#000;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-weight:bold">Kopyala</button>
+                </div>
+                <textarea id="promptOutput" style="width:100%; height:300px; padding:15px; border-radius:8px; background:rgba(0,0,0,0.3); color:#e2e8f0; border:1px solid rgba(255,255,255,0.1); font-family:monospace; font-size:13px; resize:vertical; line-height:1.5" placeholder="Yukarıdan bir analiz türü seçin, prompt buraya gelecek..."></textarea>
+                <p class="hint" style="margin-top:8px">Bu metni kopyalayıp ChatGPT, Claude veya Gemini'ye yapıştırın.</p>
+             </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== ESKİ AI MODÜLÜ (YEDEKLENDİ) ==================== -->
+    <div class="main-panel" id="panelAI_OLD" style="display:none !important">
+      <div class="card">
+        <div class="card-header" style="background: linear-gradient(90deg, rgba(139,92,246,0.2) 0%, rgba(139,92,246,0) 100%); border-bottom: 1px solid rgba(139,92,246,0.2);">
+          <h2 style="display:flex;align-items:center;gap:10px;color:#C4B5FD;margin:0">
+            <span>🤖</span> Yapay Zeka Destekli Harita Yorumu
+          </h2>
+          <div style="font-size:0.9em;opacity:0.7;margin-top:4px">
+            Dekanlar, 7'ler kuralı ve özel astroloji ekolüne göre detaylı analiz
+          </div>
+        </div>
+        
+        <div class="card-body">
+          
+          <!-- GÜVENLİK KİLİDİ (PASSWORD LOCK) -->
+          <div id="aiSecurityPanel" style="text-align:center;padding:40px 20px">
+            <div style="font-size:40px;margin-bottom:16px">🔒</div>
+            <h3 style="margin:0 0 10px 0;color:#fff">Erişim Korumalı</h3>
+            <p style="color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:20px">Bu özellik özel kullanım içindir. Devam etmek için erişim şifresini girin.</p>
+            
+            <div style="display:flex;gap:10px;justify-content:center;max-width:300px;margin:0 auto">
+              <input type="password" id="aiAccessPassword" placeholder="Şifre" 
+                style="flex:1;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;text-align:center">
+              <button onclick="checkAIPassword()" style="padding:0 20px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:bold;cursor:pointer">Giriş</button>
+            </div>
+            <div id="aiAccessMsg" style="margin-top:10px;font-size:13px;height:20px"></div>
+          </div>
+
+          <!-- ANALİZ PANELİ (Başlangıçta Gizli) -->
+          <div id="aiControlPanel" style="display:none">
+            <!-- Analiz Seçenekleri -->
+            <div style="margin-bottom:24px">
+              <div style="font-weight:600;color:var(--text-main);margin-bottom:12px">Analiz Türünü Seçin:</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px">
+                <button class="ai-btn" onclick="runAIAnalysis('general')">
+                  <div class="emoji">🔮</div>
+                  <div class="text">
+                    <div class="title">Genel Analiz</div>
+                    <div class="desc">Kişilik, potansiyeller ve yaşam yolu</div>
+                  </div>
+                </button>
+                <button class="ai-btn" onclick="runAIAnalysis('career')">
+                  <div class="emoji">💼</div>
+                  <div class="text">
+                    <div class="title">Kariyer & Finans</div>
+                    <div class="desc">Meslek yetenekleri ve maddi potansiyel</div>
+                  </div>
+                </button>
+                <button class="ai-btn" onclick="runAIAnalysis('love')">
+                  <div class="emoji">❤️</div>
+                  <div class="text">
+                    <div class="title">İlişkiler & Aşk</div>
+                    <div class="desc">Duygusal ihtiyaçlar ve partner profili</div>
+                  </div>
+                </button>
+                <button class="ai-btn" onclick="runAIAnalysis('seven')">
+                  <div class="emoji">⏳</div>
+                  <div class="text">
+                    <div class="title">7'ler Döngüsü</div>
+                    <div class="desc">Mevcut yaş döngüsü ve yıl yöneticisi</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sonuç Alanı -->
+            <div id="aiResultArea" style="display:none">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div style="font-weight:600;color:var(--accent-2)">📋 Analiz Sonucu</div>
+                <button onclick="copyAIResult()" style="font-size:12px;padding:4px 10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:4px;color:#fff;cursor:pointer">Kopyala</button>
+              </div>
+              <div id="aiOutput" style="background:rgba(0,0,0,0.4);padding:20px;border-radius:12px;border:1px solid rgba(139,92,246,0.3);min-height:300px;line-height:1.6;font-size:15px;white-space:pre-wrap;color:#e2e8f0;overflow-y:auto;max-height:600px"></div>
+            </div>
+            
+            <!-- Loading Indicator -->
+            <div id="aiLoading" style="display:none;text-align:center;padding:40px">
+              <div class="spinner" style="width:40px;height:40px;border:4px solid rgba(139,92,246,0.3);border-top:4px solid #8B5CF6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px"></div>
+              <div style="color:var(--accent);font-weight:600;font-size:16px">Yıldızlar okunuyor...</div>
+              <div style="color:var(--muted);font-size:13px;margin-top:8px">Yapay zeka haritayı analiz ediyor (Sunucu yanıtı bekleniyor...)</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      
+      <style>
+        .ai-btn {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 12px;
+          padding: 16px;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-align: left;
+        }
+        .ai-btn:hover {
+          background: rgba(139,92,246,0.1);
+          border-color: rgba(139,92,246,0.4);
+          transform: translateY(-2px);
+        }
+        .ai-btn .emoji {
+          font-size: 24px;
+          background: rgba(255,255,255,0.05);
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+        }
+        .ai-btn .text .title {
+          font-weight: 700;
+          color: #fff;
+          font-size: 15px;
+          margin-bottom: 2px;
+        }
+        .ai-btn .text .desc {
+          font-size: 11px;
+          color: rgba(255,255,255,0.6);
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Markdown benzeri stil */
+        #aiOutput h3 { color: #A78BFA; margin-top: 20px; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+        #aiOutput strong { color: #fff; font-weight: 700; }
+        #aiOutput ul { padding-left: 20px; margin: 10px 0; }
+        #aiOutput li { margin-bottom: 6px; }
+      </style>
     </div>
 
     <!-- ==================== VERİLER PANEL ==================== -->
@@ -3017,6 +3199,7 @@
         const asc = readAsc('sevenAscGrid');
         const planets = readPlanets('seven', true);
         const sev = computeSeven(sevenInput.cusps, sevenInput.flags, sevenInput.add30, asc, year);
+        window.currentSevenResults = sev; // AI için global erişim
         
         // Sol panel: Asli Dekan
         renderSeven(sev, planets, sevenInput.cusps, sevenInput.flags, sevenInput.add30, asc, $('sevenResults'), aspects, decanResults);
@@ -3497,6 +3680,267 @@
       container.appendChild(infoCard);
     }
   }
+
+  // ==================== AI ANALİZ MODÜLÜ ====================
+  // Güvenlik Kontrolü
+  window.checkAIPassword = function() {
+    const pass = document.getElementById('aiAccessPassword').value;
+    const msg = document.getElementById('aiAccessMsg');
+    
+    if (pass === 'kerem123') {
+      document.getElementById('aiSecurityPanel').style.display = 'none';
+      document.getElementById('aiControlPanel').style.display = 'block';
+      msg.innerHTML = '';
+      // Oturum boyunca açık kalsın diye basit state tutabiliriz ama şimdilik her refresh'te sorar
+    } else {
+      msg.innerHTML = '<span style="color:#ef4444">Hatalı şifre!</span>';
+    }
+  };
+  
+  // Enter tuşu ile giriş
+  document.getElementById('aiAccessPassword')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') checkAIPassword();
+  });
+
+  window.copyAIResult = function() {
+    const text = document.getElementById('aiOutput').innerText;
+    navigator.clipboard.writeText(text).then(() => alert('Kopyalandı!'));
+  };
+
+  // Harita verisini AI'nın anlayacağı formata çevir
+  function prepareAIInput(chart, decans) {
+    if (!chart) return null;
+    
+    let text = "DOĞUM HARİTASI VERİLERİ:\n";
+    text += `Doğum: ${chart.day}/${chart.month}/${chart.year} ${chart.hour}:${chart.minute}\n\n`;
+    
+    text += "1. BURÇ VE EV YERLEŞİMLERİ:\n";
+    // ASC ve Evler
+    text += `Yükselen (ASC): ${SIGNS[chart.asc.signIdx]} ${chart.asc.deg}°\n`;
+    if (chart.houses) {
+      chart.houses.forEach((h, i) => {
+        text += `${i+1}. Ev Girişi: ${SIGNS[h.signIdx]} ${h.deg}°\n`;
+      });
+    }
+    text += "\n";
+    
+    // Gezegenler
+    text += "2. GEZEGEN KONUMLARI:\n";
+    const pKeys = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto','north','south','chiron','fortune'];
+    const pNames = {sun:'Güneş',moon:'Ay',mercury:'Merkür',venus:'Venüs',mars:'Mars',jupiter:'Jüpiter',saturn:'Satürn',uranus:'Uranüs',neptune:'Neptün',pluto:'Plüton',north:'KAD',south:'GAD',chiron:'Chiron',fortune:'Şans Noktası'};
+    
+    pKeys.forEach(key => {
+      const p = chart.planets[key];
+      if (p) {
+        text += `${pNames[key]}: ${SIGNS[p.signIdx]} burcunda (${p.deg}°), ${p.house}. evde.\n`;
+      }
+    });
+    text += "\n";
+    
+    // Açılar
+    text += "3. ÖNEMLİ AÇILAR:\n";
+    if (chart.aspects) {
+      chart.aspects.forEach(a => {
+        if (a.orb < 6) { // Sadece dar orblu güçlü açıları al
+          const p1 = pNames[a.planet1] || a.planet1;
+          const p2 = pNames[a.planet2] || a.planet2;
+          text += `${p1} ${a.aspect} ${p2} (Orb: ${a.orb}°)\n`;
+        }
+      });
+    }
+    text += "\n";
+    
+    // Dekan Verileri (ÖZEL EKOL)
+    if (decans && decans.length > 0) {
+      text += "4. DEKAN ANALİZİ (ÖZEL SİSTEM):\n";
+      text += "Her ev 3 dekana ayrılır. Analiz ederken o evdeki gezegenlerin hangi dekanda olduğuna ve yönetici gezegenine dikkat et.\n";
+      
+      // Sadece gezegen içeren evlerin dekanlarını verelim ki token tasarrufu olsun
+      const housesWithUI = new Set();
+      pKeys.forEach(key => { if (chart.planets[key]) housesWithUI.add(chart.planets[key].house); });
+      
+      decans.forEach(h => {
+        if (housesWithUI.has(h.house)) {
+          text += `${h.house}. Ev Dekanları: 1.Dekan(${h.decans[0].ruler}), 2.Dekan(${h.decans[1].ruler}), 3.Dekan(${h.decans[2].ruler})\n`;
+        }
+      });
+    }
+    
+    // 7'ler Kuralı (Varsa)
+    const sevenData = window.currentSevenResults; // Global değişkene atamamız lazım
+    if (sevenData) {
+      text += "\n5. 7'LER KURALI (YAŞ DÖNGÜSÜ):\n";
+      text += `Mevcut Yaş: ${sevenData.age}, Döngü: ${sevenData.currentCycle?.startAge}-${sevenData.currentCycle?.endAge} yaş arası.\n`;
+      text += `Aktif Ev: ${sevenData.currentCycle?.houseIndex}. Ev (${sevenData.currentCycle?.signName})\n`;
+      text += `Yıl Yöneticisi Gezegen: ${sevenData.yearRuler}\n`;
+    }
+    
+    return text;
+  }
+
+  // AI Analizini Başlat (Backend Üzerinden)
+  window.runAIAnalysis = async function(type) {
+    if (!lastChartData || !lastChartData.chartData) {
+      alert('Önce bir harita hesaplamanız gerekiyor!');
+      switchMainTab(0); // Dekan sekmesine at
+      return;
+    }
+    
+    // UI Güncelle
+    document.getElementById('aiResultArea').style.display = 'block';
+    document.getElementById('aiLoading').style.display = 'block';
+    document.getElementById('aiOutput').innerText = '';
+    document.getElementById('aiOutput').style.display = 'none';
+    
+    // Prompt Hazırla (Backend'e sadece veriyi ve türü göndereceğiz, prompt orada da birleştirilebilir ama burada hazırlayıp atmak daha esnek)
+    const chartText = prepareAIInput(lastChartData.chartData, lastChartData.decanResults);
+    
+    try {
+      // Backend Request
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chartData: chartText,
+          analysisType: type
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Sunucu hatası');
+      }
+
+      const data = await response.json();
+      
+      let mdText = data.text;
+      if (mdText) {
+        // Basit Markdown -> HTML
+        mdText = mdText.replace(/## (.*)/g, '<h3>$1</h3>');
+        mdText = mdText.replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>');
+        mdText = mdText.replace(/\n/g, '<br>');
+        
+        document.getElementById('aiLoading').style.display = 'none';
+        document.getElementById('aiOutput').style.display = 'block';
+        document.getElementById('aiOutput').innerHTML = mdText;
+      }
+
+    } catch (e) {
+      document.getElementById('aiLoading').style.display = 'none';
+      document.getElementById('aiOutput').style.display = 'block';
+      document.getElementById('aiOutput').innerHTML = `<span style="color:#ef4444">Hata oluştu: ${e.message}</span>`;
+    }
+  };
+
+  // ==================== YENİ PROMPT OLUŞTURUCU ====================
+  window.generatePrompt = function(type) {
+    if (!lastChartData || !lastChartData.chartData) {
+      alert('Önce "Harita Hesapla" sekmesinden bir harita oluşturmalısınız!');
+      document.querySelectorAll('.main-tab')[0].click(); // Dekan sekmesine git
+      return;
+    }
+    
+    const outputEl = document.getElementById('promptOutput');
+    outputEl.value = "Veriler işleniyor, prompt hazırlanıyor...";
+    
+    // Temel harita verisi
+    const chartDataText = prepareAIInput(lastChartData.chartData, lastChartData.decanResults);
+    
+    // Temel Rol
+    let role = "Sen, hem Klasik hem de Modern teknikleri harmanlayan, özellikle 'Dekanlar' ve '7'ler Kuralı' (Profection/Seven Year Cycles) tekniklerinde uzmanlaşmış, deneyimli bir astrologsun.\n\n";
+    role += "GÖREVİN: Aşağıda verilen doğum haritasını analiz etmek ve sorulan özel sorulara yönelik net, detaylı ve yol gösterici bir yorum yazmaktır.\n";
+    role += "TONU: Bilge, samimi, umut verici ama gerçekçi ('Polyannacılık' yapma, zorlukları da söyle ama çözüm öner). Astrolojik terimleri parantez içinde açıkla.\n\n";
+    
+    let specificInst = "";
+    
+    switch(type) {
+        case 'general':
+            specificInst = `
+---
+### ANALİZ PLANI (GENEL YORUM):
+1. **Kimlik ve Mizaç:** Yükselen burcu (Maske), Güneş (Öz) ve Ay (Duygular) sentezi. Element dengesi.
+2. **Ruhsal Yolculuk:** Kuzey Ay Düğümü (KAD) ve Güney Ay Düğümü (GAD) aksı. Kişi nereden gelip nereye gidiyor?
+3. **Güçlü ve Zayıf Yönler:** En güçlü gezegen hangisi? En zorlayıcı açı (Kare/Karşıt) hangisi ve nasıl aşılır?
+4. **Şans ve Sınavlar:** Jüpiter (Fırsatlar) ve Satürn (Dersler) hangi evlerde?
+5. **Kısa Öngörü:** Şu anki 7'ler döngüsüne (Verilerde var) göre bu yılın ana teması nedir?
+---
+`;
+            break;
+            
+        case 'love':
+            specificInst = `
+---
+### ANALİZ PLANI (AŞK VE İLİŞKİLER):
+1. **Partner Profili:** 7. Evin burcu, yöneticisi ve içindeki gezegenler. Nasıl insanlara çekiliyor?
+2. **Sevgi Dili ve Tutku:** Venüs (Sevgiyi alma/verme şekli) ve Mars (Cinsellik ve eylem) analizi.
+3. **Duygusal İhtiyaçlar:** Ay burcu ve açıları. İlişkide kendini nasıl güvende hisseder?
+4. **Flört ve Romantizm:** 5. Evin durumu. Aşk hayatı eğlenceli mi yoksa sınavlı mı?
+5. **Kilit Tavsiye:** İlişkilerde tekrarlayan bir sorun varsa (ör. Satürn veya Plüton etkisi), bunu aşmak için ne yapmalı?
+---
+`;
+            break;
+
+        case 'career':
+            specificInst = `
+---
+### ANALİZ PLANI (KARİYER, İŞ VE FİNANS):
+1. **Kariyer Zirvesi:** 10. Ev (MC) burcu, yöneticisi ve içindeki gezegenler. Kişi toplumda nasıl tanınmalı?
+2. **Para Kaynakları:** 2. Ev (Maddi yetenekler) ve 8. Ev (Yatırımlar/Miras/Borçlar).
+3. **Çalışma Tarzı:** 6. Ev ve Merkür. Nasıl bir ortamda, nasıl bir tempoda çalışmalı?
+4. **Meslek Tavsiyeleri:** Harita potansiyeline uygun 3 somut meslek veya sektör önerisi.
+5. **Başarı Anahtarı:** Satürn (Disiplin) ve Mars (Eylem gücü) bu kişiyi nasıl destekler veya engeller?
+---
+`;
+            break;
+
+        case 'seven':
+            specificInst = `
+---
+### ANALİZ PLANI (7'LER KURALI VE YILLIK ÖNGÖRÜ):
+**ÖNEMLİ:** Bu analiz tamamen kişinin şu anki yaşına ve aktif olan "Profection" (Yıllık İlerleme) evine odaklanmalıdır.
+1. **Mevcut Döngü:** Verilerde belirtilen Aktif Ev (örn. 5. Ev döngüsü) hangi konuları gündeme getiriyor?
+2. **Yıl Yöneticisi:** Bu yılın yöneticisi olan gezegen haritada nasıl konumlanmış? (Ev, burç, açılar).
+3. **Yıllık Gündem:** Bu yaşta beklenen temel olaylar, fırsatlar ve riskler neler?
+4. **Aylık/Dönemsel Uyarılar:** Yıl yöneticisinin tetiklendiği zamanlar veya temalar için tavsiyeler.
+---
+`;
+            break;
+
+        case 'child':
+            specificInst = `
+---
+### ANALİZ PLANI (ÇOCUK POTANSİYELİ VE EBEVEYNLİK):
+**NOT:** Bu analiz bir ebeveyn için hazırlanmaktadır.
+1. **Duygusal Dünya:** Ay burcu. Çocuk korktuğunda veya üzüldüğünde nasıl sakinleşir?
+2. **Zihin ve Öğrenme:** Merkür. Öğrenme stili nedir (Görsel, işitsel, deneyimsel)? Okul hayatında nelere dikkat edilmeli?
+3. **Özgüven ve Karakter:** Güneş ve Yükselen. Çocuğun parlaması için hangi yönleri desteklenmeli?
+4. **Yetenekler ve İlgi Alanları:** 5. Ev ve güçlü gezegenler. Spora mı, sanata mı, sayısal alana mı yatkın?
+5. **Ebeveynlere Not:** 4. Ev (Aile) ve 10. Ev (Otorite) göstergelerine göre, çocuk anneyi ve babayı nasıl algılıyor? İletişimde nelere dikkat etmeliler?
+---
+`;
+            break;
+    }
+
+    // Final Prompt
+    const finalPrompt = role + specificInst + "\n" + chartDataText + "\n\n" + "Lütfen yukarıdaki verileri ve analiz planını kullanarak, Markdown formatında, okuması keyifli bir analiz yaz.";
+    outputEl.value = finalPrompt;
+  };
+  
+  window.copyPromptText = function() {
+    const outputEl = document.getElementById('promptOutput');
+    const text = outputEl.value;
+    if(!text) return;
+    outputEl.select();
+    outputEl.setSelectionRange(0, 99999); // Mobil için
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('#panelPrompt button[onclick="copyPromptText()"]');
+        if(btn) {
+           const oldText = btn.innerText;
+           btn.innerText = "Kopyalandı! ✓";
+           setTimeout(() => btn.innerText = oldText, 2000);
+        }
+    });
+  };
 
   $('verilerCalc').addEventListener('click', async () => {
     const day = Number($('verilerDay').value);
