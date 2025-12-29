@@ -418,17 +418,36 @@ const SolarDekan = {
       const houseDiv = document.createElement('div');
       houseDiv.className = 'house';
       houseDiv.style.cssText = 'margin-bottom:14px';
+
+      // Evin Tarih Aralığı ve Süresi Hesaplama
+      const firstDecan = houseData.decans[0];
+      const lastDecan = houseData.decans[houseData.decans.length - 1];
+      
+      // Bitiş tarihini hesaplamak için son dekanın gününü ekleyelim
+      const endJD = lastDecan.startJD + (lastDecan.spanDays * (365.25/360) * lastDecan.spanDeg); // Yaklaşık
+      // Daha basit: Son dekanın spanDays'ini ekleyelim
+      // Aslında görsel olarak "Başlangıç Tarihi" yeterli olabilir ama "Ne zaman bitiyor" da istenmiş.
+      // Basitçe: İlk dekan tarihi - Son dekanın bitişi (bir sonraki evin başlangıcı)
+      // Şimdilik sadece Başlangıç Tarihi ve Toplam Gün yazalım.
+      const totalDays = houseData.decans.reduce((sum, d) => sum + d.spanDays, 0);
       
       // Ev başlığı
       houseDiv.innerHTML = `
-        <div class="title" style="display:flex;align-items:center;gap:12px;padding:16px 20px;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(110,231,255,.05));border-radius:12px;margin-bottom:12px;border:1px solid rgba(245,158,11,.2)">
-          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--accent-3);color:#0a1628;width:36px;height:36px;border-radius:10px;font-weight:800;font-size:20px;line-height:1">
-            ${houseNum}
+        <div class="title" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(110,231,255,.05));border-radius:12px;margin-bottom:8px;border:1px solid rgba(245,158,11,.2);flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--accent-3);color:#0a1628;width:32px;height:32px;border-radius:8px;font-weight:800;font-size:18px;line-height:1">
+              ${houseNum}
+            </div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-main)">Ev</div>
+            <div style="font-size:16px;color:var(--muted)">•</div>
+            <div style="font-size:16px;font-weight:600;color:var(--accent-3)">
+              ${this.SIGN_SYM[houseData.houseSign]} ${houseData.houseSign}
+            </div>
           </div>
-          <div style="font-size:18px;font-weight:700;color:var(--text-main)">Ev</div>
-          <div style="font-size:18px;color:var(--muted)">•</div>
-          <div style="font-size:18px;font-weight:600;color:var(--accent-3)">
-            ${this.SIGN_SYM[houseData.houseSign]} ${houseData.houseSign}
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;background:rgba(0,0,0,0.2);padding:4px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1)">
+             <span style="color:var(--text-main);font-weight:600">📅 ${firstDecan.startDateStr}</span>
+             <span style="color:var(--muted)">•</span>
+             <span style="color:var(--accent-2)">~${Math.round(totalDays)} gün</span>
           </div>
         </div>
       `;
@@ -436,32 +455,51 @@ const SolarDekan = {
       const list = document.createElement('div');
       list.className = 'list';
       
+      // Element renkleri (transparent background için)
+      const EL_BG = {
+        fire: 'rgba(239,68,68,0.08)',
+        earth: 'rgba(34,197,94,0.08)',
+        air: 'rgba(56,189,248,0.08)',
+        water: 'rgba(59,130,246,0.08)'
+      };
+      const EL_BORDER = {
+        fire: 'rgba(239,68,68,0.2)',
+        earth: 'rgba(34,197,94,0.2)',
+        air: 'rgba(56,189,248,0.2)',
+        water: 'rgba(59,130,246,0.2)'
+      };
+
       // Bu evin 3 dekanı
       houseData.decans.forEach(d => {
         const elemClass = this.ELEMENT_MAP[d.decanSign] || 'fire';
-        
-        // Dekanın başlangıç derecesi (ilk veride yoksa hesapla)
         const startDegInfo = d.startText || '';
         
         const decanRow = document.createElement('div');
-        // Yeni CSS class ile wrapper
+        // Kompakt stil
         decanRow.className = `solar-decan-item el-${elemClass}`;
+        decanRow.style.cssText = `
+            background: ${EL_BG[elemClass]};
+            border: 1px solid ${EL_BORDER[elemClass]};
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+        `;
         
-        // Format Güncellendi: 
-        // Satır 1: Dekan No ve Başlangıç Derecesi + Ev Burcu
-        // Satır 2: Dekan Burcu ve Yönetici
-        // Satır 3: Tarih ve Süre
+        // Format: 
+        // 1. dekan • 2° 13' ♑ Oğlak → ♉ Boğa (♀ Venüs)
+        // 5 Ocak 2021 (Hemen altında)
         decanRow.innerHTML = `
-          <div class="solar-decan-row-1">
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:13px;line-height:1.4;margin-bottom:2px">
              <span style="font-weight:700;color:var(--accent-3)">${d.decanNum}. dekan</span>
-             <span style="font-family:'JetBrains Mono'">${startDegInfo} ${this.SIGN_SYM[d.houseSign]} ${d.houseSign}</span>
+             <span style="color:var(--muted)">•</span>
+             <span style="font-family:'JetBrains Mono';opacity:0.9">${startDegInfo}</span>
+             <span style="color:var(--text-muted)">${this.SIGN_SYM[d.houseSign]} ${d.houseSign}</span>
+             <span style="color:var(--muted)">→</span>
+             <span style="font-weight:600;color:var(--text-main)">${this.SIGN_SYM[d.decanSign]} ${d.decanSign}</span>
+             <span style="font-size:12px;opacity:0.7;margin-left:2px">(${this.RULER_SYM[d.ruler] || ''} ${d.ruler})</span>
           </div>
-          <div class="solar-decan-row-2">
-             → ${this.SIGN_SYM[d.decanSign]} ${d.decanSign} <span style="font-size:12px;opacity:0.8;margin-left:4px">(${this.RULER_SYM[d.ruler] || ''} ${d.ruler})</span>
-          </div>
-          <div class="solar-decan-row-3">
-             <span style="font-weight:600;color:var(--accent-3)">${d.startDateStr}</span>
-             <span>~${d.spanDays} gün</span>
+          <div style="font-size:12px;font-weight:600;color:var(--accent);margin-top:2px;margin-left:2px">
+             📅 ${d.startDateStr} <span style="font-weight:400;opacity:0.6;margin-left:4px">(~${d.spanDays} gün)</span>
           </div>
         `;
         list.appendChild(decanRow);
@@ -471,25 +509,24 @@ const SolarDekan = {
           d.planets.forEach(p => {
             const pCard = document.createElement('div');
             pCard.className = 'kv planet';
-            pCard.style.cssText = 'margin-left:20px;padding:10px 14px;background:rgba(245,158,11,.08);border-left:3px solid var(--accent-3);margin-bottom:4px;cursor:pointer';
+            pCard.style.cssText = 'margin-left:16px;padding:6px 10px;background:rgba(0,0,0,0.2);border-left:2px solid var(--accent-3);margin-bottom:2px;cursor:pointer;font-size:13px;border-radius:0 6px 6px 0';
             
             // Açıları hesapla
             const aspects = getAspectsFor(p.key);
             const hasAspects = aspects.length > 0;
             
             // Tarih bilgisi ve açı badge
-            const dateInfo = p.dateStr ? `<span style="color:var(--accent);font-weight:600">→ ${p.dateStr}</span>` : '';
-            const aspectBadge = hasAspects ? `<span class="aspect-toggle" style="color:var(--accent-2);font-size:12px;margin-left:auto;cursor:pointer"> ▼ ${aspects.length} açı</span>` : '';
+            const dateInfo = p.dateStr ? `<span style="color:var(--accent);font-weight:600;margin-left:auto">→ ${p.dateStr}</span>` : '';
+            const aspectBadge = hasAspects ? `<span class="aspect-toggle" style="color:var(--accent-2);font-size:11px;margin-left:6px;cursor:pointer"> ▼ ${aspects.length} açı</span>` : '';
             
             pCard.innerHTML = `
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                 <span style="font-weight:700">${p.sym} ${p.name}</span>
                 <span style="color:var(--muted)">•</span>
-                <span>${p.sign} ${this.SIGN_SYM[p.sign]}</span>
-                <span style="color:var(--muted)">•</span>
-                <span style="font-family:monospace">${p.deg}°${String(p.min).padStart(2,'0')}'</span>
-                ${dateInfo}
+                <span>${this.SIGN_SYM[p.sign]}</span>
+                <span style="font-family:monospace;font-size:12px">${p.deg}°${String(p.min).padStart(2,'0')}'</span>
                 ${aspectBadge}
+                ${dateInfo}
               </div>
             `;
             
@@ -499,12 +536,12 @@ const SolarDekan = {
             if (hasAspects) {
               const aspectsContainer = document.createElement('div');
               aspectsContainer.className = 'planet-aspects';
-              aspectsContainer.style.cssText = 'display:none;margin-left:36px;padding:6px 0;border-left:2px solid rgba(139,92,246,0.3);margin-bottom:8px';
+              aspectsContainer.style.cssText = 'display:none;margin-left:30px;padding:4px 0;border-left:1px solid rgba(139,92,246,0.3);margin-bottom:6px';
               
               aspects.forEach(asp => {
                 const aspEl = document.createElement('div');
-                aspEl.style.cssText = 'padding:6px 14px;font-size:13px;background:rgba(139,92,246,0.05);margin:3px 0;border-radius:6px';
-                aspEl.innerHTML = `<span style="color:${asp.color};font-weight:bold">${asp.symbol}</span> ${asp.name} <span style="color:var(--muted)">${asp.planetSym} ${asp.planetName}</span> <span style="font-size:11px;opacity:0.7">(${asp.orb}°)</span>`;
+                aspEl.style.cssText = 'padding:4px 10px;font-size:12px;background:rgba(139,92,246,0.05);margin:2px 0;border-radius:4px';
+                aspEl.innerHTML = `<span style="color:${asp.color};font-weight:bold">${asp.symbol}</span> ${asp.name} <span style="color:var(--muted)">${asp.planetSym} ${asp.planetName}</span> <span style="font-size:10px;opacity:0.7">(${asp.orb}°)</span>`;
                 aspectsContainer.appendChild(aspEl);
               });
               
