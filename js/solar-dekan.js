@@ -175,7 +175,7 @@ const SolarDekan = {
       startDate: startDate,
       startDateStr: `${startDate.day} ${this.MONTHS[startDate.month - 1]} ${startDate.year}`,
       startText: firstDecan.startText || '',
-      spanDays: Math.round(firstDecanDays),
+      spanDays: Math.max(1, Math.round(firstDecanDays)), // Minimum 1 gün göster
       isFirst: true,
       planets: []
     });
