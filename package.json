@@ -4,6 +4,9 @@
   "type": "module",
   "main": "ephemeris.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "start": "node server.cjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
