@@ -171,8 +171,29 @@
 
   </div>
 
-  <!-- Swiss Ephemeris (keep for compatibility) -->
-  <script src="/ephemeris.js"></script>
+  <!-- Swiss Ephemeris WASM Module -->
+  <script type="module">
+    import * as SwissEph from '/ephemeris.js';
+    
+    // Expose to window for global access
+    window.SwissEphemeris = {
+      calculateChart: SwissEph.calculateChart,
+      initEphemeris: SwissEph.initEphemeris,
+      isReady: SwissEph.isEphemerisReady,
+      getTurkeyOffset: SwissEph.getTurkeyOffset,
+      findSolarCross: SwissEph.findSolarCross,
+      getJulianDay: SwissEph.getJulianDay,
+      PLANETS: SwissEph.PLANETS,
+      SIGNS: SwissEph.SIGNS
+    };
+    
+    // Auto-initialize
+    SwissEph.initEphemeris().then(ready => {
+      if (ready) {
+        console.log('🌟 Swiss Ephemeris ready on window.SwissEphemeris');
+      }
+    });
+  </script>
   
   <!-- Main Application -->
   <script type="module" src="/src/main.js"></script>
