@@ -57,7 +57,9 @@ export const TZ_DATA = {
   "Europe/Zurich": [1, 2, 3, 10],
   "America/New_York": [-5, -4, 3, 11],
   "America/Chicago": [-6, -5, 3, 11],
-  "America/Los_Angeles": [-8, -7, 3, 11]
+  "America/Los_Angeles": [-8, -7, 3, 11],
+  "Europe/Bucharest": [2, 3, 3, 10], // Doğu Avrupa (Bulgaristan, Romanya vs)
+  "Europe/Moscow": [3, 3, 0, 0] // Moskova (Standart ve Yaz saati aynı)
 };
 
 // ========== COUNTRY & CITY DATABASE ==========
@@ -141,6 +143,33 @@ export const COUNTRIES = {
   CH: {name: "İsviçre", tz: "Europe/Zurich", cities: {
     "Zürich": {lat:47.3769,lng:8.5417}, "Genève": {lat:46.2044,lng:6.1432}, "Basel": {lat:47.5596,lng:7.5886},
     "Bern": {lat:46.9480,lng:7.4474}, "Lausanne": {lat:46.5197,lng:6.6323}
+  }},
+  BG: {name: "Bulgaristan", tz: "Europe/Bucharest", cities: {
+    "Sofya": {lat:42.6977,lng:23.3219}, "Plovdiv": {lat:42.1354,lng:24.7453}, "Varna": {lat:43.2141,lng:27.9147},
+    "Burgas": {lat:42.5048,lng:27.4626}, "Ruse": {lat:43.8356,lng:25.9657}, "Stara Zagora": {lat:42.4258,lng:25.6345},
+    "Pleven": {lat:43.4170,lng:24.6067}, "Sliven": {lat:42.6816,lng:26.3292}, "Dobriç": {lat:43.5667,lng:27.8333},
+    "Şumen": {lat:43.2708,lng:26.9225}, "Pernik": {lat:42.6000,lng:23.0333}, "Hasköy": {lat:41.9344,lng:25.5556},
+    "Yambol": {lat:42.4833,lng:26.5000}, "Pazarcık": {lat:42.2000,lng:24.3333}, "Blagoevgrad": {lat:42.0167,lng:23.1000}
+  }},
+  RO: {name: "Romanya", tz: "Europe/Bucharest", cities: {
+    "Bükreş": {lat:44.4268,lng:26.1025}, "Cluj-Napoca": {lat:46.7712,lng:23.6236}, "Temeşvar": {lat:45.7489,lng:21.2087},
+    "Yaş": {lat:47.1585,lng:27.6014}, "Köstence": {lat:44.1792,lng:28.6121}, "Craiova": {lat:44.3302,lng:23.7949},
+    "Brașov": {lat:45.6427,lng:25.5887}, "Galați": {lat:45.4353,lng:28.0080}, "Ploiești": {lat:44.9500,lng:26.0167},
+    "Oradea": {lat:47.0722,lng:21.9211}, "Brăila": {lat:45.2692,lng:27.9575}, "Arad": {lat:46.1667,lng:21.3167},
+    "Piteşti": {lat:44.8565,lng:24.8692}, "Sibiu": {lat:45.7983,lng:24.1256}, "Bacău": {lat:46.5670,lng:26.9146},
+    "Târgu Mureș": {lat:46.5456,lng:24.5625}, "Baia Mare": {lat:47.6567,lng:23.5850}, "Buzău": {lat:45.1500,lng:26.8333},
+    "Botoșani": {lat:47.7486,lng:26.6694}, "Satu Mare": {lat:47.7925,lng:22.8858}
+  }},
+  RU: {name: "Rusya", tz: "Europe/Moscow", cities: {
+    "Moskova": {lat:55.7558,lng:37.6173}, "Saint Petersburg": {lat:59.9343,lng:30.3351}, "Kazan": {lat:55.7961,lng:49.1064},
+    "Soçi": {lat:43.6028,lng:39.7342}, "Krasnodar": {lat:45.0355,lng:38.9753}, "Novosibirsk": {lat:55.0084,lng:82.9357},
+    "Yekaterinburg": {lat:56.8389,lng:60.6057}, "Nizhny Novgorod": {lat:56.2965,lng:43.9361}, "Samara": {lat:53.1959,lng:50.1002},
+    "Omsk": {lat:54.9885,lng:73.3242}, "Rostov-na-Donu": {lat:47.2357,lng:39.7015}, "Ufa": {lat:54.7388,lng:55.9721},
+    "Krasnoyarsk": {lat:56.0153,lng:92.8932}, "Voronej": {lat:51.6720,lng:39.1843}, "Perm": {lat:58.0105,lng:56.2502},
+    "Volgograd": {lat:48.7080,lng:44.5133}, "Saratov": {lat:51.5330,lng:46.0344}, "Tyumen": {lat:57.1522,lng:65.5272},
+    "Tolyatti": {lat:53.5078,lng:49.4204}, "Barnaul": {lat:53.3548,lng:83.7698}, "İrkutsk": {lat:52.2978,lng:104.2964},
+    "Ulyanovsk": {lat:54.3282,lng:48.3866}, "Vladivostok": {lat:43.1332,lng:131.9113}, "Yaroslavl": {lat:57.6261,lng:39.8845},
+    "Mahachkala": {lat:42.9849,lng:47.5047}
   }}
 };
 
