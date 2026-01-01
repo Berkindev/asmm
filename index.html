@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
+  <title>Astroharmony</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-dark text-gray-100 min-h-screen">
+  
+  <!-- Main Container -->
+  <div id="app" class="max-w-7xl mx-auto px-4 py-6">
+    
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">
+        🌙 Astroharmony
+      </h1>
+      <p class="text-gray-400 mt-2">Astrolojik Harita Hesaplama</p>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="main-tabs flex gap-0 border-b-2 border-gray-800 mb-6">
+      <button class="tab-btn active" data-tab="decan">Dekan Hesaplama</button>
+      <button class="tab-btn" data-tab="seven">7'li Sistem</button>
+      <button class="tab-btn" data-tab="solar">Solar</button>
+      <button class="tab-btn" data-tab="harita">Harita</button>
+    </nav>
+
+    <!-- Panels -->
+    <main>
+      <!-- Dekan Panel -->
+      <section id="panel-decan" class="main-panel active animate-fade-in">
+        <div class="grid lg:grid-cols-2 gap-6">
+          
+          <!-- Input Form -->
+          <div class="card p-6">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+              📅 Doğum Bilgileri
+            </h2>
+            
+            <!-- Date Inputs -->
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Gün</label>
+                <input type="number" id="autoDecanDay" class="input-field" min="1" max="31" placeholder="15">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Ay</label>
+                <input type="number" id="autoDecanMonth" class="input-field" min="1" max="12" placeholder="8">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Yıl</label>
+                <input type="number" id="autoDecanYear" class="input-field" min="1900" max="2100" placeholder="1990">
+              </div>
+            </div>
+            
+            <!-- Time Inputs -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Saat</label>
+                <input type="number" id="autoDecanHour" class="input-field" min="0" max="23" placeholder="14">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Dakika</label>
+                <input type="number" id="autoDecanMinute" class="input-field" min="0" max="59" placeholder="30">
+              </div>
+            </div>
+
+            <!-- Location -->
+            <h3 class="text-md font-semibold mb-3 mt-6">📍 Doğum Yeri</h3>
+            
+            <!-- Quick Locations -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              <button class="quick-loc" data-city="İstanbul" data-lat="41.0082" data-lng="28.9784">İstanbul</button>
+              <button class="quick-loc" data-city="Ankara" data-lat="39.9334" data-lng="32.8597">Ankara</button>
+              <button class="quick-loc" data-city="İzmir" data-lat="38.4192" data-lng="27.1287">İzmir</button>
+              <button class="quick-loc" data-city="Antalya" data-lat="36.8969" data-lng="30.7133">Antalya</button>
+            </div>
+            
+            <!-- Country/City Selects -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Ülke</label>
+                <select id="autoDecanCountry" class="input-field country-select">
+                  <option value="">Ülke seç</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Şehir</label>
+                <select id="autoDecanCity" class="input-field city-select">
+                  <option value="">Şehir seç</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Coordinates -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Enlem</label>
+                <input type="number" id="autoDecanLat" class="input-field" step="0.0001" placeholder="41.0082">
+              </div>
+              <div>
+                <label class="block text-sm text-gray-400 mb-1">Boylam</label>
+                <input type="number" id="autoDecanLng" class="input-field" step="0.0001" placeholder="28.9784">
+              </div>
+            </div>
+            
+            <!-- Calculate Button -->
+            <button id="btnCalculate" class="btn-primary w-full">
+              ✨ Hesapla
+            </button>
+          </div>
+          
+          <!-- Results -->
+          <div class="card p-6">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+              📊 Sonuçlar
+            </h2>
+            <div id="decanResults" class="text-gray-400">
+              Hesaplama yapmak için formu doldurun ve "Hesapla" butonuna tıklayın.
+            </div>
+          </div>
+          
+        </div>
+      </section>
+
+      <!-- 7li Sistem Panel -->
+      <section id="panel-seven" class="main-panel">
+        <div class="card p-6">
+          <h2 class="text-lg font-bold mb-4">7'li Sistem</h2>
+          <div id="sevenResults" class="text-gray-400">
+            Önce Dekan sekmesinde hesaplama yapın.
+          </div>
+        </div>
+      </section>
+
+      <!-- Solar Panel -->
+      <section id="panel-solar" class="main-panel">
+        <div class="card p-6">
+          <h2 class="text-lg font-bold mb-4">Solar Return</h2>
+          <div id="solarResults" class="text-gray-400">
+            Önce Dekan sekmesinde hesaplama yapın.
+          </div>
+        </div>
+      </section>
+
+      <!-- Harita Panel -->
+      <section id="panel-harita" class="main-panel">
+        <div class="card p-6">
+          <h2 class="text-lg font-bold mb-4">Astrolojik Harita</h2>
+          <div class="flex justify-center">
+            <svg id="wheelChart" viewBox="0 0 1400 1400" class="w-full max-w-3xl aspect-square">
+              <!-- Chart will be drawn here -->
+              <text x="700" y="700" text-anchor="middle" fill="#666" font-size="20">
+                Hesaplama yapın...
+              </text>
+            </svg>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center text-gray-500 text-sm mt-12 py-6 border-t border-gray-800">
+      <p>Astroharmony © 2026 | Modüler Yapı v2.0</p>
+    </footer>
+
+  </div>
+
+  <!-- Swiss Ephemeris (keep for compatibility) -->
+  <script src="/ephemeris.js"></script>
+  
+  <!-- Main Application -->
+  <script type="module" src="/src/main.js"></script>
+  
+</body>
+</html>
