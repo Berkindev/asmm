@@ -33,6 +33,7 @@ import {
 import { calculateChart, isSwissEphReady } from './modules/chart-calculator.js';
 import { calculateAspects, calculateChartAspects } from './modules/aspect-calculator.js';
 import { computeDecan, computeSeven, getElement as getElementFromSign, fmt, fmtAbsMin } from './modules/decan-calculator.js';
+import { calculateSolarReturn, calculateSolarMonths } from './modules/solar-return.js';
 
 // Utility functions
 import { 
@@ -97,6 +98,9 @@ function init() {
   
   // Initialize calculate button
   initCalculateButton();
+  
+  // Initialize Solar Return button
+  initSolarButton();
   
   console.log('✅ All modules initialized');
 }
@@ -201,6 +205,65 @@ function initCalculateButton() {
   const btn = $('btnCalculate');
   if (btn) {
     btn.addEventListener('click', handleCalculate);
+  }
+}
+
+/**
+ * Initialize Solar Return button
+ */
+function initSolarButton() {
+  const btn = $('btnCalculateSolar');
+  if (btn) {
+    btn.addEventListener('click', handleSolarCalculate);
+  }
+}
+
+/**
+ * Handle Solar Return calculation
+ */
+async function handleSolarCalculate() {
+  const btn = $('btnCalculateSolar');
+  const resultsDiv = $('solarResults');
+  
+  if (!globalNatalData) {
+    if (resultsDiv) {
+      resultsDiv.innerHTML = '<div class="text-amber-400">⚠️ Önce Dekan sekmesinde natal harita hesaplayın.</div>';
+    }
+    return;
+  }
+  
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Hesaplanıyor...';
+    }
+    
+    const solarYear = parseInt($('solarYear')?.value) || new Date().getFullYear();
+    
+    console.log(`☀️ Calculating Solar Return for ${solarYear}`);
+    
+    const solarData = await calculateSolarReturn(globalNatalData, solarYear);
+    
+    if (solarData.error) {
+      if (resultsDiv) {
+        resultsDiv.innerHTML = `<div class="text-red-400">❌ ${solarData.error}</div>`;
+      }
+      return;
+    }
+    
+    // Render Solar Return results
+    renderSolarResults(solarData);
+    
+  } catch (error) {
+    console.error('❌ Solar Return error:', error);
+    if (resultsDiv) {
+      resultsDiv.innerHTML = `<div class="text-red-400">Hata: ${error.message}</div>`;
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🌟 Solar Return Hesapla';
+    }
   }
 }
 
@@ -377,6 +440,82 @@ function renderSevenResults(sevenResults, chart, year) {
     html += `</div>`;
   });
   html += `</div>`;
+  
+  container.innerHTML = html;
+}
+
+/**
+ * Render Solar Return results
+ */
+function renderSolarResults(solarData) {
+  const container = $('solarResults');
+  if (!container) return;
+  
+  const { natalSun, solarReturnDate, solarYear, chart, approximate } = solarData;
+  
+  let html = '';
+  
+  // Solar Return Date Info
+  html += `<div class="mb-6 p-4 bg-amber-500/10 rounded-lg border border-amber-500/30">`;
+  html += `<h3 class="font-bold text-amber-400 mb-2">☀️ Solar Return ${solarYear}</h3>`;
+  html += `<div class="grid grid-cols-2 gap-4 text-sm">`;
+  html += `<div>`;
+  html += `<span class="text-gray-400">Natal Güneş:</span><br>`;
+  html += `<span class="font-semibold">${natalSun.sign} ${natalSun.deg}°${String(natalSun.min).padStart(2,'0')}'</span>`;
+  html += `</div>`;
+  html += `<div>`;
+  html += `<span class="text-gray-400">Solar Return Tarihi:</span><br>`;
+  html += `<span class="font-semibold">${solarReturnDate.day}/${solarReturnDate.month}/${solarReturnDate.year}</span>`;
+  html += `<span class="text-gray-500"> ${solarReturnDate.hour}:${String(solarReturnDate.minute).padStart(2,'0')}</span>`;
+  if (approximate) {
+    html += `<span class="text-yellow-500 text-xs ml-2">(yaklaşık)</span>`;
+  }
+  html += `</div>`;
+  html += `</div>`;
+  html += `</div>`;
+  
+  // Solar Return Chart Summary
+  if (chart && chart.asc) {
+    html += `<div class="mb-4 p-4 bg-dark-lighter rounded-lg border border-gray-700">`;
+    html += `<h4 class="font-semibold text-amber-400 mb-2">Solar Return Haritası</h4>`;
+    html += `<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">`;
+    html += `<div><span class="text-gray-400">ASC:</span> <span class="font-semibold">${SIGNS[chart.asc.signIdx]} ${chart.asc.deg}°</span></div>`;
+    
+    if (chart.planets?.sun) {
+      html += `<div><span class="text-gray-400">☉:</span> <span class="font-semibold">${SIGNS[chart.planets.sun.signIdx]} ${chart.planets.sun.deg}°</span></div>`;
+    }
+    if (chart.planets?.moon) {
+      html += `<div><span class="text-gray-400">☽:</span> <span class="font-semibold">${SIGNS[chart.planets.moon.signIdx]} ${chart.planets.moon.deg}°</span></div>`;
+    }
+    if (chart.mc) {
+      html += `<div><span class="text-gray-400">MC:</span> <span class="font-semibold">${SIGNS[chart.mc.signIdx]} ${chart.mc.deg}°</span></div>`;
+    }
+    html += `</div>`;
+    html += `</div>`;
+    
+    // Planets in houses
+    html += `<div class="p-4 bg-dark-card rounded-lg border border-gray-700">`;
+    html += `<h4 class="font-semibold text-amber-400 mb-3">Gezegenler</h4>`;
+    html += `<div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">`;
+    
+    const planetList = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+    const planetSymbols = { sun: '☉', moon: '☽', mercury: '☿', venus: '♀', mars: '♂', jupiter: '♃', saturn: '♄', uranus: '♅', neptune: '♆', pluto: '♇' };
+    const planetNames = { sun: 'Güneş', moon: 'Ay', mercury: 'Merkür', venus: 'Venüs', mars: 'Mars', jupiter: 'Jüpiter', saturn: 'Satürn', uranus: 'Uranüs', neptune: 'Neptün', pluto: 'Plüton' };
+    
+    planetList.forEach(key => {
+      if (chart.planets?.[key]) {
+        const p = chart.planets[key];
+        html += `<div class="p-2 bg-dark-lighter rounded">`;
+        html += `<span class="text-amber-400">${planetSymbols[key]}</span> `;
+        html += `<span class="font-semibold">${SIGNS[p.signIdx]} ${p.deg}°</span> `;
+        html += `<span class="text-gray-500">Ev ${p.house}</span>`;
+        html += `</div>`;
+      }
+    });
+    
+    html += `</div>`;
+    html += `</div>`;
+  }
   
   container.innerHTML = html;
 }

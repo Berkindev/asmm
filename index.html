@@ -141,9 +141,24 @@
       <!-- Solar Panel -->
       <section id="panel-solar" class="main-panel">
         <div class="card p-6">
-          <h2 class="text-lg font-bold mb-4">Solar Return</h2>
+          <h2 class="text-lg font-bold mb-4 text-amber-400">☀️ Solar Return</h2>
+          
+          <!-- Year selector -->
+          <div class="mb-4 p-4 bg-dark-lighter rounded-lg border border-amber-500/30">
+            <div class="flex items-center gap-4">
+              <label class="text-gray-400">Solar Yılı:</label>
+              <input type="number" id="solarYear" class="input-field w-32" min="1900" max="2100" value="2026">
+              <button id="btnCalculateSolar" class="btn-secondary">
+                🌟 Solar Return Hesapla
+              </button>
+            </div>
+            <p class="text-sm text-gray-500 mt-2">
+              Önce Dekan sekmesinde natal harita hesaplayın.
+            </p>
+          </div>
+          
           <div id="solarResults" class="text-gray-400">
-            Önce Dekan sekmesinde hesaplama yapın.
+            Solar Return hesaplamak için önce natal harita hesaplayın ve yukarıdan yıl seçin.
           </div>
         </div>
       </section>
