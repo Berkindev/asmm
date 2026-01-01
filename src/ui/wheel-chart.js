@@ -194,6 +194,145 @@ function drawHouses(chartData, converter, decanResults) {
 }
 
 /**
+ * Draw planets with collision detection
+ */
+function drawPlanets(chartData, converter, enabledPlanets) {
+  const { cx, cy, radiusZodiac, radiusHouse, radiusInner } = CHART_CONFIG;
+  const { toAngle, polarX, polarY } = converter;
+  
+  let html = '';
+  
+  if (!chartData.planets) return html;
+  
+  // Planet list with colors
+  const planetColors = {
+    sun: '#F59E0B', moon: '#E2E8F0', mercury: '#A78BFA', venus: '#EC4899',
+    mars: '#EF4444', jupiter: '#3B82F6', saturn: '#6B7280', uranus: '#06B6D4',
+    neptune: '#8B5CF6', pluto: '#78716C', chiron: '#10B981', north: '#6EE7FF',
+    south: '#FF6EE7', fortune: '#22C55E'
+  };
+  
+  const planetSyms = {
+    sun: '☉', moon: '☽', mercury: '☿', venus: '♀', mars: '♂', jupiter: '♃',
+    saturn: '♄', uranus: '♅', neptune: '♆', pluto: '♇', chiron: '⚷', north: '☊',
+    south: '☋', fortune: '⊕'
+  };
+  
+  // Sort planets by longitude
+  const sortedPlanets = PLANET_LIST
+    .filter(key => chartData.planets[key] && enabledPlanets[key])
+    .map(key => ({
+      key,
+      ...chartData.planets[key],
+      longitude: chartData.planets[key].longitude || (chartData.planets[key].signIdx * 30 + chartData.planets[key].deg + chartData.planets[key].min / 60)
+    }))
+    .sort((a, b) => a.longitude - b.longitude);
+  
+  // 4-layer collision detection
+  const midPoint = (radiusZodiac + radiusInner) / 2;
+  const layers = [midPoint + 55, midPoint + 20, midPoint - 15, midPoint - 50];
+  const minSpacing = 10;
+  
+  // Group planets by proximity
+  const groups = [];
+  let currentGroup = [];
+  
+  sortedPlanets.forEach((p, idx) => {
+    if (idx === 0 || p.longitude - sortedPlanets[idx - 1].longitude < minSpacing) {
+      currentGroup.push(p);
+    } else {
+      if (currentGroup.length > 0) groups.push([...currentGroup]);
+      currentGroup = [p];
+    }
+  });
+  if (currentGroup.length > 0) groups.push(currentGroup);
+  
+  // Assign layers
+  const planetPositions = {};
+  groups.forEach(group => {
+    group.forEach((p, idx) => {
+      p.displayRadius = layers[idx % layers.length];
+    });
+  });
+  
+  // Draw each planet
+  sortedPlanets.forEach(p => {
+    const midX = polarX(p.displayRadius, p.longitude);
+    const midY = polarY(p.displayRadius, p.longitude);
+    const innerX = polarX(radiusInner + 8, p.longitude);
+    const innerY = polarY(radiusInner + 8, p.longitude);
+    const edgeX = polarX(radiusZodiac, p.longitude);
+    const edgeY = polarY(radiusZodiac, p.longitude);
+    
+    const sym = planetSyms[p.key] || '?';
+    const color = planetColors[p.key] || '#888';
+    
+    // Store position for aspects
+    planetPositions[p.key] = { x: innerX, y: innerY, color, longitude: p.longitude };
+    
+    // Connection line
+    html += `<line x1="${midX}" y1="${midY}" x2="${innerX}" y2="${innerY}" stroke="${color}" stroke-width="1" stroke-opacity="0.4"/>`;
+    
+    // Arrow at zodiac edge
+    const angle = toAngle(p.longitude);
+    const arrowSize = 5;
+    const ax1 = edgeX + arrowSize * Math.cos(angle + Math.PI - 0.35);
+    const ay1 = edgeY - arrowSize * Math.sin(angle + Math.PI - 0.35);
+    const ax2 = edgeX + arrowSize * Math.cos(angle + Math.PI + 0.35);
+    const ay2 = edgeY - arrowSize * Math.sin(angle + Math.PI + 0.35);
+    html += `<polygon points="${edgeX},${edgeY} ${ax1},${ay1} ${ax2},${ay2}" fill="${color}" opacity="0.8"/>`;
+    
+    // Planet circle and symbol
+    html += `<circle cx="${midX}" cy="${midY}" r="18" fill="rgba(11, 15, 20, 0.85)" stroke="${color}" stroke-width="2"/>`;
+    html += `<text x="${midX}" y="${midY + 2}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="22" font-weight="bold">${sym}</text>`;
+    
+    // Degree label
+    const degLabelOffset = 24;
+    const degLabelX = midX + degLabelOffset * Math.cos(angle - Math.PI/2);
+    const degLabelY = midY - degLabelOffset * Math.sin(angle - Math.PI/2);
+    html += `<text x="${degLabelX}" y="${degLabelY}" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="10" font-weight="600" opacity="0.9">${p.deg}°${String(p.min).padStart(2,'0')}'</text>`;
+    
+    // Inner marker
+    html += `<circle cx="${innerX}" cy="${innerY}" r="6" fill="${color}" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>`;
+  });
+  
+  return { html, planetPositions };
+}
+
+/**
+ * Draw aspect lines between planets
+ */
+function drawAspects(chartData, planetPositions) {
+  let html = '';
+  
+  if (!chartData.aspects || chartData.aspects.length === 0) return html;
+  
+  const aspectColors = {
+    'Kavuşum': '#FFD700',
+    'Karşıt': '#3B82F6',
+    'Üçgen': '#22C55E',
+    'Kare': '#EF4444',
+    'Altmışlık': '#38BDF8',
+    'Yüzelllik': '#A855F7'
+  };
+  
+  chartData.aspects.forEach(asp => {
+    const p1 = planetPositions[asp.planet1];
+    const p2 = planetPositions[asp.planet2];
+    
+    if (p1 && p2) {
+      const color = aspectColors[asp.aspect] || '#666';
+      const opacity = asp.exact ? 0.8 : 0.4;
+      const width = asp.exact ? 2 : 1;
+      
+      html += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${color}" stroke-width="${width}" stroke-opacity="${opacity}"/>`;
+    }
+  });
+  
+  return html;
+}
+
+/**
  * Main draw function
  */
 export function drawWheelChart(chartData, decanResults) {
@@ -211,7 +350,6 @@ export function drawWheelChart(chartData, decanResults) {
   
   const ascLong = chartData.asc.longitude || (chartData.asc.signIdx * 30 + chartData.asc.deg + chartData.asc.min / 60);
   const converter = createAngleConverter(ascLong);
-  const { toAngle, polarX, polarY } = converter;
   
   const enabledPlanets = getEnabledPlanets();
   
@@ -233,7 +371,12 @@ export function drawWheelChart(chartData, decanResults) {
   // Inner circle
   html += `<circle cx="${cx}" cy="${cy}" r="${radiusInner}" fill="none" stroke="rgba(150,150,150,0.4)" stroke-width="1.5"/>`;
   
-  // Planets would be drawn here (large function, keeping in main file for now)
+  // Aspects (draw first so they're behind planets)
+  const { html: planetHtml, planetPositions } = drawPlanets(chartData, converter, enabledPlanets);
+  html += drawAspects(chartData, planetPositions);
+  
+  // Planets
+  html += planetHtml;
   
   svg.innerHTML = html;
 }

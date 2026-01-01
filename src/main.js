@@ -253,8 +253,12 @@ async function handleCalculate() {
         
         globalDecanResults = computeDecan(chart.houses, sameFlags, add30Flags, ascIdx);
         
+        // Calculate 7'li sistem
+        const sevenResults = computeSeven(chart.houses, sameFlags, add30Flags, ascIdx, year);
+        
         // Render results
         renderDecanResults(globalDecanResults, chart);
+        renderSevenResults(sevenResults, chart, year);
         
         // Draw wheel chart
         drawWheelChart(chart, globalDecanResults);
@@ -319,6 +323,54 @@ function renderDecanResults(results, chart) {
       html += `<div class="font-semibold">${decan.index}. Dekan</div>`;
       html += `<div class="text-xs text-gray-400">${decan.decanSign}</div>`;
       html += `<div class="text-xs">${decan.ruler}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+    html += `</div>`;
+  });
+  html += `</div>`;
+  
+  container.innerHTML = html;
+}
+
+/**
+ * Render 7-year system results
+ */
+function renderSevenResults(sevenResults, chart, year) {
+  const container = $('sevenResults');
+  if (!container) return;
+  
+  let html = '';
+  
+  html += `<div class="mb-4 p-3 bg-dark-lighter rounded-lg border border-purple-500/30">`;
+  html += `<h3 class="font-bold text-purple-400 mb-2">📅 7'li Sistem - Yaş Dönemleri</h3>`;
+  html += `<p class="text-sm text-gray-400">Doğum Yılı: ${year}</p>`;
+  html += `</div>`;
+  
+  // Show each house's 7-year period
+  html += `<div class="space-y-4">`;
+  sevenResults.forEach(house => {
+    const startAge = (house.house - 1) * 7;
+    const endAge = house.house * 7;
+    
+    html += `<div class="p-4 bg-dark-card rounded-lg border border-gray-700">`;
+    html += `<div class="flex items-center gap-3 mb-3">`;
+    html += `<span class="w-10 h-10 rounded-full bg-purple-500/20 border border-purple-500/50 flex items-center justify-center font-bold text-purple-400">${house.house}</span>`;
+    html += `<div>`;
+    html += `<div class="font-semibold">${house.houseSign}</div>`;
+    html += `<div class="text-sm text-gray-400">Yaş ${startAge}-${endAge} (${year + startAge} - ${year + endAge})</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    
+    // Segments (7 years)
+    html += `<div class="grid grid-cols-7 gap-1 text-xs">`;
+    house.segments.forEach((seg, idx) => {
+      const isCurrentAge = false; // You could calculate this based on current year
+      const bgClass = isCurrentAge ? 'bg-purple-500/30 border-purple-500' : 'bg-dark-lighter border-gray-700';
+      
+      html += `<div class="p-2 rounded border ${bgClass} text-center">`;
+      html += `<div class="font-semibold">${seg.startAge}</div>`;
+      html += `<div class="text-gray-500">${seg.signStart.substring(0, 3)}</div>`;
       html += `</div>`;
     });
     html += `</div>`;
