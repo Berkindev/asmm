@@ -63,6 +63,15 @@
   .element-earth { @apply bg-earth/20 text-earth border-earth/40; }
   .element-air { @apply bg-air/20 text-air border-air/40; }
   .element-water { @apply bg-water/20 text-water border-water/40; }
+  
+  /* Tab panels - hide inactive, show active */
+  .main-panel {
+    display: none;
+  }
+  
+  .main-panel.active {
+    display: block;
+  }
 }
 
 /* Animations */
