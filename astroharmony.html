@@ -2719,23 +2719,46 @@
     if (infoSummary) {
       infoSummary.style.display = 'block';
       infoSummary.innerHTML = `
-        <div style="font-weight:700;font-size:16px;margin-bottom:12px;color:var(--accent-3)">☉ Solar Return ${data.solarYear} Özeti</div>
-        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-          <span style="padding:8px 14px;background:rgba(245,158,11,.15);border-radius:8px;font-size:13px">
-            <strong>📅 Tarih:</strong> ${data.solarReturnDate.day} ${MONTHS[data.solarReturnDate.month - 1]} ${data.solarReturnDate.year} ${timeStr}
-          </span>
-          ${localTimeStr ? `<span style="padding:8px 14px;background:rgba(34,197,94,.1);border-radius:8px;font-size:13px">
-            <strong>🇹🇷 Yerel:</strong> ${localTimeStr}
-          </span>` : ''}
-          <span style="padding:8px 14px;background:rgba(139,92,246,.15);border-radius:8px;font-size:13px">
-            <strong>↑ Yükselen:</strong> ${SIGN_SYM[srAscSign]} ${srAscSign} ${srChart.asc.deg}°${String(srChart.asc.min).padStart(2,'0')}'
-          </span>
-          <span style="padding:8px 14px;background:rgba(110,231,255,.1);border-radius:8px;font-size:13px">
-            <strong>☉ Güneş:</strong> ${SIGN_SYM[srSunSign]} ${srChart.planets.sun.deg}°${String(srChart.planets.sun.min).padStart(2,'0')}' (${srChart.planets.sun.house}. Ev)
-          </span>
-          <span style="padding:8px 14px;background:rgba(59,130,246,.1);border-radius:8px;font-size:13px">
-            <strong>📍 Konum:</strong> ${data.chartLocation?.name || 'Doğum Yeri'}
-          </span>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;padding:8px 0">
+          <!-- Tarih Kartı -->
+          <div style="background:linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05));border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:22px">📅</span>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(245,158,11,0.8);font-weight:600">Tarih</span>
+            </div>
+            <div style="font-size:16px;font-weight:700;color:#f59e0b">${data.solarReturnDate.day} ${MONTHS[data.solarReturnDate.month - 1]} ${data.solarReturnDate.year}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7)">${timeStr}${localTimeStr ? ` <span style="color:#22c55e">• ${localTimeStr}</span>` : ''}</div>
+          </div>
+          
+          <!-- Yükselen Kartı -->
+          <div style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05));border:1px solid rgba(139,92,246,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:22px">↑</span>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(139,92,246,0.8);font-weight:600">Yükselen</span>
+            </div>
+            <div style="font-size:20px;font-weight:700;color:#a78bfa">${SIGN_SYM[srAscSign]} ${srAscSign}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7);font-family:monospace">${srChart.asc.deg}°${String(srChart.asc.min).padStart(2,'0')}'</div>
+          </div>
+          
+          <!-- Güneş Kartı -->
+          <div style="background:linear-gradient(135deg, rgba(110,231,255,0.12), rgba(110,231,255,0.03));border:1px solid rgba(110,231,255,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:22px">☉</span>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(110,231,255,0.8);font-weight:600">Güneş</span>
+            </div>
+            <div style="font-size:20px;font-weight:700;color:#6ee7ff">${SIGN_SYM[srSunSign]} ${srChart.planets.sun.deg}°${String(srChart.planets.sun.min).padStart(2,'0')}'</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7)">${srChart.planets.sun.house}. Ev</div>
+          </div>
+          
+          <!-- Konum Kartı -->
+          <div style="background:linear-gradient(135deg, rgba(59,130,246,0.12), rgba(59,130,246,0.03));border:1px solid rgba(59,130,246,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:22px">📍</span>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(59,130,246,0.8);font-weight:600">Konum</span>
+            </div>
+            <div style="font-size:16px;font-weight:700;color:#3b82f6">${data.chartLocation?.name || 'Doğum Yeri'}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7)">Solar Return Konumu</div>
+          </div>
         </div>
       `;
     }
