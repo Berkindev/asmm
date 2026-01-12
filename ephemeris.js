@@ -235,7 +235,9 @@ async function calculateChart(params) {
   
   for (const { key, id } of planetList) {
     try {
-      const pos = swe.swe_calc_ut(jd, id, 0);
+      // Use SEFLG_SWIEPH (2) | SEFLG_SPEED (256)
+      const calcFlags = 2 | 256;
+      const pos = swe.swe_calc_ut(jd, id, calcFlags);
       const longitude = pos[0]; // Ecliptic longitude
       rawLongitudes[key] = longitude;
       
@@ -422,9 +424,12 @@ function calculateAspects(longitudes) {
  * @param {number} targetLongitude Target Sun longitude (0-360)
  * @param {number} startJD Julian Date to start searching from
  * @param {number} flags Ephemeris flags (0 for default Swiss Ephemeris)
+ * @param {boolean} solarFireCompat Enable Solar Fire compatibility mode (deprecated)
+ * @param {number} [lat] Latitude for Topocentric (optional)
+ * @param {number} [lng] Longitude for Topocentric (optional)
  * @returns {Promise<number|null>} Julian Date when Sun crosses the target longitude
  */
-async function findSolarCross(targetLongitude, startJD, flags = 0) {
+async function findSolarCross(targetLongitude, startJD, flags = 0, solarFireCompat = false, lat = null, lng = null) {
   if (!isInitialized) {
     const success = await initEphemeris();
     if (!success) {
@@ -434,13 +439,76 @@ async function findSolarCross(targetLongitude, startJD, flags = 0) {
   }
   
   try {
+    let adjustedLongitude = targetLongitude;
+    
+    // Use SEFLG_SWIEPH (2) | SEFLG_SPEED (256)
+    let calcFlags = flags | 2 | 256;
+    
+    // Enable Topocentric if lat/lng provided
+    if (typeof lat === 'number' && typeof lng === 'number' && swe.swe_set_topo) {
+      swe.swe_set_topo(lng, lat, 0);
+      calcFlags |= 32768; // SEFLG_TOPOCTR
+      console.log('🌍 findSolarCross: Using Topocentric mode');
+    }
+    
     // swe_solcross_ut returns the Julian Date when Sun crosses the given longitude
-    // This is the EXACT astronomical moment - no approximation needed
-    const resultJD = swe.swe_solcross_ut(targetLongitude, startJD, flags);
-    console.log(`🌞 Swiss Ephemeris solcross: Sun reaches ${targetLongitude.toFixed(4)}° at JD ${resultJD.toFixed(6)}`);
+    const resultJD = swe.swe_solcross_ut(adjustedLongitude, startJD, calcFlags);
+    
+    console.log(`🌞 Swiss Ephemeris solcross (${(calcFlags & 32768) ? 'Topo' : 'Geo'}): Sun reaches ${adjustedLongitude.toFixed(6)}° at JD ${resultJD.toFixed(6)}`);
     return resultJD;
   } catch (error) {
     console.error('Error in findSolarCross:', error);
+    return null;
+  }
+}
+
+/**
+ * Get high-precision Sun position with arc seconds
+ * Optional: Topocentric calculation if lat/lng provided
+ * @param {number} jd Julian Date
+ * @param {number} [lat] Geographic Latitude (for Topocentric)
+ * @param {number} [lng] Geographic Longitude (for Topocentric)
+ * @param {number} [alt] Altitude in meters (default 0)
+ * @returns {object} Sun position
+ */
+function getSunPositionPrecise(jd, lat, lng, alt = 0) {
+  if (!isInitialized || !swe) return null;
+  
+  try {
+    // Use SEFLG_SWIEPH (2) | SEFLG_SPEED (256)
+    let calcFlags = 2 | 256;
+    
+    // Valid lat/lng provided? Enable Topocentric mode
+    if (typeof lat === 'number' && typeof lng === 'number') {
+      if (swe.swe_set_topo) {
+        swe.swe_set_topo(lng, lat, alt);
+        calcFlags |= 32768; // SEFLG_TOPOCTR
+        console.log(`🌍 Calculating Topocentric Sun: Lat ${lat}, Lng ${lng}`);
+      }
+    }
+    
+    const pos = swe.swe_calc_ut(jd, PLANETS.SUN, calcFlags);
+    const longitude = pos[0];  // FIX: Extract longitude from pos array
+    
+    const signIdx = Math.floor(longitude / 30);
+    const degInSign = longitude % 30;
+    const deg = Math.floor(degInSign);
+    const minFloat = (degInSign - deg) * 60;
+    const min = Math.floor(minFloat);
+    const sec = Math.round((minFloat - min) * 60);
+    
+    return {
+      longitude: longitude,
+      signIdx: signIdx,
+      deg: deg,
+      min: min,
+      sec: sec,
+      formatted: `${deg}°${String(min).padStart(2,'0')}'${String(sec).padStart(2,'0')}"`,
+      totalDegrees: longitude,
+      isTopo: (calcFlags & 32768) !== 0
+    };
+  } catch (error) {
+    console.error('Error getting precise Sun position:', error);
     return null;
   }
 }
@@ -471,6 +539,7 @@ export {
   findSolarCross,
   getSweInstance,
   getJulianDay,
+  getSunPositionPrecise,
   PLANETS,
   SIGNS
 };

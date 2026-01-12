@@ -32,6 +32,8 @@
     .wrap { max-width: 1800px; margin: 0 auto; padding: 0 24px 32px; }
     .wrap.view-1 { max-width: 1200px; }
     .wrap.view-2 { max-width: 1800px; }
+    /* When combo panel is active, expand wrap to allow side-by-side charts */
+    .wrap.view-1:has(#panelCombo.active) { max-width: 1800px; }
     
     /* View Toggle */
     .view-toggle {
@@ -83,9 +85,52 @@
     .main-tab[data-tab="seven"].active { color: var(--accent-2); border-bottom-color: var(--accent-2); background: rgba(139,92,246,.05); }
     .main-tab[data-tab="solar"].active { color: var(--accent-3); border-bottom-color: var(--accent-3); background: rgba(245,158,11,.05); }
     .main-tab[data-tab="newmap"].active { color: #ec4899; border-bottom-color: #ec4899; background: rgba(236,72,153,.05); }
+    .main-tab[data-tab="combo"].active { color: #10b981; border-bottom-color: #10b981; background: rgba(16,185,129,.05); }
+
+    /* Collapsible Section Styles */
+    .collapsible-section {
+      margin-bottom: 16px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .collapsible-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .collapsible-header:hover {
+      background: rgba(255,255,255,0.06);
+    }
+    .collapsible-header h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .collapsible-toggle {
+      font-size: 18px;
+      transition: transform 0.2s;
+    }
+    .collapsible-section.collapsed .collapsible-toggle {
+      transform: rotate(-90deg);
+    }
+    .collapsible-content {
+      padding: 16px;
+    }
+    .collapsible-section.collapsed .collapsible-content {
+      display: none;
+    }
 
     .main-panel { display: none; padding-top: 20px; }
     .main-panel.active { display: block; }
+    
+    /* Combo Panel - Extra wide for side-by-side charts */
+    #panelCombo.active { max-width: 1600px; margin: 0 auto; }
+    #panelCombo .card { max-width: none; }
 
     /* ===== CARD & FORM STYLES ===== */
     .card {
@@ -336,6 +381,7 @@
       <button class="main-tab" data-tab="solar">☉ Solar Harita</button>
       <button class="main-tab" data-tab="chart">🎯 Harita</button>
       <button class="main-tab" data-tab="newmap">🗺️ NewMap</button>
+      <button class="main-tab" data-tab="combo">🔄 Harita + Solar</button>
       <button class="main-tab" data-tab="prompt">📋 Prompt Oluştur</button>
       <!-- Harita Bilgileri Toggle - Sadece Harita sekmesinde görünür -->
       <button id="chartInfoToggle" onclick="const panel = document.getElementById('chartSidePanel'); panel.style.display = panel.style.display === 'none' ? 'block' : 'none';" style="display:none;margin-left:auto;background:rgba(110,231,255,0.15);border:1px solid rgba(110,231,255,0.4);color:var(--accent);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">📊 Harita Bilgileri</button>
@@ -582,9 +628,14 @@
             <span style="font-size:13px">Dekan sekmesinde doğum bilgilerinizi hesapladıktan sonra, buradan istediğiniz yılın Solar Return haritasını görüntüleyebilirsiniz.</span>
           </div>
           
-          <div id="solarNatalInfo" style="margin-bottom:16px;padding:12px;background:rgba(110,231,255,.05);border-radius:8px;display:none">
-            <div style="font-weight:bold;margin-bottom:8px;color:var(--accent)">📌 Natal Bilgiler</div>
-            <div id="solarNatalSummary" style="font-size:13px;color:var(--muted)"></div>
+          <div id="solarNatalInfo" class="collapsible-section" style="margin-bottom:16px;display:none;background:rgba(110,231,255,.05);border:1px solid rgba(110,231,255,0.2)">
+            <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
+              <h3 style="color:var(--accent)">📌 Natal Bilgiler</h3>
+              <span class="collapsible-toggle">▼</span>
+            </div>
+            <div class="collapsible-content">
+              <div id="solarNatalSummary" style="font-size:13px;color:var(--muted)"></div>
+            </div>
           </div>
 
           <div class="row">
@@ -594,6 +645,44 @@
               <span class="hint">İncelemek istediğin yıl (örn: 2020, 2024)</span>
             </div>
           </div>
+          
+          <!-- Solar Fire Referans Zamanı (Opsiyonel) -->
+          <details style="margin-top:12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:2px">
+            <summary style="cursor:pointer;font-weight:600;color:#f59e0b;padding:10px;font-size:13px">⚡ Solar Fire Referans Zamanı (Opsiyonel)</summary>
+            <div style="padding:0 12px 12px 12px">
+              <div class="hint" style="margin-bottom:10px;font-size:12px">
+                Solar Fire'dan bildiğiniz tam zamanı girin. Sistem hesaplama yapmayıp bu zamanı doğrudan kullanacak.
+              </div>
+              <div class="row" style="align-items:flex-start;margin:0">
+                <label style="min-width:100px"><strong>Solar Return Tarihi</strong></label>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                  <input id="sfRefDay" type="number" min="1" max="31" placeholder="GG" 
+                    style="width:50px;text-align:center;font-size:14px;padding:8px 4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fff" />
+                  <span style="color:var(--muted)">/</span>
+                  <input id="sfRefMonth" type="number" min="1" max="12" placeholder="AA" 
+                    style="width:50px;text-align:center;font-size:14px;padding:8px 4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fff" />
+                  <span style="color:var(--muted)">/</span>
+                  <input id="sfRefYear" type="number" min="1900" max="2100" placeholder="YYYY" 
+                    style="width:70px;text-align:center;font-size:14px;padding:8px 4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fff" />
+                </div>
+              </div>
+              <div class="row" style="align-items:flex-start;margin-top:8px">
+                <label style="min-width:100px"><strong>Saat (UT)</strong></label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input id="sfRefHour" type="number" min="0" max="23" placeholder="SS" 
+                    style="width:50px;text-align:center;font-size:14px;padding:8px 4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fff" />
+                  <span style="font-weight:bold;color:#f59e0b;font-size:16px">:</span>
+                  <input id="sfRefMinute" type="number" min="0" max="59" placeholder="DD" 
+                    style="width:50px;text-align:center;font-size:14px;padding:8px 4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fff" />
+                  <span style="font-weight:bold;color:#f59e0b;font-size:16px">:</span>
+                  <input id="sfRefSecond" type="number" min="0" max="59" placeholder="SN" 
+                    style="width:50px;text-align:center;font-size:14px;padding:8px 4px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;color:#fff" />
+                  <span class="hint" style="margin-left:8px;font-size:11px">(Universal Time)</span>
+                </div>
+              </div>
+              <button type="button" id="sfRefClear" style="margin-top:10px;padding:6px 12px;font-size:12px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:var(--muted);cursor:pointer">🗑️ Referans Temizle</button>
+            </div>
+          </details>
           
           <div class="row" style="margin-top:12px">
             <label><strong>Konum Seçimi</strong></label>
@@ -649,19 +738,48 @@
           <button class="primary" id="solarCalc" style="background:linear-gradient(135deg,#f59e0b,#d97706)">☉ Solar Hesapla</button>
         </div>
       </div>
-      <!-- Solar Return Özet Bilgileri (üstte maddeler halinde) -->
-      <div id="solarInfoSummary" style="display:none;margin-bottom:16px;padding:16px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));border-radius:12px;border-left:4px solid #f59e0b">
-        <!-- JavaScript ile doldurulacak -->
+      <!-- Solar Return Özet Bilgileri (üstte maddeler halinde) - COLLAPSIBLE -->
+      <div id="solarInfoSummary" class="collapsible-section" style="display:none;margin-top:16px;margin-bottom:16px;background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));border:1px solid rgba(245,158,11,0.3)">
+        <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <h3 style="color:#f59e0b">☉ Solar Return Özeti</h3>
+          <span class="collapsible-toggle">▼</span>
+        </div>
+        <div class="collapsible-content" id="solarInfoSummaryContent" style="padding:16px">
+          <!-- JavaScript ile doldurulacak -->
+        </div>
       </div>
       
-      <!-- Solar Dekan Takvimi (tam ekran) -->
-      <div class="results" id="solarResults">
-        <div id="solarDekanCalendar" style="width:100%">
-          <!-- Solar Dekan Calendar will appear here -->
+      <!-- Solar Wheel Chart - COLLAPSIBLE (DEFAULT OPEN for chart visibility) -->
+      <div id="solarWheelChartSection" class="collapsible-section" style="display:none;margin-bottom:16px;background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2)">
+        <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <h3 style="color:#f59e0b">🎯 Solar Return Haritası (Görsel)</h3>
+          <span class="collapsible-toggle">▼</span>
         </div>
-        <!-- Gizli paneller (JavaScript uyumu için) -->
-        <div id="solarDekanResults" style="display:none"></div>
-        <div id="solarMonthResults" style="display:none"></div>
+        <div class="collapsible-content" style="padding:16px">
+          <div style="width:100%;display:flex;justify-content:center;align-items:flex-start">
+            <svg id="solarWheelChart" viewBox="0 0 1400 1400" style="width:100%;height:auto;max-height:95vh">
+              <text x="700" y="700" text-anchor="middle" fill="#f59e0b" font-size="18" opacity="0.5">
+                Solar harita hesaplandığında görünecek
+              </text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Solar Dekan Takvimi (tam ekran) - COLLAPSIBLE -->
+      <div id="solarResults" class="collapsible-section" style="margin-bottom:16px;background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.2)">
+        <div class="collapsible-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <h3 style="color:#a78bfa">📅 Solar Dekan Takvimi</h3>
+          <span class="collapsible-toggle">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div id="solarDekanCalendar" style="width:100%">
+            <!-- Solar Dekan Calendar will appear here -->
+          </div>
+          <!-- Gizli paneller (JavaScript uyumu için) -->
+          <div id="solarDekanResults" style="display:none"></div>
+          <div id="solarMonthResults" style="display:none"></div>
+        </div>
       </div>
     </div>
 
@@ -794,6 +912,55 @@
       </div>
     </div>
 
+    <!-- ==================== COMBO PANEL (Natal + Solar yan yana) ==================== -->
+    <div class="main-panel" id="panelCombo">
+      <div class="card">
+        <div class="card-header" style="background: linear-gradient(90deg, rgba(16,185,129,0.2) 0%, rgba(110,231,255,0.1) 50%, rgba(245,158,11,0.1) 100%); border-bottom: 1px solid rgba(16,185,129,0.3);">
+          <h2 style="display:flex;align-items:center;gap:10px;color:#10b981;margin:0">
+            <span>🔄</span> Natal + Solar Return Haritaları
+          </h2>
+          <div style="font-size:0.9em;opacity:0.7;margin-top:4px">
+            Yan yana karşılaştırmalı görünüm - Natal harita (sol) ve Solar Return harita (sağ)
+          </div>
+        </div>
+        <div class="card-body" style="padding:16px">
+          <!-- Status Bar -->
+          <div id="comboStatus" style="margin-bottom:16px;padding:12px;background:rgba(16,185,129,0.1);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <span style="color:#10b981;font-weight:600">📊 Durum:</span>
+              <span id="comboStatusText" style="color:var(--muted);margin-left:8px">Hesaplama bekleniyor...</span>
+            </div>
+            <button onclick="refreshComboCharts()" style="padding:8px 16px;background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4);color:#10b981;border-radius:8px;cursor:pointer;font-weight:600">🔄 Yenile</button>
+          </div>
+          
+          <!-- Side by Side Charts - LARGE -->
+          <div style="display:flex;gap:16px;justify-content:center;flex-wrap:nowrap">
+            <!-- Natal Chart -->
+            <div style="flex:1;min-width:700px">
+              <div style="text-align:center;margin-bottom:12px;padding:12px;background:rgba(110,231,255,0.1);border-radius:8px;border-left:4px solid var(--accent)">
+                <h3 style="margin:0;color:var(--accent);font-size:18px">🎯 Natal Harita</h3>
+                <div id="comboNatalInfo" style="font-size:13px;color:var(--muted);margin-top:4px"></div>
+              </div>
+              <div style="border:2px solid rgba(110,231,255,0.3);border-radius:12px;overflow:hidden;background:rgba(11,15,20,0.6)">
+                <svg id="comboNatalChart" viewBox="0 0 1400 1400" style="width:100%;height:auto"></svg>
+              </div>
+            </div>
+            
+            <!-- Solar Chart -->
+            <div style="flex:1;min-width:700px">
+              <div style="text-align:center;margin-bottom:12px;padding:12px;background:rgba(245,158,11,0.1);border-radius:8px;border-left:4px solid var(--accent-3)">
+                <h3 style="margin:0;color:var(--accent-3);font-size:18px">☉ Solar Return Harita</h3>
+                <div id="comboSolarInfo" style="font-size:13px;color:var(--muted);margin-top:4px"></div>
+              </div>
+              <div style="border:2px solid rgba(245,158,11,0.3);border-radius:12px;overflow:hidden;background:rgba(11,15,20,0.6)">
+                <svg id="comboSolarChart" viewBox="0 0 1400 1400" style="width:100%;height:auto"></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== AI ANALİZ PANEL ==================== -->
     <!-- ==================== PROMPT OLUŞTURUCU (YENİ) ==================== -->
     <div class="main-panel" id="panelPrompt">
@@ -810,21 +977,30 @@
              <!-- Butonlar -->
              <div style="margin-bottom:20px">
                <div style="font-weight:600;color:var(--text-main);margin-bottom:12px">Analiz Türünü Seçin:</div>
-               <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:10px">
-                 <button class="ai-btn" onclick="generatePrompt('general')" style="border-left:3px solid var(--accent);text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
-                    <div style="font-size:1.5em">🔮</div> <div><div style="font-weight:bold;color:#fff">Genel</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">Detaylı yorum</div></div>
+               <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:8px">
+                 <button class="ai-btn" onclick="generatePrompt('general')" style="border-left:3px solid var(--accent);text-align:left;padding:8px 10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.3em">🔮</div> <div><div style="font-weight:bold;color:#fff;font-size:0.9em">Genel</div></div>
                  </button>
-                 <button class="ai-btn" onclick="generatePrompt('seven')" style="border-left:3px solid var(--accent-2);text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
-                    <div style="font-size:1.5em">7️⃣</div> <div><div style="font-weight:bold;color:#fff">7'ler Kuralı</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">Yaş döngüsü</div></div>
+                 <button class="ai-btn" onclick="generatePrompt('typology')" style="border-left:3px solid #14b8a6;text-align:left;padding:8px 10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.3em">🧬</div> <div><div style="font-weight:bold;color:#fff;font-size:0.9em">Tipoloji</div></div>
                  </button>
-                 <button class="ai-btn" onclick="generatePrompt('career')" style="border-left:3px solid var(--gold);text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
-                    <div style="font-size:1.5em">💼</div> <div><div style="font-weight:bold;color:#fff">Kariyer</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">İş & Para</div></div>
+                 <button class="ai-btn" onclick="generatePrompt('seven')" style="border-left:3px solid var(--accent-2);text-align:left;padding:8px 10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.3em">7️⃣</div> <div><div style="font-weight:bold;color:#fff;font-size:0.9em">7'ler</div></div>
                  </button>
-                 <button class="ai-btn" onclick="generatePrompt('love')" style="border-left:3px solid #e11d48;text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
-                    <div style="font-size:1.5em">❤️</div> <div><div style="font-weight:bold;color:#fff">Aşk & İlişki</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">Partner profili</div></div>
+                 <button class="ai-btn" onclick="generatePrompt('career')" style="border-left:3px solid var(--gold);text-align:left;padding:8px 10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.3em">💼</div> <div><div style="font-weight:bold;color:#fff;font-size:0.9em">Kariyer</div></div>
                  </button>
-                 <button class="ai-btn" onclick="generatePrompt('child')" style="border-left:3px solid #8b5cf6;text-align:left;padding:10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
-                    <div style="font-size:1.5em">👶</div> <div><div style="font-weight:bold;color:#fff">Çocuk</div><div style="font-size:0.8em;color:rgba(255,255,255,0.5)">Potansiyel</div></div>
+                 <button class="ai-btn" onclick="generatePrompt('love')" style="border-left:3px solid #e11d48;text-align:left;padding:8px 10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.3em">❤️</div> <div><div style="font-weight:bold;color:#fff;font-size:0.9em">İlişki</div></div>
+                 </button>
+                 <button class="ai-btn" onclick="generatePrompt('marriage')" style="border-left:3px solid #f472b6;text-align:left;padding:8px 10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.3em">💍</div> <div><div style="font-weight:bold;color:#fff;font-size:0.9em">Evlilik</div></div>
+                 </button>
+                 <button class="ai-btn" onclick="generatePrompt('child')" style="border-left:3px solid #8b5cf6;text-align:left;padding:8px 10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.3em">👶</div> <div><div style="font-weight:bold;color:#fff;font-size:0.9em">Çocuk</div></div>
+                 </button>
+                 <button class="ai-btn" onclick="generatePrompt('health')" style="border-left:3px solid #22c55e;text-align:left;padding:8px 10px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;border-top:none;border-right:none;border-bottom:none">
+                    <div style="font-size:1.3em">🏥</div> <div><div style="font-weight:bold;color:#fff;font-size:0.9em">Sağlık</div></div>
                  </button>
                </div>
              </div>
@@ -1103,7 +1279,7 @@
       // 81 İl (tüm iller)
       "Adana": {lat:37.0000,lng:35.3213}, "Adıyaman": {lat:37.7648,lng:38.2786}, "Afyonkarahisar": {lat:38.7507,lng:30.5567},
       "Ağrı": {lat:39.7191,lng:43.0503}, "Aksaray": {lat:38.3687,lng:34.0370}, "Amasya": {lat:40.6499,lng:35.8353},
-      "Ankara": {lat:39.9334,lng:32.8597}, "Antalya": {lat:36.8969,lng:30.7133}, "Ardahan": {lat:41.1105,lng:42.7022},
+      "Ankara": {lat:39.9334,lng:32.8597}, "Antalya": {lat:36.8833,lng:30.7000}, "Ardahan": {lat:41.1105,lng:42.7022},
       "Artvin": {lat:41.1828,lng:41.8183}, "Aydın": {lat:37.8560,lng:27.8416}, "Balıkesir": {lat:39.6484,lng:27.8826},
       "Bartın": {lat:41.6344,lng:32.3375}, "Batman": {lat:37.8812,lng:41.1351}, "Bayburt": {lat:40.2552,lng:40.2249},
       "Bilecik": {lat:40.0567,lng:30.0665}, "Bingöl": {lat:38.8854,lng:40.4966}, "Bitlis": {lat:38.4006,lng:42.1095},
@@ -1946,14 +2122,45 @@
     
     try {
       // Use Swiss Ephemeris for EXACT calculation
-      const { findSolarCross, getJulianDay } = await import('./ephemeris.js');
-      const exactJD = await findSolarCross(natalSunLong, startJD, 0);
+      const importedModule = await import(`./ephemeris.js?v=CLAUDE_FIX_V4`);
+      const { findSolarCross, getJulianDay, getSunPositionPrecise, degToSignDegMin, calculateChart, initEphemeris } = importedModule;
+      
+      await initEphemeris();
+      window.calculateChart = calculateChart;
+      
+      console.log('🚀 VERSION: CLAUDE_FIX_V4 (Raw High Precision)');
+      
+      // Get raw high-precision natal Sun - FIXED PATH!
+      let rawSunLong = natalSunLong;
+      
+      // The raw data is stored in globalNatalData.chart.rawData, not globalNatalData.rawData
+      if (globalNatalData.chart && globalNatalData.chart.rawData && globalNatalData.chart.rawData.planetLongitudes) {
+         rawSunLong = globalNatalData.chart.rawData.planetLongitudes.sun;
+         console.log(`✓ Using HIGH PRECISION Sun from chart.rawData: ${rawSunLong}`);
+      } else if (globalNatalData.rawData && globalNatalData.rawData.planetLongitudes) {
+         // Fallback to old path just in case
+         rawSunLong = globalNatalData.rawData.planetLongitudes.sun;
+         console.log(`⚠ Using Sun from rawData (old path): ${rawSunLong}`);
+      } else {
+         console.log(`⚠ Using rounded natalSunLong as fallback: ${rawSunLong}`);
+      }
+      // Use RAW (High Precision) value directly
+      // With fixed data path, Raw now gives ~19:23 which matches Solar Fire!
+      const targetSunLong = rawSunLong;
+      
+      console.log(`🎯 Target Sun (RAW High Precision): ${targetSunLong.toFixed(6)}°`);
+      
+      // Calculate Solar Return
+      const exactJD = await findSolarCross(targetSunLong, startJD, 0);
       
       if (exactJD) {
         const result = jdToDateTime(exactJD);
         result.jd = exactJD;
         result.approximate = false;
-        console.log(`✅ Swiss Ephemeris Solar Return: ${result.day}/${result.month}/${result.year} ${result.hour}:${String(result.minute).padStart(2,'0')}`);
+        
+        const secStr = Math.round(result.second || 0).toString().padStart(2, '0');
+        console.log(`✅ Solar Return: ${result.day}/${result.month}/${result.year} ${result.hour}:${String(result.minute).padStart(2,'0')}:${secStr} UT`);
+        
         return result;
       }
     } catch (error) {
@@ -2070,9 +2277,40 @@
       chartLocationName = customCity;
     }
     
-    // Find PRECISE solar return moment for this year (AWAIT because it's async now)
-    const srDate = await findSolarReturnDate(natalSunLong, solarYear);
-    if (!srDate) return { error: 'Solar return tarihi hesaplanamadı.' };
+    // Check for Solar Fire reference time (user-provided exact time)
+    let srDate = null;
+    const sfRefDay = parseInt($('sfRefDay')?.value);
+    const sfRefMonth = parseInt($('sfRefMonth')?.value);
+    const sfRefYear = parseInt($('sfRefYear')?.value);
+    const sfRefHour = parseInt($('sfRefHour')?.value);
+    const sfRefMinute = parseInt($('sfRefMinute')?.value);
+    const sfRefSecond = parseInt($('sfRefSecond')?.value) || 0; // Default to 0 if not provided
+    
+    const hasSolarFireRef = !isNaN(sfRefDay) && !isNaN(sfRefMonth) && !isNaN(sfRefYear) && 
+                            !isNaN(sfRefHour) && !isNaN(sfRefMinute) &&
+                            sfRefYear === solarYear; // Reference must be for the same year
+    
+    if (hasSolarFireRef) {
+      // Use Solar Fire reference time (convert to JD with seconds as fractional minutes)
+      const minutesWithSeconds = sfRefMinute + (sfRefSecond / 60);
+      const refJD = dateToJD(sfRefYear, sfRefMonth, sfRefDay, sfRefHour, minutesWithSeconds);
+      srDate = {
+        jd: refJD,
+        year: sfRefYear,
+        month: sfRefMonth,
+        day: sfRefDay,
+        hour: sfRefHour,
+        minute: sfRefMinute,
+        second: sfRefSecond,
+        approximate: false,
+        solarFireRef: true // Flag to indicate this is a user-provided reference
+      };
+      console.log(`🔥 Solar Fire Referans Kullanılıyor: ${sfRefDay}/${sfRefMonth}/${sfRefYear} ${sfRefHour}:${String(sfRefMinute).padStart(2,'0')}:${String(sfRefSecond).padStart(2,'0')} UT`);
+    } else {
+      // Find PRECISE solar return moment for this year using Swiss Ephemeris
+      srDate = await findSolarReturnDate(natalSunLong, solarYear);
+      if (!srDate) return { error: 'Solar return tarihi hesaplanamadı.' };
+    }
     
     // Find NEXT year's Solar Return for precise year length calculation
     const nextSrDate = await findSolarReturnDate(natalSunLong, solarYear + 1);
@@ -2093,13 +2331,16 @@
     try {
       const srHour = srDate.hour || 12;
       const srMinute = srDate.minute || 0;
+      const srSecond = srDate.second || 0;
+      // Include seconds as fractional minutes for precise calculation
+      const srMinuteWithSeconds = srMinute + (srSecond / 60);
       
       // CRITICAL: Swiss Ephemeris swe_solcross_ut returns time in UT (Universal Time)
       // We must use tz = 0 to avoid double timezone conversion
       // The time from findSolarReturnDate is ALREADY in UT!
       const srChart = await calculateChart(
         srDate.year, srDate.month, srDate.day, 
-        srHour, srMinute, 
+        srHour, srMinuteWithSeconds, 
         chartLat, chartLng, 
         0  // tz = 0 because time is already in UT
       );
@@ -2718,26 +2959,75 @@
     const infoSummary = $('solarInfoSummary');
     if (infoSummary) {
       infoSummary.style.display = 'block';
+      const solarFireRefBadge = data.solarReturnDate.solarFireRef 
+        ? `<span style="padding:4px 10px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:6px;font-size:11px;font-weight:600;color:#fff;margin-left:8px">🔥 SOLAR FIRE REF</span>` 
+        : '';
       infoSummary.innerHTML = `
-        <div style="font-weight:700;font-size:16px;margin-bottom:12px;color:var(--accent-3)">☉ Solar Return ${data.solarYear} Özeti</div>
-        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
-          <span style="padding:8px 14px;background:rgba(245,158,11,.15);border-radius:8px;font-size:13px">
-            <strong>📅 Tarih:</strong> ${data.solarReturnDate.day} ${MONTHS[data.solarReturnDate.month - 1]} ${data.solarReturnDate.year} ${timeStr}
-          </span>
-          ${localTimeStr ? `<span style="padding:8px 14px;background:rgba(34,197,94,.1);border-radius:8px;font-size:13px">
-            <strong>🇹🇷 Yerel:</strong> ${localTimeStr}
-          </span>` : ''}
-          <span style="padding:8px 14px;background:rgba(139,92,246,.15);border-radius:8px;font-size:13px">
-            <strong>↑ Yükselen:</strong> ${SIGN_SYM[srAscSign]} ${srAscSign} ${srChart.asc.deg}°${String(srChart.asc.min).padStart(2,'0')}'
-          </span>
-          <span style="padding:8px 14px;background:rgba(110,231,255,.1);border-radius:8px;font-size:13px">
-            <strong>☉ Güneş:</strong> ${SIGN_SYM[srSunSign]} ${srChart.planets.sun.deg}°${String(srChart.planets.sun.min).padStart(2,'0')}' (${srChart.planets.sun.house}. Ev)
-          </span>
-          <span style="padding:8px 14px;background:rgba(59,130,246,.1);border-radius:8px;font-size:13px">
-            <strong>📍 Konum:</strong> ${data.chartLocation?.name || 'Doğum Yeri'}
-          </span>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;padding:8px 0">
+          <!-- Tarih Kartı -->
+          <div style="background:linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05));border:1px solid rgba(245,158,11,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:22px">📅</span>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(245,158,11,0.8);font-weight:600">Tarih</span>
+            </div>
+            <div style="font-size:16px;font-weight:700;color:#f59e0b">${data.solarReturnDate.day} ${MONTHS[data.solarReturnDate.month - 1]} ${data.solarReturnDate.year}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7)">${timeStr}${localTimeStr ? ` <span style="color:#22c55e">• ${localTimeStr}</span>` : ''}</div>
+          </div>
+          
+          <!-- Yükselen Kartı -->
+          <div style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05));border:1px solid rgba(139,92,246,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:22px">↑</span>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(139,92,246,0.8);font-weight:600">Yükselen</span>
+            </div>
+            <div style="font-size:20px;font-weight:700;color:#a78bfa">${SIGN_SYM[srAscSign]} ${srAscSign}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7);font-family:monospace">${srChart.asc.deg}°${String(srChart.asc.min).padStart(2,'0')}'</div>
+          </div>
+          
+          <!-- Güneş Kartı -->
+          <div style="background:linear-gradient(135deg, rgba(110,231,255,0.12), rgba(110,231,255,0.03));border:1px solid rgba(110,231,255,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:22px">☉</span>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(110,231,255,0.8);font-weight:600">Güneş</span>
+            </div>
+            <div style="font-size:20px;font-weight:700;color:#6ee7ff">${SIGN_SYM[srSunSign]} ${srChart.planets.sun.deg}°${String(srChart.planets.sun.min).padStart(2,'0')}'</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7)">${srChart.planets.sun.house}. Ev</div>
+          </div>
+          
+          <!-- Konum Kartı -->
+          <div style="background:linear-gradient(135deg, rgba(59,130,246,0.12), rgba(59,130,246,0.03));border:1px solid rgba(59,130,246,0.25);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:22px">📍</span>
+              <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(59,130,246,0.8);font-weight:600">Konum</span>
+            </div>
+            <div style="font-size:16px;font-weight:700;color:#3b82f6">${data.chartLocation?.name || 'Doğum Yeri'}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.7)">Solar Return Konumu</div>
+          </div>
         </div>
       `;
+      // Update collapsible content
+      const summaryContent = $('solarInfoSummaryContent');
+      if (summaryContent) {
+        summaryContent.innerHTML = infoSummary.innerHTML;
+        infoSummary.innerHTML = '';
+        infoSummary.appendChild(infoSummary.querySelector('.collapsible-header'));
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'collapsible-content';
+        contentDiv.id = 'solarInfoSummaryContent';
+        contentDiv.innerHTML = summaryContent.innerHTML;
+        infoSummary.appendChild(contentDiv);
+      }
+    }
+    
+    // ===== SOLAR WHEEL CHART =====
+    // Show the solar wheel chart section
+    const solarWheelSection = $('solarWheelChartSection');
+    if (solarWheelSection && srChart) {
+      solarWheelSection.style.display = 'block';
+      // Draw the solar return wheel chart
+      drawSolarWheelChart(srChart, data.srDekan);
+      // Store for combo panel
+      window.lastSolarChartData = { chartData: srChart, decanResults: data.srDekan, solarReturnData: data };
     }
     
     // Eski panelleri gizle
@@ -2795,11 +3085,11 @@
   }
 
 
-  function drawWheelChart(chartData, decanResults) {
+  function drawWheelChart(chartData, decanResults, targetSvgId = 'wheelChart') {
     lastChartData = { chartData, decanResults };
     // Also make available globally for NewMap module
     window.lastChartData = lastChartData;
-    const svg = $('wheelChart');
+    const svg = $(targetSvgId);
     if (!svg || !chartData) return;
     
     // Büyütülmüş merkez ve yarıçaplar (1400x1400 viewBox için)
@@ -3262,6 +3552,57 @@
     renderElementNitelik(chartData);
   }
   
+  // ===== DRAW SOLAR WHEEL CHART - Wrapper that uses full drawWheelChart with custom target =====
+  function drawSolarWheelChart(chartData, decanResults, targetSvgId = 'solarWheelChart') {
+    // Use the full featured drawWheelChart with the specified target SVG
+    drawWheelChart(chartData, decanResults, targetSvgId);
+  }
+  
+  // ===== REFRESH COMBO CHARTS - For Harita + Solar panel =====
+  window.refreshComboCharts = function() {
+    const statusText = $('comboStatusText');
+    const natalInfo = $('comboNatalInfo');
+    const solarInfo = $('comboSolarInfo');
+    
+    // Check if we have natal data
+    if (!globalNatalData || !globalNatalData.chart) {
+      if (statusText) statusText.textContent = '⚠️ Önce Dekan sekmesinde natal harita hesaplayın';
+      return;
+    }
+    
+    // Check if we have solar data
+    if (!window.lastSolarChartData) {
+      if (statusText) statusText.textContent = '⚠️ Önce Solar Harita sekmesinde Solar Return hesaplayın';
+      return;
+    }
+    
+    // Draw Natal chart to combo panel
+    const natalChart = globalNatalData.chart;
+    const natalDecan = globalNatalData.decanResults;
+    drawSolarWheelChart(natalChart, natalDecan, 'comboNatalChart');
+    
+    // Draw Solar chart to combo panel
+    const solarChart = window.lastSolarChartData.chartData;
+    const solarDecan = window.lastSolarChartData.decanResults;
+    drawSolarWheelChart(solarChart, solarDecan, 'comboSolarChart');
+    
+    // Update status
+    if (statusText) statusText.textContent = '✅ Her iki harita yüklendi';
+    
+    // Update info texts
+    if (natalInfo && globalNatalData) {
+      const nd = globalNatalData;
+      natalInfo.textContent = `${nd.birthDay}/${nd.birthMonth}/${nd.birthYear} ${nd.birthHour}:${String(nd.birthMinute).padStart(2,'0')} - ${nd.city || 'Bilinmiyor'}`;
+    }
+    
+    if (solarInfo && window.lastSolarChartData.solarReturnData) {
+      const sr = window.lastSolarChartData.solarReturnData;
+      const srDate = sr.solarReturnDate;
+      solarInfo.textContent = `${srDate.day}/${srDate.month}/${srDate.year} ${srDate.hour || 12}:${String(srDate.minute || 0).padStart(2,'0')} UT - Solar Return ${sr.solarYear}`;
+    }
+  }
+
+  
   // Element-Nitelik Hesaplama ve Render
   function renderElementNitelik(chartData) {
     if (!chartData || !chartData.planets) return;
@@ -3584,7 +3925,7 @@
   const PRESETS = {
     D: {asc:1,birthDay:13,birthMonth:11,birthYear:1993,cusps:[{deg:26,min:34},{deg:21,min:45},{deg:12,min:31},{deg:4,min:7},{deg:1,min:8},{deg:9,min:22}],axes:[],sameFlags:[],planets:{sun:{house:6,sign:7,deg:21,min:15},moon:{house:6,sign:7,deg:17,min:26},mercury:{house:6,sign:7,deg:6,min:46},venus:{house:6,sign:7,deg:5,min:40},mars:{house:7,sign:8,deg:3,min:9},jupiter:{house:6,sign:7,deg:0,min:41},saturn:{house:10,sign:10,deg:23,min:52},uranus:{house:9,sign:9,deg:19,min:8},neptune:{house:9,sign:9,deg:18,min:54},pluto:{house:6,sign:7,deg:25,min:15},north:{house:7,sign:8,deg:3,min:39},south:{house:1,sign:2,deg:3,min:39},chiron:{house:5,sign:5,deg:7,min:49},fortune:{house:1,sign:2,deg:0,min:23}}},
     K: {asc:6,birthDay:5,birthMonth:10,birthYear:1994,cusps:[{deg:2,min:59},{deg:29,min:13},{deg:29,min:46},{deg:3,min:28},{deg:7,min:1},{deg:7,min:15}],axes:[3],sameFlags:[1],planets:{sun:{house:1,sign:6,deg:12,min:39},moon:{house:1,sign:6,deg:26,min:15},mercury:{house:2,sign:7,deg:5,min:55},venus:{house:2,sign:7,deg:17,min:22},mars:{house:10,sign:4,deg:0,min:50},jupiter:{house:2,sign:7,deg:16,min:5},saturn:{house:5,sign:11,deg:6,min:38},uranus:{house:4,sign:9,deg:22,min:23},neptune:{house:4,sign:9,deg:20,min:34},pluto:{house:2,sign:7,deg:26,min:17},north:{house:2,sign:7,deg:16,min:22},south:{house:8,sign:1,deg:16,min:22},chiron:{house:12,sign:5,deg:18,min:41},fortune:{house:12,sign:5,deg:19,min:23}}},
-    S: {asc:7,birthDay:6,birthMonth:8,birthYear:1998,birthHour:14,birthMinute:37,birthCity:'Antalya',birthLat:36.8969,birthLng:30.7133,cusps:[{deg:26,min:42},{deg:27,min:21},{deg:2,min:18},{deg:8,min:6},{deg:9,min:35},{deg:6,min:15}],axes:[2],sameFlags:[6],planets:{sun:{house:9,sign:4,deg:13,min:48},moon:{house:2,sign:9,deg:23,min:16},mercury:{house:9,sign:4,deg:26,min:31},venus:{house:8,sign:3,deg:21,min:35},mars:{house:8,sign:3,deg:20,min:41},jupiter:{house:4,sign:11,deg:27,min:26},saturn:{house:5,sign:1,deg:3,min:33},uranus:{house:3,sign:10,deg:10,min:38},neptune:{house:3,sign:10,deg:0,min:24},pluto:{house:1,sign:8,deg:5,min:19},north:{house:10,sign:5,deg:2,min:12},south:{house:4,sign:11,deg:2,min:12},chiron:{house:12,sign:7,deg:12,min:58},fortune:{house:6,sign:1,deg:6,min:10}}}
+    S: {asc:7,birthDay:6,birthMonth:8,birthYear:1998,birthHour:14,birthMinute:37,birthCity:'Antalya',birthLat:36.8833,birthLng:30.7000,cusps:[{deg:26,min:42},{deg:27,min:21},{deg:2,min:18},{deg:8,min:6},{deg:9,min:35},{deg:6,min:15}],axes:[2],sameFlags:[6],planets:{sun:{house:9,sign:4,deg:13,min:48},moon:{house:2,sign:9,deg:23,min:16},mercury:{house:9,sign:4,deg:26,min:31},venus:{house:8,sign:3,deg:21,min:35},mars:{house:8,sign:3,deg:20,min:41},jupiter:{house:4,sign:11,deg:27,min:26},saturn:{house:5,sign:1,deg:3,min:33},uranus:{house:3,sign:10,deg:10,min:38},neptune:{house:3,sign:10,deg:0,min:24},pluto:{house:1,sign:8,deg:5,min:19},north:{house:10,sign:5,deg:2,min:12},south:{house:4,sign:11,deg:2,min:12},chiron:{house:12,sign:7,deg:12,min:58},fortune:{house:6,sign:1,deg:6,min:10}}}
   };
 
   // Solar Presets
@@ -3949,15 +4290,17 @@
       const infoToggle = $('chartInfoToggle');
       const sidePanel = $('chartSidePanel');
       
-      // Harita, Solar ve 7'ler sekmelerinde toggle butonu görünsün
-      if (['chart', 'solar', 'seven'].includes(tab.dataset.tab)) {
-        if (lastChartData && infoToggle) {
-          infoToggle.style.display = 'block'; // Hesaplama yapılmışsa butonu göster
-        }
-      } else {
-        // Diğer sekmelerde (Dekan, Prompt vb.) gizle
-        if (infoToggle) infoToggle.style.display = 'none';
-        if (sidePanel) sidePanel.style.display = 'none';
+      // Hesaplama yapıldıysa toggle butonu her zaman görünsün (kullanıcı istediği zaman açabilsin)
+      if (lastChartData && infoToggle) {
+        infoToggle.style.display = 'block';
+      }
+      
+      // Side panel'i sadece diğer sekmelere geçtiğinde gizleme - kullanıcı kapatmadıysa açık kalsın
+      // sidePanel durumu kullanıcı tercihi olarak korunur
+      
+      // Combo tab - automatically refresh charts when switching to it
+      if (tab.dataset.tab === 'combo') {
+        refreshComboCharts();
       }
     });
   });
@@ -4043,6 +4386,18 @@
 
   // Solar calc - now automatic using global natal data
   $('solarCalc').addEventListener('click', async () => {
+    // RECOVERY: If solarDekanCalendar is missing (e.g. wiped by clear), recreate the structure
+    if (!$('solarDekanCalendar')) {
+      const resEl = $('solarResults');
+      if (resEl) {
+        resEl.innerHTML = `
+          <div id="solarDekanCalendar" style="width:100%"></div>
+          <div id="solarDekanResults" style="display:none"></div>
+          <div id="solarMonthResults" style="display:none"></div>
+        `;
+      }
+    }
+
     const sYear = Number($('solarYear').value);
     const resultsEl = $('solarResults');
     const dateInfoEl = $('solarReturnDateInfo');
@@ -4119,7 +4474,11 @@
   });
   $('solarClear').addEventListener('click', () => { 
     $('solarYear').value='';
-    $('solarResults').innerHTML='';
+    // Don't wipe the entire results div, just the content
+    const calEl = $('solarDekanCalendar');
+    if (calEl) calEl.innerHTML = '';
+    const dekRes = $('solarDekanResults');
+    if (dekRes) dekRes.innerHTML = '';
     const dateInfo = $('solarReturnDateInfo');
     if (dateInfo) dateInfo.style.display = 'none';
     // Reset location to birth
@@ -4128,7 +4487,26 @@
     $('solarCustomCity').value = '';
     $('solarCustomLat').value = '';
     $('solarCustomLng').value = '';
+    // Clear Solar Fire reference fields
+    if ($('sfRefDay')) $('sfRefDay').value = '';
+    if ($('sfRefMonth')) $('sfRefMonth').value = '';
+    if ($('sfRefYear')) $('sfRefYear').value = '';
+    if ($('sfRefHour')) $('sfRefHour').value = '';
+    if ($('sfRefMinute')) $('sfRefMinute').value = '';
+    if ($('sfRefSecond')) $('sfRefSecond').value = '';
   });
+  
+  // Solar Fire reference clear button
+  if ($('sfRefClear')) {
+    $('sfRefClear').addEventListener('click', () => {
+      $('sfRefDay').value = '';
+      $('sfRefMonth').value = '';
+      $('sfRefYear').value = '';
+      $('sfRefHour').value = '';
+      $('sfRefMinute').value = '';
+      if ($('sfRefSecond')) $('sfRefSecond').value = '';
+    });
+  }
   
   // Solar location toggle
   $('solarLocBirth').addEventListener('change', () => {
@@ -4380,14 +4758,22 @@
     if (!chart) return null;
     
     let text = "DOĞUM HARİTASI VERİLERİ:\n";
-    text += `Doğum: ${chart.day}/${chart.month}/${chart.year} ${chart.hour}:${chart.minute}\n\n`;
+    
+    // Doğum bilgilerini globalNatalData'dan al
+    if (globalNatalData) {
+      const nd = globalNatalData;
+      text += `Doğum: ${nd.birthDay}/${nd.birthMonth}/${nd.birthYear} ${nd.birthHour}:${String(nd.birthMinute || 0).padStart(2, '0')}\n`;
+      text += `Konum: ${nd.lat?.toFixed(4) || '?'}°N, ${nd.lng?.toFixed(4) || '?'}°E\n\n`;
+    } else {
+      text += `Doğum: Bilgi mevcut değil\n\n`;
+    }
     
     text += "1. BURÇ VE EV YERLEŞİMLERİ:\n";
     // ASC ve Evler
-    text += `Yükselen (ASC): ${SIGNS[chart.asc.signIdx]} ${chart.asc.deg}°\n`;
+    text += `Yükselen (ASC): ${SIGNS[chart.asc.signIdx]} ${chart.asc.deg}°${chart.asc.min}'\n`;
     if (chart.houses) {
       chart.houses.forEach((h, i) => {
-        text += `${i+1}. Ev Girişi: ${SIGNS[h.signIdx]} ${h.deg}°\n`;
+        text += `${i+1}. Ev Girişi: ${SIGNS[h.signIdx]} ${h.deg}°${h.min}'\n`;
       });
     }
     text += "\n";
@@ -4400,21 +4786,25 @@
     pKeys.forEach(key => {
       const p = chart.planets[key];
       if (p) {
-        text += `${pNames[key]}: ${SIGNS[p.signIdx]} burcunda (${p.deg}°), ${p.house}. evde.\n`;
+        const retro = p.retrograde ? ' (R)' : '';
+        text += `${pNames[key]}: ${SIGNS[p.signIdx]} burcunda (${p.deg}°${p.min}'), ${p.house}. evde${retro}\n`;
       }
     });
     text += "\n";
     
     // Açılar
     text += "3. ÖNEMLİ AÇILAR:\n";
-    if (chart.aspects) {
+    if (chart.aspects && chart.aspects.length > 0) {
       chart.aspects.forEach(a => {
-        if (a.orb < 6) { // Sadece dar orblu güçlü açıları al
+        const orbValue = parseFloat(a.orb) || 0;
+        if (orbValue < 6) { // Sadece dar orblu güçlü açıları al
           const p1 = pNames[a.planet1] || a.planet1;
           const p2 = pNames[a.planet2] || a.planet2;
-          text += `${p1} ${a.aspect} ${p2} (Orb: ${a.orb}°)\n`;
+          text += `${p1} ${a.aspect} ${p2} (Orb: ${orbValue.toFixed(2)}°)\n`;
         }
       });
+    } else {
+      text += "Açı verisi hesaplanmadı.\n";
     }
     text += "\n";
     
@@ -4423,24 +4813,43 @@
       text += "4. DEKAN ANALİZİ (ÖZEL SİSTEM):\n";
       text += "Her ev 3 dekana ayrılır. Analiz ederken o evdeki gezegenlerin hangi dekanda olduğuna ve yönetici gezegenine dikkat et.\n";
       
-      // Sadece gezegen içeren evlerin dekanlarını verelim ki token tasarrufu olsun
-      const housesWithUI = new Set();
-      pKeys.forEach(key => { if (chart.planets[key]) housesWithUI.add(chart.planets[key].house); });
-      
+      // Tüm evlerin dekanlarını ver
       decans.forEach(h => {
-        if (housesWithUI.has(h.house)) {
-          text += `${h.house}. Ev Dekanları: 1.Dekan(${h.decans[0].ruler}), 2.Dekan(${h.decans[1].ruler}), 3.Dekan(${h.decans[2].ruler})\n`;
+        if (h.decans && h.decans.length === 3) {
+          // signIdx kullanarak burç adını al, yoksa houseSign veya sign kullan
+          const houseSign = h.signIdx !== undefined ? SIGNS[h.signIdx] : (h.houseSign || h.sign || 'Bilinmiyor');
+          text += `${h.house}. Ev (${houseSign}): 1.Dekan(${h.decans[0].ruler}), 2.Dekan(${h.decans[1].ruler}), 3.Dekan(${h.decans[2].ruler})\n`;
         }
       });
     }
     
-    // 7'ler Kuralı (Varsa)
-    const sevenData = window.currentSevenResults; // Global değişkene atamamız lazım
-    if (sevenData) {
-      text += "\n5. 7'LER KURALI (YAŞ DÖNGÜSÜ):\n";
-      text += `Mevcut Yaş: ${sevenData.age}, Döngü: ${sevenData.currentCycle?.startAge}-${sevenData.currentCycle?.endAge} yaş arası.\n`;
-      text += `Aktif Ev: ${sevenData.currentCycle?.houseIndex}. Ev (${sevenData.currentCycle?.signName})\n`;
-      text += `Yıl Yöneticisi Gezegen: ${sevenData.yearRuler}\n`;
+    // 7'ler Kuralı (Yaş Döngüsü)
+    if (globalNatalData && globalNatalData.birthYear) {
+      const birthYear = globalNatalData.birthYear;
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - birthYear;
+      const cycleHouse = (age % 84) >= 0 ? Math.floor((age % 84) / 7) + 1 : 1;
+      const cycleStart = Math.floor(age / 7) * 7;
+      const cycleEnd = cycleStart + 6;
+      
+      // 7'ler döngüsü verisinden yönetici gezegeni al
+      const sevenResults = window.currentSevenResults;
+      let yearRuler = "Hesaplanmadı";
+      if (sevenResults && Array.isArray(sevenResults) && sevenResults[cycleHouse - 1]) {
+        yearRuler = sevenResults[cycleHouse - 1].ruler || sevenResults[cycleHouse - 1].sign || "Bilinmiyor";
+      }
+      
+      text += `\n5. 7'LER KURALI (YAŞ DÖNGÜSÜ):\n`;
+      text += `Mevcut Yaş: ${age}\n`;
+      text += `Aktif Döngü: ${cycleStart}-${cycleEnd} yaş arası (${cycleHouse}. Ev döngüsü)\n`;
+      text += `Yıl Yöneticisi: ${yearRuler}\n`;
+      
+      // Kritik yaşlar
+      if (age >= 27 && age <= 30) {
+        text += `⚠️ KRİTİK: İlk Satürn Dönüşü döneminde (28-29 yaş)\n`;
+      } else if (age >= 55 && age <= 58) {
+        text += `⚠️ KRİTİK: İkinci Satürn Dönüşü döneminde (56-57 yaş)\n`;
+      }
     }
     
     return text;
@@ -4500,98 +4909,253 @@
     }
   };
 
-  // ==================== YENİ PROMPT OLUŞTURUCU ====================
+  // ==================== PROMPT OLUŞTURUCU ====================
+  
+  // Temel kurallar (kısa)
+  const RULES = `KURALLAR:
+- Başak=Chiron, Akrep=Plüton, Balık=Neptün yöneticisi
+- Teknik terim kullanma, anlaşılır yaz
+- "Kesinlikle" deme, "potansiyeli var" de
+- Zorlukları fırsat olarak sun
+- Kısa paragraflar, samimi ton`;
+
+  // Analiz türlerine göre promtlar + knowledge
+  const PROMPTS = {
+    
+    general: {
+      instruction: `KİŞİLİK ANALİZİ yap:
+- Yükselen, Güneş, Ay sentezi
+- Öne çıkan 3-4 gezegen ve açıları
+- Güçlü ve gelişim alanları
+- Şu anki dönem (yaşa göre 7'ler)`,
+      knowledge: ``
+    },
+
+    typology: {
+      instruction: `TİPOLOJİ ANALİZİ yap - FİZİKSEL ve KARAKTER özellikleri:`,
+      knowledge: `
+## TİPOLOJİ BİLGİ BANKASI
+
+VÜCUT BÖLGELERİ (Burçlara göre):
+- Koç: Kafa, baş, yüz
+- Boğa: Boyun, bel
+- İkizler: Eller, kollar, burun
+- Yengeç: Göğüs, mide
+- Aslan: Gözler, saç, sırt
+- Başak: Alt karın
+- Terazi: Kulaklar, böbrek
+- Akrep: Cinsel bölge
+- Yay: Üst bacak, kalça
+- Oğlak: Kemikler, iskelet
+- Kova: Baldır
+- Balık: Ayaklar
+
+TİPOLOJİ ANALİZ NOKTALARI:
+1. ASC (Yükselen) = Ana belirleyici
+2. ASC Yöneticisi hangi evde?
+3. ASC'ye gelen açılar
+4. Mars konumu = Fiziksel yapı, yara/ben
+5. Jüpiter = Vücutta büyük bölge
+
+YÜKSELENİN ETKİLERİ:
+- Koç: Atletik, enerjik, alında yara
+- Boğa: Güçlü, dolgun, kısa boyun
+- İkizler: İnce, uzun, meraklı bakış
+- Yengeç: Yuvarlak, duygusal, ay yüzlü
+- Aslan: Karizmatik, asil, aslan yelesi saç
+- Başak: Fit, düzenli, ince dudak
+- Terazi: Estetik, dengeli, güzel
+- Akrep: Gizemli, manyetik bakış
+- Yay: Uzun, geniş gülüş
+- Oğlak: İri kemikli, ciddi
+- Kova: Alışılmadık, asimetrik
+- Balık: Sevimli, bulanık bakış
+
+Yükselen burca göre boy, yüz, gözler, ten, saç, vücut, eller, ayaklar, ben noktası ve yürüyüş özelliklerini detaylı anlat.`
+    },
+
+    seven: {
+      instruction: `7'LER YAŞAM DÖNGÜSÜ ANALİZİ yap:`,
+      knowledge: `
+## 7'LER SİSTEMİ BİLGİ BANKASI
+
+Hayat 7'şer yıllık döngülere ayrılır (12×7=84 yıl):
+
+| Ev | Yaş | Tema |
+|----|-----|------|
+| 1 | 0-7 | Fiziksel gelişim, benlik |
+| 2 | 7-14 | Değer sistemi oluşumu |
+| 3 | 14-21 | Öğrenme, sosyalleşme |
+| 4 | 21-28 | Yuva kurma, bağımsızlaşma |
+| 5 | 28-35 | Yaratıcılık, çocuk, aşk |
+| 6 | 35-42 | Kariyer, sağlık, rutin |
+| 7 | 42-49 | İlişkiler, ortaklıklar |
+| 8 | 49-56 | Dönüşüm, miras |
+| 9 | 56-63 | Felsefe, bilgelik |
+| 10 | 63-70 | Toplumsal miras |
+| 11 | 70-77 | Topluluk, hedefler |
+| 12 | 77-84 | İç dünya, maneviyat |
+
+SATÜRN DÖNÜŞLERİ (Kritik):
+- 28-29 yaş: Ham→Olgun geçiş, köklü değişim
+- 56-57 yaş: Bilgelik, doruk
+- 84-85 yaş: Hayatın tamamlanması
+
+Aktif dönemdeki ev yöneticisinin haritadaki konumuna göre yorumla.`
+    },
+
+    career: {
+      instruction: `KARİYER ve PARA ANALİZİ yap:`,
+      knowledge: `
+## KARİYER BİLGİ BANKASI
+
+ÖNEMLİ EVLER:
+- 10. Ev: Kariyer, toplumsal statü, meslek
+- 6. Ev: Çalışma ortamı, günlük iş, rutin
+- 2. Ev: Para kazanma, gelir kaynağı
+- 8. Ev: Başkalarının parası, miras, ortak mali
+
+GEZEGENLERİN KARİYER ETKİSİ:
+- MC burcu: Toplumun sizi nasıl gördüğü
+- 10. ev yöneticisi: Kariyer yönü
+- Satürn: Disiplin, engeller, azim
+- Mars: Enerji, motivasyon, rekabet
+- Jüpiter: Şans, genişleme, fırsatlar
+
+MESLEK ALANLARI (MC burcuna göre):
+- Ateş: Liderlik, girişim, spor
+- Toprak: Finans, inşaat, tarım
+- Hava: İletişim, eğitim, teknoloji
+- Su: Sanat, sağlık, psikoloji
+
+3-5 somut meslek önerisi ver.`
+    },
+
+    love: {
+      instruction: `İLİŞKİ ANALİZİ yap:`,
+      knowledge: `
+## İLİŞKİ BİLGİ BANKASI
+
+ÖNEMLİ GÖSTERGECİLER:
+- 7. Ev: İlişki tarzı, partner profili
+- 7. Ev Yöneticisi: Eş karakteri
+- Venüs: Sevgi dili, çekicilik
+- 5. Ev: Romantizm, flört
+- 8. Ev: Cinsellik, derin bağ
+- Ay (erkek haritasında): Eş tipi
+- Güneş (kadın haritasında): Eş tipi
+
+SEVGİ DİLLERİ (Venüs burcuna göre):
+- Ateş: Tutkulu, spontane
+- Toprak: Sadık, fiziksel dokunuş
+- Hava: İletişim, arkadaşlık
+- Su: Duygusal derinlik
+
+İdeal partner fiziksel ve karakter profilini çıkar.`
+    },
+
+    marriage: {
+      instruction: `EVLİLİK ANALİZİ yap:`,
+      knowledge: `
+## EVLİLİK BİLGİ BANKASI
+
+7. EV ANALİZİ:
+- Burç: Evliliğe yaklaşım
+- Yönetici: Eşin karakteri
+- İçindeki gezegenler: Evlilik dinamikleri
+- Dekanlar: Detay etkiler
+
+EVLİLİK ZAMANLAMA İPUÇLARI:
+- 7. ev yöneticisine transit
+- Venüs ilerlemeleri
+- 7'ler döngüsünde 7. ev dönemi (42-49 yaş)
+- Satürn dönüşleri (28-29, 56-57)
+
+MUTLULUK FAKTÖRLERİ:
+- Venüs-Mars uyumu
+- Ay-Güneş açıları
+- 7. ev durumu (boş/dolu, açılar)`
+    },
+
+    child: {
+      instruction: `ÇOCUK POTANSİYELİ ANALİZİ yap (Hassas konu - yumuşak dille):`,
+      knowledge: `
+## ÇOCUK BİLGİ BANKASI
+
+5. EV ANALİZİ:
+- 5. Ev = Çocuk evi
+- 1. Dekan = İlk çocuk
+- 2. Dekan = İkinci çocuk
+- 3. Dekan = Üçüncü çocuk
+- Yönetici konumu: Çocuk potansiyeli
+
+GÖSTERGELER:
+- Jüpiter: Bereket, şans
+- Ay: Doğurganlık (kadın)
+- 4. Ev: Aile, yuva
+- 11. Ev: Çocukların 7. evi (çocuğun evliliği)
+
+DİKKAT: Kesinlik ifadesi kullanma. "Potansiyel", "yatkınlık" gibi kelimeler tercih et.`
+    },
+
+    health: {
+      instruction: `SAĞLIK EĞİLİMLERİ ANALİZİ yap (Tıbbi tavsiye değil, astrolojik eğilim):`,
+      knowledge: `
+## SAĞLIK BİLGİ BANKASI
+
+6. EV ANALİZİ:
+- Sağlık evi
+- Hastalık eğilimleri
+- Günlük rutin ve beslenme
+
+VÜCUT-BURÇ İLİŞKİSİ:
+- Koç: Baş, migren
+- Boğa: Boğaz, tiroid
+- İkizler: Sinir sistemi, solunum
+- Yengeç: Mide, sindirim
+- Aslan: Kalp, sırt
+- Başak: Bağırsaklar
+- Terazi: Böbrekler
+- Akrep: Üreme sistemi
+- Yay: Karaciğer, kalça
+- Oğlak: Kemikler, diz
+- Kova: Dolaşım
+- Balık: Ayaklar, bağışıklık
+
+Stres yönetimi ve enerji dengesi önerileri sun.`
+    }
+  };
+
   window.generatePrompt = function(type) {
     if (!lastChartData || !lastChartData.chartData) {
-      alert('Önce "Harita Hesapla" sekmesinden bir harita oluşturmalısınız!');
-      document.querySelectorAll('.main-tab')[0].click(); // Dekan sekmesine git
+      alert('Önce harita hesaplayın!');
       return;
     }
     
     const outputEl = document.getElementById('promptOutput');
-    outputEl.value = "Veriler işleniyor, prompt hazırlanıyor...";
+    const chartData = prepareAIInput(lastChartData.chartData, lastChartData.decanResults);
+    const selected = PROMPTS[type] || PROMPTS.general;
     
-    // Temel harita verisi
-    const chartDataText = prepareAIInput(lastChartData.chartData, lastChartData.decanResults);
-    
-    // Temel Rol
-    let role = "Sen, hem Klasik hem de Modern teknikleri harmanlayan, özellikle 'Dekanlar' ve '7'ler Kuralı' (Profection/Seven Year Cycles) tekniklerinde uzmanlaşmış, deneyimli bir astrologsun.\n\n";
-    role += "GÖREVİN: Aşağıda verilen doğum haritasını analiz etmek ve sorulan özel sorulara yönelik net, detaylı ve yol gösterici bir yorum yazmaktır.\n";
-    role += "TONU: Bilge, samimi, umut verici ama gerçekçi ('Polyannacılık' yapma, zorlukları da söyle ama çözüm öner). Astrolojik terimleri parantez içinde açıkla.\n\n";
-    
-    let specificInst = "";
-    
-    switch(type) {
-        case 'general':
-            specificInst = `
----
-### ANALİZ PLANI (GENEL YORUM):
-1. **Kimlik ve Mizaç:** Yükselen burcu (Maske), Güneş (Öz) ve Ay (Duygular) sentezi. Element dengesi.
-2. **Ruhsal Yolculuk:** Kuzey Ay Düğümü (KAD) ve Güney Ay Düğümü (GAD) aksı. Kişi nereden gelip nereye gidiyor?
-3. **Güçlü ve Zayıf Yönler:** En güçlü gezegen hangisi? En zorlayıcı açı (Kare/Karşıt) hangisi ve nasıl aşılır?
-4. **Şans ve Sınavlar:** Jüpiter (Fırsatlar) ve Satürn (Dersler) hangi evlerde?
-5. **Kısa Öngörü:** Şu anki 7'ler döngüsüne (Verilerde var) göre bu yılın ana teması nedir?
----
-`;
-            break;
-            
-        case 'love':
-            specificInst = `
----
-### ANALİZ PLANI (AŞK VE İLİŞKİLER):
-1. **Partner Profili:** 7. Evin burcu, yöneticisi ve içindeki gezegenler. Nasıl insanlara çekiliyor?
-2. **Sevgi Dili ve Tutku:** Venüs (Sevgiyi alma/verme şekli) ve Mars (Cinsellik ve eylem) analizi.
-3. **Duygusal İhtiyaçlar:** Ay burcu ve açıları. İlişkide kendini nasıl güvende hisseder?
-4. **Flört ve Romantizm:** 5. Evin durumu. Aşk hayatı eğlenceli mi yoksa sınavlı mı?
-5. **Kilit Tavsiye:** İlişkilerde tekrarlayan bir sorun varsa (ör. Satürn veya Plüton etkisi), bunu aşmak için ne yapmalı?
----
-`;
-            break;
+    let prompt = `Sen deneyimli bir astrologsun.
 
-        case 'career':
-            specificInst = `
----
-### ANALİZ PLANI (KARİYER, İŞ VE FİNANS):
-1. **Kariyer Zirvesi:** 10. Ev (MC) burcu, yöneticisi ve içindeki gezegenler. Kişi toplumda nasıl tanınmalı?
-2. **Para Kaynakları:** 2. Ev (Maddi yetenekler) ve 8. Ev (Yatırımlar/Miras/Borçlar).
-3. **Çalışma Tarzı:** 6. Ev ve Merkür. Nasıl bir ortamda, nasıl bir tempoda çalışmalı?
-4. **Meslek Tavsiyeleri:** Harita potansiyeline uygun 3 somut meslek veya sektör önerisi.
-5. **Başarı Anahtarı:** Satürn (Disiplin) ve Mars (Eylem gücü) bu kişiyi nasıl destekler veya engeller?
----
-`;
-            break;
+${RULES}
 
-        case 'seven':
-            specificInst = `
----
-### ANALİZ PLANI (7'LER KURALI VE YILLIK ÖNGÖRÜ):
-**ÖNEMLİ:** Bu analiz tamamen kişinin şu anki yaşına ve aktif olan "Profection" (Yıllık İlerleme) evine odaklanmalıdır.
-1. **Mevcut Döngü:** Verilerde belirtilen Aktif Ev (örn. 5. Ev döngüsü) hangi konuları gündeme getiriyor?
-2. **Yıl Yöneticisi:** Bu yılın yöneticisi olan gezegen haritada nasıl konumlanmış? (Ev, burç, açılar).
-3. **Yıllık Gündem:** Bu yaşta beklenen temel olaylar, fırsatlar ve riskler neler?
-4. **Aylık/Dönemsel Uyarılar:** Yıl yöneticisinin tetiklendiği zamanlar veya temalar için tavsiyeler.
----
-`;
-            break;
-
-        case 'child':
-            specificInst = `
----
-### ANALİZ PLANI (ÇOCUK POTANSİYELİ VE EBEVEYNLİK):
-**NOT:** Bu analiz bir ebeveyn için hazırlanmaktadır.
-1. **Duygusal Dünya:** Ay burcu. Çocuk korktuğunda veya üzüldüğünde nasıl sakinleşir?
-2. **Zihin ve Öğrenme:** Merkür. Öğrenme stili nedir (Görsel, işitsel, deneyimsel)? Okul hayatında nelere dikkat edilmeli?
-3. **Özgüven ve Karakter:** Güneş ve Yükselen. Çocuğun parlaması için hangi yönleri desteklenmeli?
-4. **Yetenekler ve İlgi Alanları:** 5. Ev ve güçlü gezegenler. Spora mı, sanata mı, sayısal alana mı yatkın?
-5. **Ebeveynlere Not:** 4. Ev (Aile) ve 10. Ev (Otorite) göstergelerine göre, çocuk anneyi ve babayı nasıl algılıyor? İletişimde nelere dikkat etmeliler?
----
-`;
-            break;
+${selected.instruction}`;
+    
+    // Knowledge varsa ekle
+    if (selected.knowledge) {
+      prompt += `\n${selected.knowledge}`;
     }
+    
+    prompt += `
 
-    // Final Prompt
-    const finalPrompt = role + specificInst + "\n" + chartDataText + "\n\n" + "Lütfen yukarıdaki verileri ve analiz planını kullanarak, Markdown formatında, okuması keyifli bir analiz yaz.";
-    outputEl.value = finalPrompt;
+---
+${chartData}
+---
+
+Yorumu Türkçe, kısa paragraflarla, samimi tonda yaz.`;
+    
+    outputEl.value = prompt;
   };
   
   window.copyPromptText = function() {

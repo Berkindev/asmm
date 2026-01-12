@@ -116,7 +116,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   // ============== STATIC FILE SERVER ==============
-  let filePath = path.join(ROOT, req.url === '/' ? 'astroharmony.html' : req.url);
+  // Parse URL to remove query parameters (e.g. ?v=123) which cause file lookup failures
+  const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = parsedUrl.pathname;
+  
+  let filePath = path.join(ROOT, pathname === '/' ? 'astroharmony.html' : pathname);
   
   // Security
   if (!filePath.startsWith(ROOT)) {
@@ -127,6 +131,7 @@ const server = http.createServer(async (req, res) => {
   
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
+      // Try looking for index.html if directory
       res.writeHead(404);
       res.end('Not Found');
       return;
